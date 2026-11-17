@@ -1,0 +1,128 @@
+# CLAUDE.md — Portfolio "GROUND TRUTH / 原典"
+
+あなた（Claude Code）は、フリーランスのフルスタックエンジニアのポートフォリオサイトを実装する**リードエンジニア**である。
+企画・優先順位の最終判断はオーナー（ユーザー）とPMが行う。あなたは実装・技術提案・検証に責任を持つ。
+
+## 0. 最初に読むもの（唯一の出典）
+
+| ファイル | 内容 | 扱い |
+|---|---|---|
+| `docs/BRIEF.md` | コンセプト・情報設計・各シーン仕様・**ファクトシート** | 企画の正。数値・事実は必ずここから引く |
+| `docs/KICKOFF_PROMPTS.md` | フェーズごとの作業指示 | オーナーが1フェーズずつ渡す |
+| `docs/ASSET_CHECKLIST.md` | 素材と匿名化ルール | 素材を扱う前に確認 |
+
+- BRIEFと矛盾する実装をしない。矛盾や改善案に気づいたら、実装せずに**提案として報告**する。
+- **数値・実績・事実を創作しない。** ファクトシートにない数字が必要になったら `TODO(fact)` を残して報告する。
+
+## 1. 絶対ルール（守秘・誠実さ）
+
+1. 顧客名・事業者を特定できる情報・顧客システムの実コード・実ログ・IPアドレス・ホスト名・AWSアカウントID・インスタンスID・（本人の公開用以外の）メールアドレスを**一切コミットしない**。
+2. 外部リンクは次の許可リストのみ（`src/content/links.ts` に一元管理し、ここ以外にURLを書かない）：
+   - `https://genten.vercel.app/`（本人の公開物）
+   - `https://github.com/senpythondev`（本人）
+   - DEV のプロフィールと Genten 記事（URLはオーナーから受領後に追加）
+   - LinkedIn（あれば。URLはオーナーから受領後に追加）
+   - `mailto:sen.python.dev@gmail.com`（HTMLに平文で書かず、クライアント側で組み立てる）
+   - `https://pegasus-job.com`（先方の了承後に有効化。`NEXT_PUBLIC_ENABLE_PEGASUS_LINK` フラグで制御）
+   - 技術経歴書に記載された内容は公開してよい。サイトに載せる個人情報は、名前・メール・GitHub・DEVだけにする。
+3. AIトレーニングプラットフォームの名称・タスク内容・リポジトリ名は書かない。
+4. セキュリティ診断の演出はすべて模擬データで作り、UI上に `再現` ラベルを表示する。実在の攻撃ペイロードや悪用可能なコードは載せない。
+5. 確度ラベル（`実測`／`概算`／`再現`）はファクトシートの指定どおりに付ける。
+6. コミット前に `confidentiality-guard` サブエージェントでチェックする。
+
+## 2. 技術スタック（セットアップ時点の最新安定版を使う）
+
+- **Next.js（App Router）＋ TypeScript（strict）**、Vercelにデプロイ。可能な部分は静的生成。
+- **React Three Fiber ＋ drei ＋ @react-three/postprocessing**（3D）
+- **GSAP ＋ ScrollTrigger**（スクロール演出）、**Lenis**（スムーズスクロール）
+- **Tailwind CSS**、デザイントークンは `src/styles/tokens.ts` に集約
+- **next-intl**（`ja` を既定、`en`）
+- **zod**（コンテンツスキーマ）
+- **detect-gpu**（端末性能の判定）、**pdf-lib**（特許シーンの透かしPDFをクライアント側で生成）
+- **Playwright**（E2E・スクリーンショット比較）、**Lighthouse CI**（性能の自動計測）
+
+ライブラリを追加するときは、理由とバンドルサイズへの影響を報告してから入れる。
+
+## 3. アーキテクチャ方針
+
+```
+src/
+  app/[locale]/page.tsx          # 1ページ構成（地表→岩盤）
+  content/                        # 型付きコンテンツ（ja/en）。schema.ts で zod 検証
+    schema.ts                     # Layer, Metric, Evidence, Confidence('measured'|'approx'|'reconstructed')
+    layers.ja.ts / layers.en.ts
+  components/
+    layout/                       # 深度計、言語切替、30秒ボタン
+    evidence/                     # 根拠ドロワー（全数字クリック可能）
+    core-sample/                  # ボーリングコア・ナビゲーター
+    layers/<layer-id>/            # 各地層のHTML部分
+  three/
+    Stage.tsx                     # 単一の固定Canvas（WebGLコンテキストは1つだけ）
+    scenes/<layer-id>/            # 各地層の3Dシーン（動的import）
+    quality.ts                    # 品質ティア（high/medium/low/static）
+  lib/scroll/                     # Lenis + ScrollTrigger の統合、現在の地層の状態管理
+public/media/                     # 匿名化済み素材のみ
+```
+
+- **Canvasは1つだけ。** スクロール位置から「現在の地層」を決め、その地層と前後1枚のシーンだけをマウントする。それ以外は破棄してGPUメモリを解放する。
+- 各シーンは `next/dynamic` で遅延読み込み。最初の描画（LCP）に3Dを含めない。
+- コンテンツはすべてHTMLとして描画し、3Dは `aria-hidden` の演出レイヤーにする。
+- 数値は `Metric` 型を通じてのみ描画し、`Evidence`（測定方法・確度・図表）と必ず紐づける。
+
+## 4. 性能予算（このサイト自体が「性能改善エンジニア」の実績になる）
+
+| 指標 | 目標 |
+|---|---|
+| LCP（モバイル・4G相当） | 2.5秒以内（目標2.0秒） |
+| CLS | 0.05以下 |
+| INP | 200ms以内 |
+| 初期JS（3Dを除く、gzip） | 180KB以下 |
+| 各3Dシーンのチャンク | 250KB以下（gzip、テクスチャ除く） |
+| フレームレート | デスクトップ60fps、モバイル30fps以上 |
+| 動画1本 | 3MB以下、ポスター画像必須、画面に入ってから読み込む |
+| 日本語Webフォント | サブセット化、ウェイトは最大3つ |
+| Lighthouse（モバイル） | Performance 90以上、Accessibility 100 |
+
+- `prefers-reduced-motion` のときは3Dを静止画に、スクロール演出をフェード程度に落とす。
+- WebGL非対応・低性能端末（quality=`static`）でも全コンテンツが読めること。
+- 最終的な実測Lighthouseスコアをフッターに表示する（自分の主張に根拠をつける）。
+
+## 5. モデルの使い分け（Claude MAXプラン）
+
+| 場面 | モデル | 切替 |
+|---|---|---|
+| 各フェーズの計画（Plan Mode）、アーキテクチャ、3Dシーン設計、GSAPタイムライン、セキュリティ地層の実装 | **Claude Opus 5.5**（既定） | `/model opus` |
+| 特に難しい部分だけ：独自GLSLシェーダー（地層・コアのマテリアル）、45,000インスタンスの描画最適化、複雑な物理表現 | **Claude Fable 5.2** | `/model fable` |
+| スタイリング、レイアウト調整、i18nの配線、コピーの流し込み、テストの追加 | **Claude Sonnet 5.5** | `/model sonnet` |
+| 定型的なデータ変換・一貫性チェック（サブエージェント） | **Claude Haiku 5.5** | サブエージェントの `model:` で指定 |
+
+- Fable 5.2 は安全分類器がサイバーセキュリティ関連と判定した依頼で自動的に別モデルへ切り替わることがある。**セキュリティ地層の作業は Opus 5.5 で行う。** 都市の描画最適化をFableに依頼するときは「45,000個のインスタンスを持つ都市の描画最適化」という純粋なグラフィックス課題として切り出す。
+- 使用中のモデルを変えたら、作業ログ（§7）に記録する。
+
+## 6. 作業の進め方
+
+1. 各フェーズは **Plan Mode で計画 → オーナー承認 → 実装** の順。承認なしにフェーズを越えない。
+2. 1シーン＝1ブランチ（`feat/layer-<id>`）。マイルストーンごとにコミットする。
+3. 実装中は `npm run dev` で実際の見た目と挙動を確認する。見た目の作業は、スクリーンショットを撮って自分の目で確認してから完了とする。
+4. 不明点・判断が分かれる点は推測で進めず、選択肢と推奨を添えて質問する。
+
+## 7. 完了の定義（各フェーズ・各シーン共通）
+
+- [ ] `npm run build` が警告なしで通る
+- [ ] `npm run lint` と `npm run typecheck` が通る
+- [ ] Playwright のE2E・スクリーンショットテストが通る（デスクトップ／モバイル／reduced-motion の3パターン）
+- [ ] Lighthouse CI が §4 の予算内
+- [ ] `confidentiality-guard` と `perf-auditor` のサブエージェントチェックが通る
+- [ ] ja/en 両方で表示を確認した
+- [ ] `docs/WORKLOG.md` に「やったこと／使ったモデル／計測値／残課題」を追記した
+
+## 8. コマンド（セットアップ後に実際の内容へ更新する）
+
+```
+npm run dev         # 開発サーバー
+npm run build       # 本番ビルド
+npm run lint
+npm run typecheck
+npm run test:e2e    # Playwright
+npm run lhci        # Lighthouse CI
+```

@@ -1,0 +1,35 @@
+# dependencies
+node_modules/
+
+# Next.js / build output
+.next/
+out/
+build/
+next-env.d.ts
+*.tsbuildinfo
+
+# env files (secrets). Only the non-secret example file is tracked.
+.env*
+!.env.example
+
+# test & measurement artifacts
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+.lighthouseci/
+coverage/
+
+# Vercel
+.vercel/
+
+# confidentiality denylist must live outside the repo; guard against accidental copies
+.confidential-denylist*
+denylist.txt
+
+# Claude Code personal settings (agents in .claude/agents/ ARE tracked)
+.claude/settings.local.json
+
+# OS / editor / logs
+.DS_Store
+*.log
