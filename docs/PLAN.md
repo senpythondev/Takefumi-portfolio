@@ -1,6 +1,7 @@
 # 全体実装計画 — GROUND TRUTH / 原典
 
-> Phase 1 成果物｜作成 2026-11-17｜作成モデル：Claude Opus 5.5｜**ステータス：オーナー承認待ち**
+> Phase 1 成果物｜作成 2026-11-17｜作成モデル：Claude Opus 5.5｜**ステータス：承認済み（`docs/PM_REVIEW_01.md`、2026-11-17）**
+> レビューで確定・変更した点は `docs/PM_REVIEW_01.md` と `docs/WORKLOG.md` を正とする（本文は Phase 1 提出時のまま）。
 >
 > `CLAUDE.md`・`docs/BRIEF.md`・`docs/ASSET_CHECKLIST.md`・`docs/KICKOFF_PROMPTS.md` を全文読んだうえで作成した。
 > 数値・事実は BRIEF §6 ファクトシート以外から引いていない。ライブラリのサイズなどの見込み値には「推定」と書き、Phase 2 で実測値に置き換える。
