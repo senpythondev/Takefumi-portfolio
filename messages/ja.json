@@ -1,0 +1,68 @@
+{
+  "meta": {
+    "title": "大野 雄文美 — フルスタックエンジニア | GROUND TRUTH／原典",
+    "description": "フィンランドと日本で{years}。実測して原因を特定し、根拠のある手を打つフルスタックエンジニアのポートフォリオ。すべての数字に根拠を添えています。"
+  },
+  "nav": {
+    "skip": "本文へ移動",
+    "summary": "30秒で見る",
+    "switchLanguage": "English",
+    "layers": "地層の一覧",
+    "dig": "掘る"
+  },
+  "depth": {
+    "label": "{index, select, 0 {地表} 9 {岩盤} 10 {次の地層} other {第{index}層}}"
+  },
+  "confidence": {
+    "measured": "実測",
+    "approx": "概算",
+    "reconstructed": "再現",
+    "measuredDef": "本番データ・テスト・評価で確認した値、または数えた件数",
+    "approxDef": "当時の計測に基づく約値、または見積との比較",
+    "reconstructedDef": "守秘のため、再現環境で作り直したもの"
+  },
+  "evidence": {
+    "eyebrow": "根拠",
+    "close": "閉じる",
+    "confidence": "確度",
+    "statement": "記録の内容",
+    "method": "測定方法",
+    "source": "出典",
+    "note": "補足",
+    "open": "根拠を表示",
+    "legendTitle": "数字の読み方",
+    "legend": "数字はすべて押すと根拠が開きます。確度ラベルは次のとおりです。"
+  },
+  "source": {
+    "records": "本人の実績記録",
+    "eval": "評価結果（本人が実施）",
+    "article": "DEV の記事（本人執筆）",
+    "ci": "CI による自動計測"
+  },
+  "genten": {
+    "question": "問",
+    "correct": "正答",
+    "incorrect": "誤答",
+    "setup": "構成"
+  },
+  "projects": {
+    "period": "期間",
+    "industry": "業界",
+    "role": "役割",
+    "team": "規模",
+    "tech": "主な技術",
+    "results": "成果"
+  },
+  "contact": {
+    "copy": "アドレスをコピー",
+    "copied": "コピーしました",
+    "noscript": "メールアドレスは JavaScript を有効にすると表示されます。GitHub や DEV からもご連絡いただけます。"
+  },
+  "links": {
+    "external": "（外部サイト）"
+  },
+  "footer": {
+    "builtWith": "このサイトはHTMLだけでも全文が読めるように作っています。",
+    "rights": "© 2026 Takefumi Ono"
+  }
+}

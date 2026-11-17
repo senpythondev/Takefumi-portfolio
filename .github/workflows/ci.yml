@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches: [main, 'feat/**']
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      NEXT_PUBLIC_ENABLE_PEGASUS_LINK: 'false'
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      - name: Confidentiality (deterministic first line)
+        run: npm run check:confidentiality
+
+      - name: Content validation (schema, ja/en parity, fact-lint)
+        run: npm run validate
+
+      - run: npm run lint
+      - run: npm run typecheck
+
+      - name: Build (prebuild repeats validation + confidentiality)
+        run: npm run build
+
+      - name: Fonts matching the local screenshot baselines
+        # Until Phase 4 self-hosts subset fonts, CJK text falls back to the system font.
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends fonts-droid-fallback
+
+      - run: npx playwright install --with-deps chromium
+
+      - name: E2E (desktop / mobile / reduced-motion)
+        run: npm run test:e2e
+
+      - name: Initial-JS budget
+        run: npm run budget
+
+      - name: Lighthouse CI (mobile, budgets from CLAUDE.md §4)
+        run: npm run lhci
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: reports
+          path: |
+            playwright-report/
+            test-results/
+            .lighthouseci/
+          retention-days: 14

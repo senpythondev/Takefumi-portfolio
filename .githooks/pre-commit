@@ -1,0 +1,5 @@
+#!/bin/sh
+# Deterministic confidentiality check on the staged content (PM_REVIEW_01 D9, scope per PM_REVIEW_04 §2).
+# Blocks the commit on any finding. The confidentiality-guard sub-agent reviews context before committing.
+# Enabled automatically by `npm install` (package.json "prepare": git config core.hooksPath .githooks).
+exec node scripts/check-confidentiality.ts --staged

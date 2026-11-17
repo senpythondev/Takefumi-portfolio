@@ -1,0 +1,68 @@
+{
+  "meta": {
+    "title": "Takefumi Ono — Full-stack engineer | GROUND TRUTH",
+    "description": "{years} in Finland and Japan. A full-stack engineer who measures first, finds the root cause, and acts on evidence. Every number on this site comes with its evidence."
+  },
+  "nav": {
+    "skip": "Skip to content",
+    "summary": "30-second summary",
+    "switchLanguage": "日本語",
+    "layers": "Layers",
+    "dig": "Dig"
+  },
+  "depth": {
+    "label": "{index, select, 0 {Surface} 9 {Bedrock} 10 {Next layer} other {Layer {index}}}"
+  },
+  "confidence": {
+    "measured": "Measured",
+    "approx": "Approximate",
+    "reconstructed": "Reconstructed",
+    "measuredDef": "Confirmed with production data, tests or an evaluation — or a direct count",
+    "approxDef": "An approximate figure based on measurements at the time, or a comparison with an estimate",
+    "reconstructedDef": "Rebuilt in a separate environment to protect confidentiality"
+  },
+  "evidence": {
+    "eyebrow": "Evidence",
+    "close": "Close",
+    "confidence": "Confidence",
+    "statement": "What the record says",
+    "method": "How it was measured",
+    "source": "Source",
+    "note": "Note",
+    "open": "Show evidence",
+    "legendTitle": "How to read the numbers",
+    "legend": "Every number opens its evidence when you select it. Each one carries one of three labels:"
+  },
+  "source": {
+    "records": "Author's project records",
+    "eval": "Evaluation results (run by the author)",
+    "article": "DEV article (by the author)",
+    "ci": "Measured automatically in CI"
+  },
+  "genten": {
+    "question": "Q",
+    "correct": "Correct",
+    "incorrect": "Incorrect",
+    "setup": "Setup"
+  },
+  "projects": {
+    "period": "Period",
+    "industry": "Industry",
+    "role": "Role",
+    "team": "Team",
+    "tech": "Main stack",
+    "results": "Results"
+  },
+  "contact": {
+    "copy": "Copy address",
+    "copied": "Copied",
+    "noscript": "The e-mail address appears when JavaScript is enabled. You can also reach me via GitHub or DEV."
+  },
+  "links": {
+    "external": "(external site)"
+  },
+  "footer": {
+    "builtWith": "Everything on this site can be read as plain HTML.",
+    "rights": "© 2026 Takefumi Ono"
+  }
+}

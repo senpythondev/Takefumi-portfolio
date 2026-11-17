@@ -1,0 +1,27 @@
+[
+  {
+    "check": "url",
+    "file": "package-lock.json",
+    "reason": "npm が生成するパッケージのレジストリ・資金提供URL。サイトのコンテンツではない"
+  },
+  {
+    "check": "email",
+    "file": "package-lock.json",
+    "reason": "npm が生成する依存パッケージの非推奨メッセージに含まれる、パッケージ作者の公開連絡先。本人・顧客の情報ではない"
+  },
+  {
+    "check": "url",
+    "match": "http://localhost",
+    "reason": "ローカルのテストサーバー（Playwright・Lighthouse CI）。外部リンクではない"
+  },
+  {
+    "check": "url",
+    "match": "http://ns.adobe.com/xap",
+    "reason": "XMP の名前空間（画像メタデータを検出するための識別子）。リンクではない"
+  },
+  {
+    "check": "url",
+    "match": "http://www.w3.org/2000/svg",
+    "reason": "SVG の名前空間（SVG ファイルに必須の識別子）。リンクではない"
+  }
+]
