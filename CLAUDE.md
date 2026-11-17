@@ -13,6 +13,8 @@
 
 - BRIEFと矛盾する実装をしない。矛盾や改善案に気づいたら、実装せずに**提案として報告**する。
 - **数値・実績・事実を創作しない。** ファクトシートにない数字が必要になったら `TODO(fact)` を残して報告する。
+  - 例外：CI が自動計測した Lighthouse などの数値は、計測日・計測条件・レポートを根拠とする `Metric`（確度＝実測）として表示してよい。
+  - 追加の事実データは `docs/facts/` に置く（例：`genten-eval.json`）。ここにあるデータもファクトシートと同じく正とする。
 
 ## 1. 絶対ルール（守秘・誠実さ）
 
@@ -20,8 +22,8 @@
 2. 外部リンクは次の許可リストのみ（`src/content/links.ts` に一元管理し、ここ以外にURLを書かない）：
    - `https://genten.vercel.app/`（本人の公開物）
    - `https://github.com/senpythondev`（本人）
-   - DEV のプロフィールと Genten 記事（URLはオーナーから受領後に追加）
-   - LinkedIn（あれば。URLはオーナーから受領後に追加）
+   - `https://dev.to/kaze001`（DEVプロフィール）
+   - `https://dev.to/kaze001/english-guides-say-y6-million-the-fsa-says-y18-million-genten-checks-japans-money-rules-against-4jfe`（Genten記事）
    - `mailto:sen.python.dev@gmail.com`（HTMLに平文で書かず、クライアント側で組み立てる）
    - `https://pegasus-job.com`（先方の了承後に有効化。`NEXT_PUBLIC_ENABLE_PEGASUS_LINK` フラグで制御）
    - 技術経歴書に記載された内容は公開してよい。サイトに載せる個人情報は、名前・メール・GitHub・DEVだけにする。
@@ -116,13 +118,21 @@ public/media/                     # 匿名化済み素材のみ
 - [ ] ja/en 両方で表示を確認した
 - [ ] `docs/WORKLOG.md` に「やったこと／使ったモデル／計測値／残課題」を追記した
 
-## 8. コマンド（セットアップ後に実際の内容へ更新する）
+## 8. コマンド（Phase 2 で実装済み。Node 22.18 以上、`.nvmrc` 参照）
 
 ```
-npm run dev         # 開発サーバー
-npm run build       # 本番ビルド
+npm run dev                     # 開発サーバー
+npm run build                   # 本番ビルド（prebuild で validate と check:confidentiality を先に実行）
+npm run build:release           # 本番公開用ビルド（TODO(fact) が残っていたら失敗。VERCEL_ENV=production でも同じ）
 npm run lint
-npm run typecheck
-npm run test:e2e    # Playwright
-npm run lhci        # Lighthouse CI
+npm run typecheck               # next typegen + tsc
+npm run validate                # コンテンツ検証（zod、ja/en の一致、ファクトシートとの照合、docs/facts の整合性）
+npm run check:confidentiality   # パターンによる守秘チェック（IP、AWS の ID・ARN、許可外の URL・メール、画像のメタデータ）
+npm run test:e2e                # Playwright（desktop / mobile / reduced-motion）。先に build が必要
+npm run test:e2e:update         # スクリーンショットの基準画像を更新
+npm run budget                  # 初期JS 180KB の計測（Playwright）
+npm run lhci                    # Lighthouse CI（モバイル、§4 の予算をアサーション）
+npm run screenshots -- <URL>    # レビュー用スクリーンショット（docs/screenshots/、コミットしない）
 ```
+
+- pre-commit フック（`.githooks/pre-commit`、`npm install` で自動設定）が、ステージした内容に守秘チェックをかける。

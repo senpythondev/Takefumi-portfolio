@@ -1,0 +1,420 @@
+{
+ "source": "オーナー提供の評価結果（2026-11-17受領）。LLMを使わない決定的採点",
+ "confidence": "measured",
+ "configs": [
+  {
+   "id": "closed-book",
+   "label_ja": "モデル単体（検索なし）",
+   "label_en": "Model only (no retrieval)"
+  },
+  {
+   "id": "keyword-search",
+   "label_ja": "同じ57ファイルへのキーワード検索（BM25）",
+   "label_en": "Keyword search (BM25) over the same 57 files"
+  },
+  {
+   "id": "genten",
+   "label_ja": "Gentenナレッジベース（Sanity＋MCP）",
+   "label_en": "Genten knowledge base (Sanity + MCP)"
+  }
+ ],
+ "questions": 25,
+ "results": [
+  {
+   "question": 1,
+   "config": "closed-book",
+   "correct": true
+  },
+  {
+   "question": 1,
+   "config": "keyword-search",
+   "correct": true
+  },
+  {
+   "question": 1,
+   "config": "genten",
+   "correct": true
+  },
+  {
+   "question": 2,
+   "config": "closed-book",
+   "correct": true
+  },
+  {
+   "question": 2,
+   "config": "keyword-search",
+   "correct": true
+  },
+  {
+   "question": 2,
+   "config": "genten",
+   "correct": true
+  },
+  {
+   "question": 3,
+   "config": "closed-book",
+   "correct": true
+  },
+  {
+   "question": 3,
+   "config": "keyword-search",
+   "correct": true
+  },
+  {
+   "question": 3,
+   "config": "genten",
+   "correct": true
+  },
+  {
+   "question": 4,
+   "config": "closed-book",
+   "correct": true
+  },
+  {
+   "question": 4,
+   "config": "keyword-search",
+   "correct": true
+  },
+  {
+   "question": 4,
+   "config": "genten",
+   "correct": true
+  },
+  {
+   "question": 5,
+   "config": "closed-book",
+   "correct": true
+  },
+  {
+   "question": 5,
+   "config": "keyword-search",
+   "correct": true
+  },
+  {
+   "question": 5,
+   "config": "genten",
+   "correct": true
+  },
+  {
+   "question": 6,
+   "config": "closed-book",
+   "correct": true
+  },
+  {
+   "question": 6,
+   "config": "keyword-search",
+   "correct": true
+  },
+  {
+   "question": 6,
+   "config": "genten",
+   "correct": true
+  },
+  {
+   "question": 7,
+   "config": "closed-book",
+   "correct": true
+  },
+  {
+   "question": 7,
+   "config": "keyword-search",
+   "correct": true
+  },
+  {
+   "question": 7,
+   "config": "genten",
+   "correct": true
+  },
+  {
+   "question": 8,
+   "config": "closed-book",
+   "correct": true
+  },
+  {
+   "question": 8,
+   "config": "keyword-search",
+   "correct": false
+  },
+  {
+   "question": 8,
+   "config": "genten",
+   "correct": true
+  },
+  {
+   "question": 9,
+   "config": "closed-book",
+   "correct": true
+  },
+  {
+   "question": 9,
+   "config": "keyword-search",
+   "correct": true
+  },
+  {
+   "question": 9,
+   "config": "genten",
+   "correct": true
+  },
+  {
+   "question": 10,
+   "config": "closed-book",
+   "correct": true
+  },
+  {
+   "question": 10,
+   "config": "keyword-search",
+   "correct": true
+  },
+  {
+   "question": 10,
+   "config": "genten",
+   "correct": true
+  },
+  {
+   "question": 11,
+   "config": "closed-book",
+   "correct": true
+  },
+  {
+   "question": 11,
+   "config": "keyword-search",
+   "correct": true
+  },
+  {
+   "question": 11,
+   "config": "genten",
+   "correct": true
+  },
+  {
+   "question": 12,
+   "config": "closed-book",
+   "correct": true
+  },
+  {
+   "question": 12,
+   "config": "keyword-search",
+   "correct": false
+  },
+  {
+   "question": 12,
+   "config": "genten",
+   "correct": true
+  },
+  {
+   "question": 13,
+   "config": "closed-book",
+   "correct": true
+  },
+  {
+   "question": 13,
+   "config": "keyword-search",
+   "correct": false
+  },
+  {
+   "question": 13,
+   "config": "genten",
+   "correct": true
+  },
+  {
+   "question": 14,
+   "config": "closed-book",
+   "correct": false
+  },
+  {
+   "question": 14,
+   "config": "keyword-search",
+   "correct": false
+  },
+  {
+   "question": 14,
+   "config": "genten",
+   "correct": true
+  },
+  {
+   "question": 15,
+   "config": "closed-book",
+   "correct": false
+  },
+  {
+   "question": 15,
+   "config": "keyword-search",
+   "correct": false
+  },
+  {
+   "question": 15,
+   "config": "genten",
+   "correct": true
+  },
+  {
+   "question": 16,
+   "config": "closed-book",
+   "correct": false
+  },
+  {
+   "question": 16,
+   "config": "keyword-search",
+   "correct": false
+  },
+  {
+   "question": 16,
+   "config": "genten",
+   "correct": true
+  },
+  {
+   "question": 17,
+   "config": "closed-book",
+   "correct": false
+  },
+  {
+   "question": 17,
+   "config": "keyword-search",
+   "correct": true
+  },
+  {
+   "question": 17,
+   "config": "genten",
+   "correct": true
+  },
+  {
+   "question": 18,
+   "config": "closed-book",
+   "correct": false
+  },
+  {
+   "question": 18,
+   "config": "keyword-search",
+   "correct": true
+  },
+  {
+   "question": 18,
+   "config": "genten",
+   "correct": true
+  },
+  {
+   "question": 19,
+   "config": "closed-book",
+   "correct": false
+  },
+  {
+   "question": 19,
+   "config": "keyword-search",
+   "correct": false
+  },
+  {
+   "question": 19,
+   "config": "genten",
+   "correct": true
+  },
+  {
+   "question": 20,
+   "config": "closed-book",
+   "correct": true
+  },
+  {
+   "question": 20,
+   "config": "keyword-search",
+   "correct": true
+  },
+  {
+   "question": 20,
+   "config": "genten",
+   "correct": true
+  },
+  {
+   "question": 21,
+   "config": "closed-book",
+   "correct": true
+  },
+  {
+   "question": 21,
+   "config": "keyword-search",
+   "correct": true
+  },
+  {
+   "question": 21,
+   "config": "genten",
+   "correct": true
+  },
+  {
+   "question": 22,
+   "config": "closed-book",
+   "correct": true
+  },
+  {
+   "question": 22,
+   "config": "keyword-search",
+   "correct": true
+  },
+  {
+   "question": 22,
+   "config": "genten",
+   "correct": true
+  },
+  {
+   "question": 23,
+   "config": "closed-book",
+   "correct": true
+  },
+  {
+   "question": 23,
+   "config": "keyword-search",
+   "correct": true
+  },
+  {
+   "question": 23,
+   "config": "genten",
+   "correct": true
+  },
+  {
+   "question": 24,
+   "config": "closed-book",
+   "correct": true
+  },
+  {
+   "question": 24,
+   "config": "keyword-search",
+   "correct": true
+  },
+  {
+   "question": 24,
+   "config": "genten",
+   "correct": true
+  },
+  {
+   "question": 25,
+   "config": "closed-book",
+   "correct": true
+  },
+  {
+   "question": 25,
+   "config": "keyword-search",
+   "correct": true
+  },
+  {
+   "question": 25,
+   "config": "genten",
+   "correct": true
+  }
+ ],
+ "summary": [
+  {
+   "config": "closed-book",
+   "correct": 19,
+   "correct_with_official_citation": 2,
+   "avg_seconds": 3.2
+  },
+  {
+   "config": "keyword-search",
+   "correct": 18,
+   "correct_with_official_citation": 5,
+   "avg_seconds": 3.4
+  },
+  {
+   "config": "genten",
+   "correct": 25,
+   "correct_with_official_citation": 25,
+   "avg_seconds_approx": 15
+  }
+ ],
+ "summary_source": "DEV記事 https://dev.to/kaze001/english-guides-say-y6-million-the-fsa-says-y18-million-genten-checks-japans-money-rules-against-4jfe（本人執筆）。correct/citation は実測、Gentenの平均時間は「約15秒」なので概算"
+}
