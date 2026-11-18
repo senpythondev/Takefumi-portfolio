@@ -10,6 +10,8 @@ import { Hero } from '@/components/layers/Hero';
 import { layerAnchor, LayerSection } from '@/components/layers/LayerSection';
 import type { RichContext } from '@/components/layers/RichText';
 import { LayerIndex, SiteFooter, SiteHeader } from '@/components/layout/SiteChrome';
+import { StageLoader } from '@/three/StageLoader';
+import { LayerTracker } from '@/lib/scroll/LayerTracker';
 
 /**
  * One page, surface → bedrock. Everything here is server-rendered HTML; the only client code is
@@ -49,6 +51,8 @@ export default async function Page({ params }: PageProps<'/[locale]'>) {
       </span>
       <EvidenceDialogs metrics={content.metrics} />
       <EvidenceController />
+      <LayerTracker />
+      <StageLoader />
     </>
   );
 }

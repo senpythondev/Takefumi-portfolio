@@ -40,6 +40,10 @@ export async function LayerSection({ layer, index, ctx }: { layer: Layer; index:
           <RichText text={layer.lead} ctx={ctx} />
         </p>
       </header>
+      {/* Decorative 3D slot: same size in every tier (static shows a still), so loading 3D never shifts layout. */}
+      <div className="layer-stage" data-stage-slot={layer.id} aria-hidden="true">
+        <div className="layer-stage-still" />
+      </div>
       <div className="layer-body">
         {layer.blocks.map((block, i) => (
           <BlockView key={i} block={block} ctx={ctx} id={`${anchor}-b${i}`} />

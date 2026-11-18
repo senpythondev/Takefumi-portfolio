@@ -19,6 +19,48 @@
 
 ---
 
+## 2026-11-18 — Phase 3：中核の仕組み（ブランチ `feat/core-systems`）— マイルストーン 1（3-0〜3-3）
+
+**モデル：** Claude Opus 5.5。計画：Plan Mode で提出し、オーナーが承認（PLAN.md §3 Phase 3 の更新版）
+
+### やったこと
+| ID | 内容 |
+|---|---|
+| 3-0 | 依存の追加（three 0.187.0・@react-three/fiber 9.8.2・@react-three/drei 10.7.9・gsap 3.15.1・lenis 1.3.27・detect-gpu 5.0.70・@types/three）。**PM_REVIEW_03 §4 (b) を Turbopack で実測：3D基盤 192.9KB（gzip）で上限 250KB 以内 → 上限はそのまま、(a) は不要。** R3F の `<Canvas>` は内部で `extend(THREE)` を呼んで three.js 全体を取り込むため使わず、`createRoot`＋使うクラスだけの `extend`（`src/three/registry.ts`）にした。遅延チャンクを用途別に計る予算テスト `tests/budget/chunks.spec.ts` を追加 |
+| 3-1 | `src/lib/scroll/`：共有ストア（低頻度の状態は React に通知、毎フレームの進捗は `scrollLive` に直接書く）、IntersectionObserver による現在の地層（初期の島）、Lenis＋ScrollTrigger の演出バンドル（`gsap.ticker` 1本で Lenis と R3F の `advance` を駆動、ピン留めなし、タッチ端末は Lenis の `syncTouch` なし） |
+| 3-2 | `src/three/quality.ts`：detect-gpu（ベンチマークは prebuild で `public/gpu-benchmarks/` に複製し外部通信なし）、`?quality=` 上書き、**タッチ端末は最高でも medium で開始**、`PerformanceMonitor` で昇格・降格、**ソフトウェア描画（SwiftShader・llvmpipe など）は static** |
+| 3-3 | `src/three/{StageLoader,boot,Stage}.tsx`：単一の canvas、各地層の stage slot に drei `View track` で描画、**現在±1だけマウント**、マウント時に `compileAsync`、コンテキストロストで static へ。仮シーン11個（それぞれ別チャンク、テクスチャを持たせてメモリ解放を検証可能に）。stage slot はどのティアでも同じ大きさ（static では静止画の仮表示）なので、3D の読み込みでレイアウトが動かない |
+
+### 判断と理由
+| # | 判断 | 理由 |
+|---|---|---|
+| 1 | **3D の読み込みは「最初の操作」だけをきっかけにする**（計画の設計要点2の切り替え） | load 後のアイドルでも読み込む設計で Lighthouse（3D を強制）を測ると **TBT 中央値 1,115ms**（1,050〜2,137ms、Performance 72〜78）。予算 200ms の5倍のため、計画どおり操作のみに切り替えた。代償：地表の3Dは、訪問者がポインタを動かす・触る・スクロールするまで表示されない（LCP の文字には影響なし）。**PM に報告する事項** |
+| 2 | ソフトウェア描画の環境は static | detect-gpu は SwiftShader を「tier 1（FALLBACK）」と判定し、3D が動いてしまっていた。CPU で描画する環境では 3D は滑らかに動かないので、内容がすべて読める static にする |
+| 3 | 起動の各段階の間でメインスレッドを譲る（`scheduler.yield`／`setTimeout(0)`） | 品質判定・演出バンドル・3D基盤・シーンを別々の短いタスクにする |
+| 4 | 地層のレイアウトをグリッドにし、子要素は列幅に従わせる（`width: 100%`・`min-width: 0`） | auto マージンのままだとグリッド内で幅が「中身なり」になり、Genten の表がスマートフォンで画面外にはみ出した（E2E のはみ出し検査で検出） |
+| 5 | GPU のメモリ検査は「1往復後の状態」を基準にする | three.js は GPU に送った時点で数えるため、画面外の隣のシーンは最初は数に入らない。1往復後と3往復後で増えないこと＋常駐が最大3シーン分であることを検査する |
+
+### 計測値（代わりの計測：GPU なしの共有 VM）
+| 指標 | 予算 | 計測値 |
+|---|---|---|
+| 初期JS（gzip） | 180KB | 136.8KB（StageLoader・LayerTracker の追加で＋0.8KB） |
+| 遅延：品質判定 | — | 4.0KB |
+| 遅延：演出バンドル（Lenis＋GSAP） | — | 49.4KB |
+| **遅延：3D基盤** | **250KB** | **192.9KB** |
+| 遅延：各シーン（仮） | 250KB | 0.7〜0.8KB |
+| Lighthouse（既定＝この環境では static） | Perf 90／A11y 100／TBT 200ms | Perf 99／99、A11y・BP・SEO 100、LCP 0.911〜0.934秒、TBT 中央値 136／146ms、CLS 0 |
+| Lighthouse（3D を強制、アイドル時に読み込む旧設計） | — | TBT 中央値 1,115ms、Perf 72〜78、LCP・CLS は影響なし |
+| **3D 起動のコスト（操作をきっかけに読み込み、Playwright＋CPU スロットリング）** | — | **4倍：Long Task 4回、最長 203〜222ms、合計ブロック 約330ms／6倍：7回、最長 330〜370ms、合計 約620〜660ms**（high と low でほぼ同じ＝描画ではなく three.js の評価が主因） |
+| E2E | — | 62件合格（Canvas は常に1つ、static・reduced-motion では 3D・Lenis・GSAP を一切読まない、3往復で GPU リソースが増えない） |
+
+**サブエージェントの確認：**
+- `confidentiality-guard`：**PASS**。要オーナー確認だった WORKLOG 内のローカルの絶対パス（OS のユーザー名を含む）は、相対的な書き方に直した。
+- `perf-auditor`：**予算超過なし**。指摘3点：① 3D を有効にした状態の性能は Lighthouse では見えない → 上の「3D 起動のコスト」で計測済み、3-10 で繰り返し測れるテストにする ② 3D基盤とシーンの予算の数え方 → PM_REVIEW_01 D8 で確定済み（基盤は1回だけ数えて 250KB、シーンはシーン固有分だけ）。**CLAUDE.md §4 に「3D基盤チャンク 250KB」の行を追加することを提案する** ③ CLAUDE.md §3 は「各シーンは `next/dynamic` で遅延読み込み」だが、シーンは R3F の別の描画ルートの中にあり `next/dynamic`（ページ側の部品用）は使えないため、`React.lazy`＋`import()` で同じことをしている（シーンごとに別チャンク、予算テストで計測）。**CLAUDE.md §3 の文言との差分として PM に報告する。**
+
+**PM への報告事項：** 3D の読み込みが操作の直後に入るため、その直後の操作の応答（INP）に最長 200ms 前後（CPU 4倍）の遅れが出うる。3-10 で three.js の評価コストを下げる方法（チャンク分割の調整など）を調べる。実機での値は Phase 6 の iPhone 確認で測る。
+
+---
+
 ## 2026-11-18 — PM_REVIEW_03・04 への対応と Phase 2 のコミット
 
 **モデル：** Claude Opus 5.5（`confidentiality-guard` は定義どおり Sonnet）
@@ -225,7 +267,7 @@
 - なし（コード未着手）。
 
 ### ブロッカー（Phase 2 開始条件）
-- [ ] **`.claude/` がまだプロジェクト内にない**（`/home/oono/Oono-portfolio/.claude` が存在しない。ホームディレクトリ以下にも `confidentiality-guard.md` は見つからなかった）。隠しフォルダなので、ファイルマネージャーでは隠しファイルの表示（Ctrl+H）が必要。または `cp -r <始動パック>/.claude /home/oono/Oono-portfolio/`。
+- [ ] **`.claude/` がまだプロジェクト内にない**（プロジェクト直下に `.claude/` が存在せず、ホームディレクトリ以下にも `confidentiality-guard.md` は見つからなかった）。隠しフォルダなので、ファイルマネージャーでは隠しファイルの表示（Ctrl+H）が必要。または `cp -r <始動パック>/.claude <プロジェクト>/`。
 - [x] `git init` と最初のコミット（`e72037e`）
 - [x] D7・D8・D9 の差分報告（PM の回答待ち：D7 の45,000本と導入年、D8 のポストプロセス、D9 の守秘チェックの構成）
 

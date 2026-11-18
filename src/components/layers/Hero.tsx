@@ -13,6 +13,7 @@ export async function Hero({ layer, person, ctx, nextAnchor }: { layer: Layer; p
 
   return (
     <section id={anchor} className="layer layer-surface" data-layer={layer.id} aria-labelledby={`${anchor}-title`}>
+      <div className="hero-stage" data-stage-slot={layer.id} aria-hidden="true" />
       <header className="hero-header">
         <h1 id={`${anchor}-title`}>
           <span className="hero-name">{person.name}</span>
