@@ -34,3 +34,6 @@ docs/screenshots/
 # OS / editor / logs
 .DS_Store
 *.log
+
+# Font sources for `npm run fonts` (OFL fonts, several MB each; only the generated subsets are committed)
+.cache/

@@ -6,6 +6,7 @@ import { getContent } from '@/content';
 import { routing } from '@/i18n/routing';
 import { siteUrl } from '@/lib/site';
 import { base } from '@/styles/tokens';
+import { fontVariables } from '@/fonts/active';
 import '../globals.css';
 
 export const dynamicParams = false;
@@ -43,7 +44,7 @@ export default async function LocaleLayout({ children, params }: LayoutProps<'/[
   setRequestLocale(locale);
 
   return (
-    <html lang={locale}>
+    <html lang={locale} className={fontVariables}>
       <body>{children}</body>
     </html>
   );

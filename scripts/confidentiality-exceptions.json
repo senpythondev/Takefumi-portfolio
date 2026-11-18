@@ -23,5 +23,10 @@
     "check": "url",
     "match": "http://www.w3.org/2000/svg",
     "reason": "SVG の名前空間（SVG ファイルに必須の識別子）。リンクではない"
+  },
+  {
+    "check": "url",
+    "file": "src/fonts/LICENSES",
+    "reason": "フォントに同梱が義務づけられたライセンス文（SIL OFL 1.1）と著作権表示に含まれる URL。サイトのリンクではない"
   }
 ]

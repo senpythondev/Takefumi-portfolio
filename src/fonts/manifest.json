@@ -1,0 +1,222 @@
+{
+  "display": "swap",
+  "active": "a",
+  "sets": {
+    "a": {
+      "label": "A 編集的：見出し Shippori Mincho B1／本文 IBM Plex Sans JP／数字 IBM Plex Mono",
+      "faces": [
+        {
+          "file": "heading-600",
+          "role": "heading",
+          "weight": 600,
+          "source": "shipporiminchob1/ShipporiMinchoB1-SemiBold.ttf",
+          "licence": "shipporiminchob1",
+          "sourceSha256": "2d0dfceb662d522c9dd643f6822e9af2def6b0a0186ed5cb303463d2ed8f5c06",
+          "bytes": 125088,
+          "glyphs": 971,
+          "covered": " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~©–—…→、。〜あいうえおかがきくけこごさしじすずせそただっつづてでとなにのはへべほまみむめもやよらりるれわをァアィイウエォオガキクグケコサシジスセタダチッツテデトドナニネバパビピフブプベペボポマムメモャュョラリルレロワン・ー一上不中主予事人今仕付件企会体作使価保信修値停備働像先入全公典内再処出切初刷則前割労効動務募勤化単原参可各合同向告品員問善回因固国在地均型執基報場境外大字守定実容対導就層岩己常平年広度庫式当役後応怠情成戻所手打技投押担拠持挿掘接掲援支改数整文断新方施日時書月有期本条果査根桁案検業概構模次止正歴段比法活流深添済測点物特率現理環生用申画界番発登監盤直短研確示秒秘移種稼稿積究第筆答算管系約索組経結絡統続維線縮績美者自英融行術表補要見規視覧触計記設許診証評認語誤読課調象資質起足転較載込送途通速連運達部野量金録閉開間限階隔際雄面順題類験（）＋／：",
+          "missing": ""
+        },
+        {
+          "file": "sans-400",
+          "role": "sans",
+          "weight": 400,
+          "source": "ibmplexsansjp/IBMPlexSansJP-Regular.ttf",
+          "licence": "ibmplexsansjp",
+          "rename": {
+            "family": "GroundTruth Sans JP",
+            "style": "Regular",
+            "postscript": "GroundTruthSansJP-Regular"
+          },
+          "sourceSha256": "372f8bba95f386856ae435dc0e69f08db1cac29bed513d99171a0ae2d307ba2a",
+          "bytes": 127184,
+          "glyphs": 1632,
+          "covered": " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~¥§©±·×÷–—―‘’“”‥…←↑→↓─○　、。「」『』【】〜あいうえおかがきくけげこごさしじすずせそただちっつづてでとどなにのはばひびふへべほぼまみむめもやよらりるれろわをんァアィイウェエォオカガキクグケコサザシジスズセゼタダチッツテデトドナニネハバパビピフブプヘベペボポマムメモャュユョラリルレロワン・ー一万上下不両中主了予事二互人今仕付令以件企休会体作使供依価係保信修個値停備働像先入全公具典内円再処出分切列初判別到制刷刻則削前割力加労効動務募勤化卒単原参収取受可台号各合同名向告和品員問善営回因固国在地均型域執基堆報場境増売変外大失始子字存学宅守安完定実客害家容審対将導小就層岩崩工差己常平年庁広度庫式張強当形役後従得心必応怠急性情態成戻所手打技投択押担拠拡括持挿排掘採接推掲提換援携撃支改攻教数整文断新方施既日旧時暗更書替最月有期未本札条来析果枠査株根桁案検業概構模権横機次止正歩歴段毎比気汎決法注洗活流消涯深添済減渡測演潜点無照版物特状独率現理環生産用由申画界番異発登的監盤目直相瞬知短研確示科秒秘移程税種稼稿積究立第筆答算管築系約納索細組経結絡統継続維緊総線縮績置署美群義者育能自英荷融行術表装裏補製複要見規視覧解触言計託記設許診証評該詳認語誤説読課調談警象販貫資質起超足転軸較載込返追送透途通速造連週進遂遅運過達違適選避部配重野量金録閉開間関限除階隔際隠雄集離電非面項順領題額類顧飛飽験高！％（）＋，－．／：；＝？［］～",
+          "missing": "↗↺≈✓"
+        },
+        {
+          "file": "sans-600",
+          "role": "sans",
+          "weight": 600,
+          "source": "ibmplexsansjp/IBMPlexSansJP-SemiBold.ttf",
+          "licence": "ibmplexsansjp",
+          "rename": {
+            "family": "GroundTruth Sans JP",
+            "style": "SemiBold",
+            "postscript": "GroundTruthSansJP-SemiBold"
+          },
+          "sourceSha256": "5985c29d2d5d444072915cf5874dc80e0a3f5fadbf14a9e3013a03a8fe6d7ff5",
+          "bytes": 132772,
+          "glyphs": 1632,
+          "covered": " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~¥§©±·×÷–—―‘’“”‥…←↑→↓─○　、。「」『』【】〜あいうえおかがきくけげこごさしじすずせそただちっつづてでとどなにのはばひびふへべほぼまみむめもやよらりるれろわをんァアィイウェエォオカガキクグケコサザシジスズセゼタダチッツテデトドナニネハバパビピフブプヘベペボポマムメモャュユョラリルレロワン・ー一万上下不両中主了予事二互人今仕付令以件企休会体作使供依価係保信修個値停備働像先入全公具典内円再処出分切列初判別到制刷刻則削前割力加労効動務募勤化卒単原参収取受可台号各合同名向告和品員問善営回因固国在地均型域執基堆報場境増売変外大失始子字存学宅守安完定実客害家容審対将導小就層岩崩工差己常平年庁広度庫式張強当形役後従得心必応怠急性情態成戻所手打技投択押担拠拡括持挿排掘採接推掲提換援携撃支改攻教数整文断新方施既日旧時暗更書替最月有期未本札条来析果枠査株根桁案検業概構模権横機次止正歩歴段毎比気汎決法注洗活流消涯深添済減渡測演潜点無照版物特状独率現理環生産用由申画界番異発登的監盤目直相瞬知短研確示科秒秘移程税種稼稿積究立第筆答算管築系約納索細組経結絡統継続維緊総線縮績置署美群義者育能自英荷融行術表装裏補製複要見規視覧解触言計託記設許診証評該詳認語誤説読課調談警象販貫資質起超足転軸較載込返追送透途通速造連週進遂遅運過達違適選避部配重野量金録閉開間関限除階隔際隠雄集離電非面項順領題額類顧飛飽験高！％（）＋，－．／：；＝？［］～",
+          "missing": "↗↺≈✓"
+        },
+        {
+          "file": "mono-400",
+          "role": "mono",
+          "weight": 400,
+          "source": "ibmplexmono/IBMPlexMono-Regular.ttf",
+          "licence": "ibmplexmono",
+          "rename": {
+            "family": "GroundTruth Mono",
+            "style": "Regular",
+            "postscript": "GroundTruthMono-Regular"
+          },
+          "sourceSha256": "6a3412f058c7d8dfd9170c41e85ade48e5156ecb89356110ca57a0a27734af46",
+          "bytes": 7524,
+          "glyphs": 185,
+          "covered": " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~¥§©±·×÷–—‘’“”…←↑→↓↗↺≈─✓",
+          "missing": "―‥○"
+        },
+        {
+          "file": "mono-600",
+          "role": "mono",
+          "weight": 600,
+          "source": "ibmplexmono/IBMPlexMono-SemiBold.ttf",
+          "licence": "ibmplexmono",
+          "rename": {
+            "family": "GroundTruth Mono",
+            "style": "SemiBold",
+            "postscript": "GroundTruthMono-SemiBold"
+          },
+          "sourceSha256": "d3c38e55c78f5b0f28009fddba4834ec503278936a5986032424c9bd2d23aa46",
+          "bytes": 7476,
+          "glyphs": 185,
+          "covered": " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~¥§©±·×÷–—‘’“”…←↑→↓↗↺≈─✓",
+          "missing": "―‥○"
+        }
+      ]
+    },
+    "b": {
+      "label": "B 工学的：IBM Plex Sans JP（見出しは太字）／数字 IBM Plex Mono",
+      "faces": [
+        {
+          "file": "sans-400",
+          "role": "sans",
+          "weight": 400,
+          "source": "ibmplexsansjp/IBMPlexSansJP-Regular.ttf",
+          "licence": "ibmplexsansjp",
+          "rename": {
+            "family": "GroundTruth Sans JP",
+            "style": "Regular",
+            "postscript": "GroundTruthSansJP-Regular"
+          },
+          "sourceSha256": "372f8bba95f386856ae435dc0e69f08db1cac29bed513d99171a0ae2d307ba2a",
+          "bytes": 127184,
+          "glyphs": 1632,
+          "covered": " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~¥§©±·×÷–—―‘’“”‥…←↑→↓─○　、。「」『』【】〜あいうえおかがきくけげこごさしじすずせそただちっつづてでとどなにのはばひびふへべほぼまみむめもやよらりるれろわをんァアィイウェエォオカガキクグケコサザシジスズセゼタダチッツテデトドナニネハバパビピフブプヘベペボポマムメモャュユョラリルレロワン・ー一万上下不両中主了予事二互人今仕付令以件企休会体作使供依価係保信修個値停備働像先入全公具典内円再処出分切列初判別到制刷刻則削前割力加労効動務募勤化卒単原参収取受可台号各合同名向告和品員問善営回因固国在地均型域執基堆報場境増売変外大失始子字存学宅守安完定実客害家容審対将導小就層岩崩工差己常平年庁広度庫式張強当形役後従得心必応怠急性情態成戻所手打技投択押担拠拡括持挿排掘採接推掲提換援携撃支改攻教数整文断新方施既日旧時暗更書替最月有期未本札条来析果枠査株根桁案検業概構模権横機次止正歩歴段毎比気汎決法注洗活流消涯深添済減渡測演潜点無照版物特状独率現理環生産用由申画界番異発登的監盤目直相瞬知短研確示科秒秘移程税種稼稿積究立第筆答算管築系約納索細組経結絡統継続維緊総線縮績置署美群義者育能自英荷融行術表装裏補製複要見規視覧解触言計託記設許診証評該詳認語誤説読課調談警象販貫資質起超足転軸較載込返追送透途通速造連週進遂遅運過達違適選避部配重野量金録閉開間関限除階隔際隠雄集離電非面項順領題額類顧飛飽験高！％（）＋，－．／：；＝？［］～",
+          "missing": "↗↺≈✓"
+        },
+        {
+          "file": "sans-600",
+          "role": "sans",
+          "weight": 600,
+          "source": "ibmplexsansjp/IBMPlexSansJP-SemiBold.ttf",
+          "licence": "ibmplexsansjp",
+          "rename": {
+            "family": "GroundTruth Sans JP",
+            "style": "SemiBold",
+            "postscript": "GroundTruthSansJP-SemiBold"
+          },
+          "sourceSha256": "5985c29d2d5d444072915cf5874dc80e0a3f5fadbf14a9e3013a03a8fe6d7ff5",
+          "bytes": 132772,
+          "glyphs": 1632,
+          "covered": " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~¥§©±·×÷–—―‘’“”‥…←↑→↓─○　、。「」『』【】〜あいうえおかがきくけげこごさしじすずせそただちっつづてでとどなにのはばひびふへべほぼまみむめもやよらりるれろわをんァアィイウェエォオカガキクグケコサザシジスズセゼタダチッツテデトドナニネハバパビピフブプヘベペボポマムメモャュユョラリルレロワン・ー一万上下不両中主了予事二互人今仕付令以件企休会体作使供依価係保信修個値停備働像先入全公具典内円再処出分切列初判別到制刷刻則削前割力加労効動務募勤化卒単原参収取受可台号各合同名向告和品員問善営回因固国在地均型域執基堆報場境増売変外大失始子字存学宅守安完定実客害家容審対将導小就層岩崩工差己常平年庁広度庫式張強当形役後従得心必応怠急性情態成戻所手打技投択押担拠拡括持挿排掘採接推掲提換援携撃支改攻教数整文断新方施既日旧時暗更書替最月有期未本札条来析果枠査株根桁案検業概構模権横機次止正歩歴段毎比気汎決法注洗活流消涯深添済減渡測演潜点無照版物特状独率現理環生産用由申画界番異発登的監盤目直相瞬知短研確示科秒秘移程税種稼稿積究立第筆答算管築系約納索細組経結絡統継続維緊総線縮績置署美群義者育能自英荷融行術表装裏補製複要見規視覧解触言計託記設許診証評該詳認語誤説読課調談警象販貫資質起超足転軸較載込返追送透途通速造連週進遂遅運過達違適選避部配重野量金録閉開間関限除階隔際隠雄集離電非面項順領題額類顧飛飽験高！％（）＋，－．／：；＝？［］～",
+          "missing": "↗↺≈✓"
+        },
+        {
+          "file": "sans-700",
+          "role": "sans",
+          "weight": 700,
+          "source": "ibmplexsansjp/IBMPlexSansJP-Bold.ttf",
+          "licence": "ibmplexsansjp",
+          "rename": {
+            "family": "GroundTruth Sans JP",
+            "style": "Bold",
+            "postscript": "GroundTruthSansJP-Bold"
+          },
+          "sourceSha256": "bd8a98b9b55c9ea3f0fa1ed094c15981788cc9a41b0357f4453014fd1d44da19",
+          "bytes": 129324,
+          "glyphs": 1632,
+          "covered": " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~¥§©±·×÷–—―‘’“”‥…←↑→↓─○　、。「」『』【】〜あいうえおかがきくけげこごさしじすずせそただちっつづてでとどなにのはばひびふへべほぼまみむめもやよらりるれろわをんァアィイウェエォオカガキクグケコサザシジスズセゼタダチッツテデトドナニネハバパビピフブプヘベペボポマムメモャュユョラリルレロワン・ー一万上下不両中主了予事二互人今仕付令以件企休会体作使供依価係保信修個値停備働像先入全公具典内円再処出分切列初判別到制刷刻則削前割力加労効動務募勤化卒単原参収取受可台号各合同名向告和品員問善営回因固国在地均型域執基堆報場境増売変外大失始子字存学宅守安完定実客害家容審対将導小就層岩崩工差己常平年庁広度庫式張強当形役後従得心必応怠急性情態成戻所手打技投択押担拠拡括持挿排掘採接推掲提換援携撃支改攻教数整文断新方施既日旧時暗更書替最月有期未本札条来析果枠査株根桁案検業概構模権横機次止正歩歴段毎比気汎決法注洗活流消涯深添済減渡測演潜点無照版物特状独率現理環生産用由申画界番異発登的監盤目直相瞬知短研確示科秒秘移程税種稼稿積究立第筆答算管築系約納索細組経結絡統継続維緊総線縮績置署美群義者育能自英荷融行術表装裏補製複要見規視覧解触言計託記設許診証評該詳認語誤説読課調談警象販貫資質起超足転軸較載込返追送透途通速造連週進遂遅運過達違適選避部配重野量金録閉開間関限除階隔際隠雄集離電非面項順領題額類顧飛飽験高！％（）＋，－．／：；＝？［］～",
+          "missing": "↗↺≈✓"
+        },
+        {
+          "file": "mono-400",
+          "role": "mono",
+          "weight": 400,
+          "source": "ibmplexmono/IBMPlexMono-Regular.ttf",
+          "licence": "ibmplexmono",
+          "rename": {
+            "family": "GroundTruth Mono",
+            "style": "Regular",
+            "postscript": "GroundTruthMono-Regular"
+          },
+          "sourceSha256": "6a3412f058c7d8dfd9170c41e85ade48e5156ecb89356110ca57a0a27734af46",
+          "bytes": 7524,
+          "glyphs": 185,
+          "covered": " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~¥§©±·×÷–—‘’“”…←↑→↓↗↺≈─✓",
+          "missing": "―‥○"
+        },
+        {
+          "file": "mono-600",
+          "role": "mono",
+          "weight": 600,
+          "source": "ibmplexmono/IBMPlexMono-SemiBold.ttf",
+          "licence": "ibmplexmono",
+          "rename": {
+            "family": "GroundTruth Mono",
+            "style": "SemiBold",
+            "postscript": "GroundTruthMono-SemiBold"
+          },
+          "sourceSha256": "d3c38e55c78f5b0f28009fddba4834ec503278936a5986032424c9bd2d23aa46",
+          "bytes": 7476,
+          "glyphs": 185,
+          "covered": " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~¥§©±·×÷–—‘’“”…←↑→↓↗↺≈─✓",
+          "missing": "―‥○"
+        }
+      ]
+    },
+    "c": {
+      "label": "C 読みやすさ重視：見出し・本文 BIZ UDPGothic／数字 JetBrains Mono",
+      "faces": [
+        {
+          "file": "sans-400",
+          "role": "sans",
+          "weight": 400,
+          "source": "bizudpgothic/BIZUDPGothic-Regular.ttf",
+          "licence": "bizudpgothic",
+          "sourceSha256": "258d7156c165f2ff774b6efee637c22c3b950de0d8a10e501137061bc8085d01",
+          "bytes": 162040,
+          "glyphs": 1833,
+          "covered": " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~¥§©±·×÷–—―‘’“”‥…←↑→↓↗≈─○✓　、。「」『』【】〜あいうえおかがきくけげこごさしじすずせそただちっつづてでとどなにのはばひびふへべほぼまみむめもやよらりるれろわをんァアィイウェエォオカガキクグケコサザシジスズセゼタダチッツテデトドナニネハバパビピフブプヘベペボポマムメモャュユョラリルレロワン・ー一万上下不両中主了予事二互人今仕付令以件企休会体作使供依価係保信修個値停備働像先入全公具典内円再処出分切列初判別到制刷刻則削前割力加労効動務募勤化卒単原参収取受可台号各合同名向告和品員問善営回因固国在地均型域執基堆報場境増売変外大失始子字存学宅守安完定実客害家容審対将導小就層岩崩工差己常平年庁広度庫式張強当形役後従得心必応怠急性情態成戻所手打技投択押担拠拡括持挿排掘採接推掲提換援携撃支改攻教数整文断新方施既日旧時暗更書替最月有期未本札条来析果枠査株根桁案検業概構模権横機次止正歩歴段毎比気汎決法注洗活流消涯深添済減渡測演潜点無照版物特状独率現理環生産用由申画界番異発登的監盤目直相瞬知短研確示科秒秘移程税種稼稿積究立第筆答算管築系約納索細組経結絡統継続維緊総線縮績置署美群義者育能自英荷融行術表装裏補製複要見規視覧解触言計託記設許診証評該詳認語誤説読課調談警象販貫資質起超足転軸較載込返追送透途通速造連週進遂遅運過達違適選避部配重野量金録閉開間関限除階隔際隠雄集離電非面項順領題額類顧飛飽験高！％（）＋，－．／：；＝？［］～",
+          "missing": "↺"
+        },
+        {
+          "file": "sans-700",
+          "role": "sans",
+          "weight": 700,
+          "source": "bizudpgothic/BIZUDPGothic-Bold.ttf",
+          "licence": "bizudpgothic",
+          "sourceSha256": "30eba52fc837e8b62c97d4b82e6706583149fb7294e3712dd71a655eaea80a90",
+          "bytes": 160376,
+          "glyphs": 1833,
+          "covered": " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~¥§©±·×÷–—―‘’“”‥…←↑→↓↗≈─○✓　、。「」『』【】〜あいうえおかがきくけげこごさしじすずせそただちっつづてでとどなにのはばひびふへべほぼまみむめもやよらりるれろわをんァアィイウェエォオカガキクグケコサザシジスズセゼタダチッツテデトドナニネハバパビピフブプヘベペボポマムメモャュユョラリルレロワン・ー一万上下不両中主了予事二互人今仕付令以件企休会体作使供依価係保信修個値停備働像先入全公具典内円再処出分切列初判別到制刷刻則削前割力加労効動務募勤化卒単原参収取受可台号各合同名向告和品員問善営回因固国在地均型域執基堆報場境増売変外大失始子字存学宅守安完定実客害家容審対将導小就層岩崩工差己常平年庁広度庫式張強当形役後従得心必応怠急性情態成戻所手打技投択押担拠拡括持挿排掘採接推掲提換援携撃支改攻教数整文断新方施既日旧時暗更書替最月有期未本札条来析果枠査株根桁案検業概構模権横機次止正歩歴段毎比気汎決法注洗活流消涯深添済減渡測演潜点無照版物特状独率現理環生産用由申画界番異発登的監盤目直相瞬知短研確示科秒秘移程税種稼稿積究立第筆答算管築系約納索細組経結絡統継続維緊総線縮績置署美群義者育能自英荷融行術表装裏補製複要見規視覧解触言計託記設許診証評該詳認語誤説読課調談警象販貫資質起超足転軸較載込返追送透途通速造連週進遂遅運過達違適選避部配重野量金録閉開間関限除階隔際隠雄集離電非面項順領題額類顧飛飽験高！％（）＋，－．／：；＝？［］～",
+          "missing": "↺"
+        },
+        {
+          "file": "mono-var",
+          "role": "mono",
+          "weight": 0,
+          "source": "jetbrainsmono/JetBrainsMono[wght].ttf",
+          "licence": "jetbrainsmono",
+          "sourceSha256": "48715a42ec242c21e9f02692891e147d022299a52e48d5e413e1a942193ffeda",
+          "bytes": 34972,
+          "glyphs": 294,
+          "covered": " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~¥§©±·×÷–—‘’“”…←↑→↓↗≈─",
+          "missing": "―‥↺○✓"
+        }
+      ]
+    }
+  }
+}

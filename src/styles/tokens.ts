@@ -62,10 +62,18 @@ export const city = {
   fog: base.ground,
 } as const;
 
-/** Font stacks. Phase 4-2 puts the self-hosted subset fonts in front of these system fallbacks. */
+/**
+ * Font stacks. The self-hosted subset faces (src/fonts/active.ts, via next/font: --font-face-*) come
+ * first; each var() has a fallback so the stack stays valid where they are not defined.
+ * - Japanese in the mono stack falls through to the sans face, never to an OS-wide fallback search
+ *   (that search made /ja's layout 2.5× /en's on CI — PM_REVIEW_07 §2-3).
+ * - The sans stack lists the mono face after the sans face for symbols the Japanese face lacks (≈ ✓ ↺).
+ */
+const systemJa = ["'Hiragino Sans'", "'Hiragino Kaku Gothic ProN'", "'Noto Sans JP'", "'Noto Sans CJK JP'", "'Yu Gothic UI'", "'Meiryo'"];
 export const font = {
-  sans: ["'Hiragino Sans'", "'Hiragino Kaku Gothic ProN'", "'Noto Sans JP'", "'Noto Sans CJK JP'", "'Yu Gothic UI'", "'Meiryo'", 'system-ui', 'sans-serif'],
-  mono: ['ui-monospace', "'SFMono-Regular'", "'Menlo'", "'Consolas'", "'Hiragino Sans'", "'Noto Sans JP'", "'Noto Sans CJK JP'", "'Yu Gothic UI'", 'sans-serif'],
+  sans: ['var(--font-face-sans, system-ui)', 'var(--font-face-mono, system-ui)', ...systemJa, 'system-ui', 'sans-serif'],
+  heading: ['var(--font-face-heading, var(--font-face-sans, system-ui))', 'var(--font-face-sans, system-ui)', ...systemJa, 'system-ui', 'sans-serif'],
+  mono: ['var(--font-face-mono, ui-monospace)', 'ui-monospace', "'SFMono-Regular'", "'Menlo'", "'Consolas'", 'var(--font-face-sans, system-ui)', ...systemJa, 'monospace'],
 } as const;
 
 export const space = {

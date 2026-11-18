@@ -25,8 +25,9 @@
   --color-city-building-lit: #667380;
   --color-city-pulse: #e26943;
   --color-city-fog: #13110f;
-  --font-sans: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', 'Noto Sans CJK JP', 'Yu Gothic UI', 'Meiryo', system-ui, sans-serif;
-  --font-mono: ui-monospace, 'SFMono-Regular', 'Menlo', 'Consolas', 'Hiragino Sans', 'Noto Sans JP', 'Noto Sans CJK JP', 'Yu Gothic UI', sans-serif;
+  --font-sans: var(--font-face-sans, system-ui), var(--font-face-mono, system-ui), 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', 'Noto Sans CJK JP', 'Yu Gothic UI', 'Meiryo', system-ui, sans-serif;
+  --font-heading: var(--font-face-heading, var(--font-face-sans, system-ui)), var(--font-face-sans, system-ui), 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', 'Noto Sans CJK JP', 'Yu Gothic UI', 'Meiryo', system-ui, sans-serif;
+  --font-mono: var(--font-face-mono, ui-monospace), ui-monospace, 'SFMono-Regular', 'Menlo', 'Consolas', var(--font-face-sans, system-ui), 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', 'Noto Sans CJK JP', 'Yu Gothic UI', 'Meiryo', monospace;
   --ease-strata: cubic-bezier(0.2, 0.7, 0.2, 1);
   --ease-drill: cubic-bezier(0.6, 0, 0.4, 1);
 }

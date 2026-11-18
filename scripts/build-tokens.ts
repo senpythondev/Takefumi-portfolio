@@ -63,6 +63,7 @@ ${Object.entries(colours)
   .map(([k, v]) => `  --color-${k}: ${v};`)
   .join('\n')}
   --font-sans: ${font.sans.join(', ')};
+  --font-heading: ${font.heading.join(', ')};
   --font-mono: ${font.mono.join(', ')};
 ${Object.entries(motion.ease)
   .map(([k, v]) => `  --ease-${k}: ${v};`)
@@ -119,6 +120,7 @@ ${Object.entries(city)
 
 ## 書体・余白・動き
 - 本文：\`${font.sans.join(', ')}\`
+- 見出し：\`${font.heading.join(', ')}\`
 - 等幅：\`${font.mono.join(', ')}\`
 - 余白：gutter \`${space.gutter}\`、本文の幅 \`${space.measure}\`
 - イージング：${Object.entries(motion.ease)

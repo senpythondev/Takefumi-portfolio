@@ -5,6 +5,15 @@
 
 :root {
   color-scheme: dark;
+  /* The subset faces carry only the weights we use: never fake bold or italic from them. */
+  font-synthesis: none;
+}
+
+h1,
+h2,
+h3,
+.hero-copy {
+  font-family: var(--font-heading);
 }
 
 html {

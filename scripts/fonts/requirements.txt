@@ -1,0 +1,3 @@
+# Font tooling for `npm run fonts` only (never part of the site or the build). See docs/FONTS.md.
+fonttools==4.68.0
+brotli==1.2.1
