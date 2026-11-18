@@ -66,7 +66,10 @@ test.describe('3D stage', () => {
     await page.mouse.move(20, 20);
     await expect(page.locator('html')).toHaveAttribute('data-stage', 'live', { timeout: 15_000 });
     const cdp = await page.context().newCDPSession(page);
-    await cdp.send('Emulation.setCPUThrottlingRate', { rate: 6 });
+    // 20×: this test proves the degrade path, so the slowdown must be unambiguous on any machine.
+    // (At 6× a fast runner may legitimately hold ≥ 40 fps and stay at medium — that case is the
+    // "25 fps or more" half of PM_REVIEW_03 §8, measured by `npm run perf`.)
+    await cdp.send('Emulation.setCPUThrottlingRate', { rate: 20 });
     // PerformanceMonitor lowers the tier step by step; at 'static' the canvas is disposed.
     await expect(page.locator('canvas')).toHaveCount(0, { timeout: 90_000 });
     await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });

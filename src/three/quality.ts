@@ -54,3 +54,32 @@ export function stepQuality(current: Quality, direction: 1 | -1): Quality {
   const i = QUALITY_ORDER.indexOf(current) + direction;
   return QUALITY_ORDER[Math.min(QUALITY_ORDER.length - 1, Math.max(0, i))] as Quality;
 }
+
+/**
+ * Turns PerformanceMonitor's incline/decline signals into tier changes.
+ *
+ * drei's own `flipflops`/`onFallback` is not used: it counts every signal, including inclines that
+ * cannot apply at the top tier, so a smooth desktop at 'high' reached the fallback after four
+ * windows (~10 s) and was demoted to 'low' (found in PM_REVIEW_06 3-10). Here only applied changes
+ * count, and only a change of direction counts as oscillation. Once the tier has reversed
+ * `maxReversals` times it stops climbing; declines always apply, so sustained load still reaches
+ * 'static'.
+ */
+export function createQualityGovernor(initial: Quality, maxReversals = 2) {
+  let current = initial;
+  let lastDirection: 0 | 1 | -1 = 0;
+  let reversals = 0;
+  return {
+    get: (): Quality => current,
+    /** The new tier, or null when the signal changes nothing. */
+    step(direction: 1 | -1): Quality | null {
+      if (direction === 1 && reversals >= maxReversals) return null;
+      const next = stepQuality(current, direction);
+      if (next === current) return null;
+      if (lastDirection !== 0 && lastDirection !== direction) reversals += 1;
+      lastDirection = direction;
+      current = next;
+      return next;
+    },
+  };
+}

@@ -9,10 +9,10 @@
  */
 import { advance, createRoot, events, useThree, type ReconcilerRoot } from '@react-three/fiber';
 import { PerformanceMonitor, PerspectiveCamera, View } from '@react-three/drei';
-import { Suspense, useEffect, useMemo, useRef, useState, useSyncExternalStore, type RefObject } from 'react';
+import { Suspense, useEffect, useMemo, useState, useSyncExternalStore, type RefObject } from 'react';
 import { scrollStore, type Quality } from '@/lib/scroll/store';
 import type { FrameListener } from '@/lib/scroll/effects';
-import { DPR_CAP, stepQuality } from './quality';
+import { DPR_CAP, createQualityGovernor } from './quality';
 import { SCENES } from './scenes';
 import { CoreView } from './core/CoreView';
 import './registry';
@@ -95,19 +95,17 @@ function Scenes({ slots, quality, mounted }: { slots: Slot[]; quality: LiveQuali
 }
 
 function StageTree({ slots, core, initial, adaptive, onQuality }: { slots: Slot[]; core: RefObject<HTMLElement> | null; initial: LiveQuality; adaptive: boolean; onQuality: (q: Quality) => void }) {
-  const quality = useRef<Quality>(initial);
+  const [governor] = useState(() => createQualityGovernor(initial));
   const live = useSyncExternalStore(scrollStore.subscribe, () => scrollStore.get().quality, () => initial);
   const ids = useMemo(() => slots.map((s) => s.id), [slots]);
   const mounted = useStagedMount(4);
   const change = (direction: 1 | -1) => {
-    const next = stepQuality(quality.current, direction);
-    if (next === quality.current) return;
-    quality.current = next;
-    onQuality(next);
+    const next = governor.step(direction);
+    if (next) onQuality(next);
   };
   return (
     <>
-      {adaptive ? <PerformanceMonitor flipflops={3} onIncline={() => change(1)} onDecline={() => change(-1)} onFallback={() => onQuality('low')} /> : null}
+      {adaptive ? <PerformanceMonitor onIncline={() => change(1)} onDecline={() => change(-1)} /> : null}
       {live !== 'static' && live !== 'pending' ? <Scenes slots={slots} quality={live} mounted={mounted} /> : null}
       {core && live !== 'static' && live !== 'pending' && mounted >= 4 ? <CoreView track={core} ids={ids} quality={live} /> : null}
     </>

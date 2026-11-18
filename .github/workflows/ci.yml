@@ -53,6 +53,7 @@ jobs:
         run: npm run test:e2e -- --grep-invert @visual
 
       - name: Safari behaviour (Playwright WebKit, iPhone viewport)
+        if: ${{ !cancelled() }}
         run: npx playwright install --with-deps webkit && npx playwright test --project=webkit
 
       - name: Initial-JS budget
