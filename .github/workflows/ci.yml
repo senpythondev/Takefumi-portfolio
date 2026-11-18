@@ -56,9 +56,12 @@ jobs:
         run: npx playwright install --with-deps webkit && npx playwright test --project=webkit
 
       - name: Initial-JS budget
+        # Measurements still run when an earlier check fails, so every result is reported.
+        if: ${{ !cancelled() }}
         run: npm run budget
 
       - name: Lighthouse CI (mobile, budgets from CLAUDE.md §4)
+        if: ${{ !cancelled() }}
         run: npm run lhci
 
       - name: Upload reports

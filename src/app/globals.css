@@ -240,6 +240,12 @@ html[data-stage='live'] .core-ring {
 }
 
 .site-brand {
+  /* The only flexible item in the header: it truncates instead of pushing the row past the screen
+     (WebKit measured /en 7px too wide at 393px with the runner's fallback fonts). */
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   color: var(--color-ink);
   font-weight: 600;
   text-decoration: none;
@@ -248,8 +254,23 @@ html[data-stage='live'] .core-ring {
 
 .site-actions {
   display: flex;
+  flex: none;
   gap: 0.5rem;
   margin-left: auto;
+}
+
+@media (max-width: 420px) {
+  .site-header {
+    gap: 0.6rem;
+  }
+
+  .site-actions {
+    gap: 0.35rem;
+  }
+
+  .site-actions a {
+    padding: 0.25rem 0.6rem;
+  }
 }
 
 .site-actions a {
