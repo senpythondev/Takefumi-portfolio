@@ -5,6 +5,22 @@ import { useEffect } from 'react';
 const TRIGGERS = ['pointerdown', 'pointermove', 'wheel', 'touchstart', 'keydown', 'scroll'] as const;
 
 /**
+ * Runs `fn` only after the browser has painted its response to the current interaction
+ * (PM_REVIEW_07 §3-1): the frame callback runs just before that paint, and the task it schedules
+ * runs after it, so loading and evaluating the 3D code can never delay the visitor's first
+ * interaction (INP). Priority 'user-visible', not 'background': measured (mobile, CPU 4×, warm
+ * cache) both give a first-interaction INP of 16–32 ms, but 'background' showed the 3D ~300 ms
+ * later (803–917 ms vs 574–600 ms after the tap) because other page work kept starving it.
+ */
+function afterNextPaint(fn: () => void): void {
+  requestAnimationFrame(() => {
+    const scheduler = (globalThis as { scheduler?: { postTask?: (cb: () => void, o: { priority: string }) => Promise<unknown> } }).scheduler;
+    if (scheduler?.postTask) void scheduler.postTask(fn, { priority: 'user-visible' });
+    else setTimeout(fn, 0);
+  });
+}
+
+/**
  * Decides whether and when to load the 3D stage. Part of the initial bundle, so it stays tiny:
  * it imports nothing from three.js / R3F / drei.
  *
@@ -31,7 +47,7 @@ export function StageLoader() {
       cleanup();
       // Budget tests split JS into initial / 3D at this mark (tests/budget/*.spec.ts).
       performance.mark('stage:start');
-      void import('./boot').then(({ boot }) => boot(forced));
+      afterNextPaint(() => void import('./boot').then(({ boot }) => boot(forced)));
     }
     for (const t of TRIGGERS) window.addEventListener(t, start, { once: true, passive: true });
     return cleanup;

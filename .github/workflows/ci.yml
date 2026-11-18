@@ -51,15 +51,21 @@ jobs:
       - name: E2E (desktop / mobile / reduced-motion)
         # Visual baselines are machine-specific until Phase 4 self-hosts fonts: checked locally only.
         run: npm run test:e2e -- --grep-invert @visual
+        env:
+          PW_REPORT: e2e
 
       - name: Safari behaviour (Playwright WebKit, iPhone viewport)
         if: ${{ !cancelled() }}
         run: npx playwright install --with-deps webkit && npx playwright test --project=webkit
+        env:
+          PW_REPORT: webkit
 
       - name: Initial-JS budget
         # Measurements still run when an earlier check fails, so every result is reported.
         if: ${{ !cancelled() }}
         run: npm run budget
+        env:
+          PW_REPORT: budget
 
       - name: Lighthouse CI (mobile, budgets from CLAUDE.md §4)
         if: ${{ !cancelled() }}
@@ -69,6 +75,8 @@ jobs:
         if: ${{ !cancelled() }}
         continue-on-error: true
         run: npx playwright test --project=perf tests/perf/ja-layout.spec.ts
+        env:
+          PW_REPORT: ja-layout
 
       - name: Upload reports
         if: always()

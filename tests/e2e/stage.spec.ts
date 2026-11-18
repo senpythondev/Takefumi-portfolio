@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { STAGE_LIVE_TIMEOUT } from './timeouts';
 
 type Info = { geometries: number; textures: number; programs: number; calls: number };
 
@@ -25,7 +26,7 @@ test.describe('3D stage', () => {
     page.on('pageerror', (e) => errors.push(e.message));
     await page.goto('/ja?quality=high&debug=1');
     await page.mouse.move(20, 20); // the stage loads on the first interaction
-    await expect(page.locator('html')).toHaveAttribute('data-stage', 'live', { timeout: 15_000 });
+    await expect(page.locator('html')).toHaveAttribute('data-stage', 'live', { timeout: STAGE_LIVE_TIMEOUT });
     await expect(page.locator('canvas')).toHaveCount(1);
     await expect.poll(async () => (await info(page)).geometries, { timeout: 10_000 }).toBeGreaterThan(0);
     await scrollThrough(page, 'down');
@@ -37,7 +38,7 @@ test.describe('3D stage', () => {
     test.setTimeout(150_000); // six full passes over 11 layers with software-rendered WebGL
     await page.goto('/ja?quality=high&debug=1');
     await page.mouse.move(20, 20); // the stage loads on the first interaction
-    await expect(page.locator('html')).toHaveAttribute('data-stage', 'live', { timeout: 15_000 });
+    await expect(page.locator('html')).toHaveAttribute('data-stage', 'live', { timeout: STAGE_LIVE_TIMEOUT });
     // three.js counts resources once uploaded; offscreen neighbours upload on first view.
     // So the reference is the steady state after one full round trip, not the first paint.
     await scrollThrough(page, 'down');
@@ -64,7 +65,7 @@ test.describe('3D stage', () => {
     page.on('pageerror', (e) => errors.push(e.message));
     await page.goto('/ja?quality=medium&adaptive=1&debug=1');
     await page.mouse.move(20, 20);
-    await expect(page.locator('html')).toHaveAttribute('data-stage', 'live', { timeout: 15_000 });
+    await expect(page.locator('html')).toHaveAttribute('data-stage', 'live', { timeout: STAGE_LIVE_TIMEOUT });
     const cdp = await page.context().newCDPSession(page);
     // 20×: this test proves the degrade path, so the slowdown must be unambiguous on any machine.
     // (At 6× a fast runner may legitimately hold ≥ 40 fps and stay at medium — that case is the
