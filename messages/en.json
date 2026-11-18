@@ -34,7 +34,10 @@
     "legendTitle": "How to read the numbers",
     "legend": "Every number opens its evidence when you select it. Each one carries one of three labels:",
     "copyLink": "Copy a link to this evidence",
-    "copied": "Link copied"
+    "copied": "Link copied",
+    "loading": "Loading…",
+    "back": "Back to where this number appears",
+    "pageTitle": "Evidence: {label}"
   },
   "source": {
     "records": "Author's project records",

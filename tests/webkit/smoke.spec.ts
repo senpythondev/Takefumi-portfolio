@@ -12,12 +12,13 @@ for (const locale of ['ja', 'en'] as const) {
     await expect(page.locator('section.layer')).toHaveCount(11);
     const width = page.viewportSize()?.width ?? 0;
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
-    const metric = page.locator('button.metric[data-metric="auction-errors"]').first();
+    const metric = page.locator('a.metric[data-metric="auction-errors"]').first();
     await metric.scrollIntoViewIfNeeded();
     await metric.click();
-    await expect(page.locator('dialog#ev-auction-errors')).toBeVisible();
+    const dialog = page.locator('dialog#evidence-dialog');
+    await expect(dialog.locator('.evidence-figure')).toBeVisible();
     await page.keyboard.press('Escape');
-    await expect(page.locator('dialog#ev-auction-errors')).toBeHidden();
+    await expect(dialog).toBeHidden();
     expect(errors).toEqual([]);
   });
 }

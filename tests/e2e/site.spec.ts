@@ -31,24 +31,54 @@ for (const locale of LOCALES) {
 
     test('every metric opens its evidence; Esc closes it and returns focus', async ({ page }) => {
       await page.goto(`/${locale}`);
-      const ids = await page.locator('button.metric').evaluateAll((els) => [...new Set(els.map((e) => e.getAttribute('data-metric')))]);
+      const ids = await page.locator('a.metric').evaluateAll((els) => [...new Set(els.map((e) => e.getAttribute('data-metric')))]);
       expect(ids.length).toBeGreaterThan(60);
+      const dialog = page.locator('dialog#evidence-dialog');
       for (const id of ids) {
-        const button = page.locator(`button.metric[data-metric="${id}"]`).first();
-        await button.scrollIntoViewIfNeeded();
-        await button.click();
-        const dialog = page.locator(`dialog#ev-${id}`);
+        const link = page.locator(`a.metric[data-metric="${id}"]`).first();
+        await link.scrollIntoViewIfNeeded();
+        await link.click();
         await expect(dialog, `evidence for ${id}`).toBeVisible();
-        await expect(dialog.locator('.evidence-figure')).toHaveText((await button.locator('.metric-value').textContent()) ?? '');
+        await expect(dialog.locator('.evidence-figure')).toHaveText((await link.locator('.metric-value').textContent()) ?? '');
+        await expect(page).toHaveURL(new RegExp(`/${locale}$`)); // the dialog opened in place of navigation
         await page.keyboard.press('Escape');
         await expect(dialog).toBeHidden();
-        await expect(button).toBeFocused();
+        await expect(link).toBeFocused();
       }
     });
 
-    test('evidence can be opened from the URL hash', async ({ page }) => {
+    test('the page carries one empty evidence dialog, and every metric links to its evidence page', async ({ page, request }) => {
+      await page.goto(`/${locale}`);
+      await expect(page.locator('dialog')).toHaveCount(1);
+      await expect(page.locator('dialog#evidence-dialog .evidence-figure')).toHaveCount(0);
+      const hrefs = await page.locator('a.metric').evaluateAll((els) => [...new Set(els.map((e) => e.getAttribute('href') ?? ''))]);
+      for (const href of hrefs) {
+        expect(href).toMatch(new RegExp(`^/${locale}/evidence/[a-z0-9-]+$`));
+        expect((await request.get(href)).status(), href).toBe(200);
+        expect((await request.get(`${href}/fragment`)).status(), `${href}/fragment`).toBe(200);
+      }
+    });
+
+    test('evidence can be opened from a shared #ev-<id> URL', async ({ page }) => {
       await page.goto(`/${locale}#ev-genten-acc-genten`);
-      await expect(page.locator('dialog#ev-genten-acc-genten')).toBeVisible();
+      await expect(page.locator('dialog#evidence-dialog')).toBeVisible();
+      await expect(page.locator('dialog#evidence-dialog .evidence-figure')).toHaveText('100%');
+    });
+
+    test('evidence page: readable without JavaScript, links back and across languages', async ({ browser }) => {
+      const context = await browser.newContext({ javaScriptEnabled: false });
+      const page = await context.newPage();
+      await page.goto(`/${locale}`);
+      await page.locator('a.metric[data-metric="genten-acc-genten"]').first().click();
+      await expect(page).toHaveURL(new RegExp(`/${locale}/evidence/genten-acc-genten$`));
+      await expect(page.locator('h1')).toHaveCount(1);
+      await expect(page.locator('.evidence-figure')).toHaveText('100%');
+      await expect(page.locator('.evidence-chart svg[role="img"]')).toBeVisible();
+      await expect(page.locator('.evidence-back a')).toHaveAttribute('href', `/${locale}#layer-genten`);
+      const other = locale === 'ja' ? 'en' : 'ja';
+      await expect(page.locator('a.action-lang')).toHaveAttribute('href', `/${other}/evidence/genten-acc-genten`);
+      await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', new RegExp(`/${locale}/evidence/genten-acc-genten$`));
+      await context.close();
     });
 
     test('external links are only the allowlisted ones (CLAUDE.md §1-2)', async ({ page }) => {
@@ -78,10 +108,13 @@ for (const locale of LOCALES) {
       const tags = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
       const pageScan = await new AxeBuilder({ page }).withTags(tags).analyze();
       expect(pageScan.violations).toEqual([]);
-      await page.locator('button.metric').first().click();
-      await expect(page.locator('dialog.evidence[open]')).toBeVisible();
+      await page.locator('a.metric').first().click();
+      await expect(page.locator('dialog.evidence[open] .evidence-figure')).toBeVisible();
       const dialogScan = await new AxeBuilder({ page }).include('dialog.evidence[open]').withTags(tags).analyze();
       expect(dialogScan.violations).toEqual([]);
+      await page.goto(`/${locale}/evidence/genten-acc-genten`);
+      const evidencePageScan = await new AxeBuilder({ page }).withTags(tags).analyze();
+      expect(evidencePageScan.violations).toEqual([]);
     });
 
     test('no horizontal overflow at this viewport', async ({ page }) => {
@@ -111,9 +144,9 @@ for (const locale of LOCALES) {
       await page.goto(`/${locale}`);
       await expect(page).toHaveScreenshot(`${locale}-first-view.png`);
       await expect(page.locator('section[data-layer="genten"] .genten-eval')).toHaveScreenshot(`${locale}-genten-eval.png`);
-      await page.locator('button.metric[data-metric="auction-errors"]').first().click();
-      await expect(page.locator('dialog#ev-auction-errors')).toBeVisible();
-      await expect(page.locator('dialog#ev-auction-errors')).toHaveScreenshot(`${locale}-evidence.png`);
+      await page.locator('a.metric[data-metric="auction-errors"]').first().click();
+      await expect(page.locator('dialog#evidence-dialog .evidence-figure')).toBeVisible();
+      await expect(page.locator('dialog#evidence-dialog')).toHaveScreenshot(`${locale}-evidence.png`);
     });
   });
 }
@@ -135,7 +168,7 @@ test('/ redirects by Accept-Language', async ({ browser }) => {
 test('reduced motion: the drawer opens without animation', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'reduced-motion', 'only meaningful with prefers-reduced-motion');
   await page.goto('/ja');
-  await page.locator('button.metric').first().click();
+  await page.locator('a.metric').first().click();
   const animation = await page.locator('dialog.evidence[open]').evaluate((el) => getComputedStyle(el).animationName);
   expect(animation).toBe('none');
   expect(await page.evaluate(() => getComputedStyle(document.documentElement).scrollBehavior)).toBe('auto');

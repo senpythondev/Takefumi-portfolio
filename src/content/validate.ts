@@ -101,7 +101,7 @@ function* blockStrings(block: Block, path: string): Generator<{ path: string; te
 }
 
 /** Metric ids referenced by a block outside of {{tokens}} (genten-eval rows). */
-function blockMetricRefs(block: Block): string[] {
+export function blockMetricRefs(block: Block): string[] {
   if (block.kind !== 'genten-eval') return [];
   return block.rows.flatMap((r) => Object.values(r.metrics));
 }

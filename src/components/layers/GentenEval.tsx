@@ -1,7 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import type { Block } from '@/content';
 import { gentenEval, gentenGrid } from '@/content/facts';
-import { MetricButton } from '@/components/evidence/MetricButton';
+import { MetricLink } from '@/components/evidence/MetricLink';
 import { plainText, RichText, type RichContext } from './RichText';
 
 type GentenBlock = Extract<Block, { kind: 'genten-eval' }>;
@@ -42,7 +42,7 @@ export async function GentenEval({ block, ctx, headingId }: { block: GentenBlock
                   const metric = ctx.metrics.get(row.metrics[c.id]);
                   return (
                     <td key={c.id} data-config={c.id}>
-                      {metric ? <MetricButton metric={metric} labels={ctx.labels} /> : null}
+                      {metric ? <MetricLink metric={metric} labels={ctx.labels} locale={ctx.locale} /> : null}
                     </td>
                   );
                 })}

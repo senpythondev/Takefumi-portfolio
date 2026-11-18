@@ -1,8 +1,9 @@
 import { Fragment } from 'react';
-import type { Metric } from '@/content';
-import { MetricButton, type MetricLabels } from '@/components/evidence/MetricButton';
+import type { Locale, Metric } from '@/content';
+import { MetricLink, type MetricLabels } from '@/components/evidence/MetricLink';
 
 export type RichContext = {
+  locale: Locale;
   metrics: Map<string, Metric>;
   labels: MetricLabels;
 };
@@ -23,7 +24,7 @@ export function RichText({ text, ctx }: { text: string; ctx: RichContext }) {
     <>
       {text.split(TOKEN).map((part, i) =>
         TOKEN.test(part) ? (
-          <MetricButton key={i} metric={metricFor(part, ctx)} labels={ctx.labels} />
+          <MetricLink key={i} metric={metricFor(part, ctx)} labels={ctx.labels} locale={ctx.locale} />
         ) : (
           <Fragment key={i}>{part}</Fragment>
         ),
@@ -32,7 +33,7 @@ export function RichText({ text, ctx }: { text: string; ctx: RichContext }) {
   );
 }
 
-/** Same text with tokens replaced by their display value (for places where a button would be repeated). */
+/** Same text with tokens replaced by their display value (for places where a link would be repeated). */
 export function plainText(text: string, ctx: RichContext): string {
   return text
     .split(TOKEN)

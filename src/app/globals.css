@@ -483,6 +483,7 @@ html[data-stage='live'] .layer-stage-still {
   color: inherit;
   font: inherit;
   text-align: inherit;
+  text-decoration: none;
   cursor: pointer;
 }
 
@@ -1124,6 +1125,33 @@ dialog.evidence::backdrop {
   margin: 1.25rem 0 0;
 }
 
+.evidence-loading {
+  margin: 0;
+  color: var(--color-ink-muted);
+}
+
+/* Standalone evidence page (/[locale]/evidence/[id]): the dialog's content as a page. */
+.evidence-page {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 2rem 1rem 3rem;
+}
+
+.evidence-page .evidence-panel {
+  padding: 1.5rem;
+  border: 1px solid var(--color-seam);
+  border-radius: 6px;
+  background: var(--color-stratum);
+}
+
+.evidence-page .evidence-chart svg {
+  max-width: 27rem; /* same scale as in the dialog */
+}
+
+.evidence-back {
+  margin: 1.5rem 0 0;
+}
+
 .evidence-copy {
   min-height: 24px;
   padding: 0.3rem 0.9rem;
@@ -1152,7 +1180,7 @@ dialog.evidence::backdrop {
 @media print {
   .site-header,
   .layer-index,
-  .evidence-dialogs,
+  .evidence-host,
   .dig,
   .core-nav,
   .depth-meter,

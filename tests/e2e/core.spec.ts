@@ -24,21 +24,20 @@ test.describe('boring core, depth meter, evidence extras, HUD', () => {
     test.skip(testInfo.project.name === 'mobile', 'clipboard permission flow covered on desktop');
     await context.grantPermissions(['clipboard-read', 'clipboard-write']);
     await page.goto('/ja#ev-genten-acc-genten');
-    const dialog = page.locator('dialog#ev-genten-acc-genten');
+    const dialog = page.locator('dialog#evidence-dialog');
     await expect(dialog).toBeVisible();
     await expect(dialog.locator('svg[role="img"]')).toHaveAttribute('aria-label', /100%/);
     const copy = dialog.locator('button.evidence-copy');
     await expect(copy).toBeVisible();
     await copy.click();
-    expect(await page.evaluate(() => navigator.clipboard.readText())).toMatch(/\/ja#ev-genten-acc-genten$/);
+    // The copied link is the evidence's own page (PM_REVIEW_07 §2-1), which works without JS.
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toMatch(/^https?:\/\/[^/]+\/ja\/evidence\/genten-acc-genten$/);
   });
 
-  test('without JavaScript the copy button stays hidden', async ({ browser }) => {
-    const context = await browser.newContext({ javaScriptEnabled: false });
-    const page = await context.newPage();
-    await page.goto('/ja');
-    await expect(page.locator('button.evidence-copy').first()).toHaveAttribute('hidden', '');
-    await context.close();
+  test('the standalone evidence page has no copy button (its URL is the link)', async ({ page }) => {
+    await page.goto('/ja/evidence/genten-acc-genten');
+    await expect(page.locator('.evidence-figure')).toHaveText('100%');
+    await expect(page.locator('button.evidence-copy')).toHaveCount(0);
   });
 
   test('without ?debug the HUD code is never downloaded (PM_REVIEW_05 §2-4)', async ({ page }, testInfo) => {

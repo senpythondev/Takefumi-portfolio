@@ -5,8 +5,8 @@
  */
 import { contentEn } from './layers.en.ts';
 import { contentJa } from './layers.ja.ts';
-import type { Metric, SiteContent } from './schema.ts';
-import { validateContent } from './validate.ts';
+import type { LayerId, Metric, SiteContent } from './schema.ts';
+import { blockMetricRefs, layerStrings, tokensIn, validateContent } from './validate.ts';
 
 const validated = validateContent(contentJa, contentEn);
 
@@ -18,6 +18,16 @@ export function getContent(locale: Locale): SiteContent {
 
 export function metricMap(content: SiteContent): Map<string, Metric> {
   return new Map(content.metrics.map((m) => [m.id, m]));
+}
+
+/** The layer where each metric first appears (the evidence page links back to it). */
+export function metricLayers(content: SiteContent): Map<string, LayerId> {
+  const map = new Map<string, LayerId>();
+  for (const layer of content.layers) {
+    const ids = [...[...layerStrings(layer)].flatMap((s) => tokensIn(s.text)), ...layer.blocks.flatMap(blockMetricRefs)];
+    for (const id of ids) if (!map.has(id)) map.set(id, layer.id);
+  }
+  return map;
 }
 
 export type { Block, Confidence, Layer, LayerId, Metric, SiteContent, Source } from './schema.ts';

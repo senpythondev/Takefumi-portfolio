@@ -2,11 +2,10 @@ import { notFound } from 'next/navigation';
 import { hasLocale } from 'next-intl';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { getContent, metricMap } from '@/content';
-import { buildCharts } from '@/content/charts';
 import { routing } from '@/i18n/routing';
 import { EvidenceController } from '@/components/evidence/EvidenceController';
-import { EvidenceDialogs } from '@/components/evidence/EvidenceDialogs';
-import { METRIC_HINT_ID } from '@/components/evidence/MetricButton';
+import { EvidenceDialog } from '@/components/evidence/EvidenceDialog';
+import { METRIC_HINT_ID } from '@/components/evidence/ids';
 import { Hero } from '@/components/layers/Hero';
 import { layerAnchor, LayerSection } from '@/components/layers/LayerSection';
 import type { RichContext } from '@/components/layers/RichText';
@@ -19,7 +18,8 @@ import { DebugHudLoader } from '@/components/debug/DebugHudLoader';
 
 /**
  * One page, surface → bedrock. Everything here is server-rendered HTML; the only client code is
- * EvidenceController (dialog fallbacks) and EmailReveal (address assembled in the browser).
+ * EvidenceController (evidence dialog) and EmailReveal (address assembled in the browser).
+ * Each metric's evidence lives on its own static page (/[locale]/evidence/[id]), not in this HTML.
  */
 export default async function Page({ params }: PageProps<'/[locale]'>) {
   const { locale } = await params;
@@ -32,6 +32,7 @@ export default async function Page({ params }: PageProps<'/[locale]'>) {
   const td = await getTranslations('depth');
   const te = await getTranslations('evidence');
   const ctx: RichContext = {
+    locale,
     metrics: metricMap(content),
     labels: {
       confidence: { measured: tc('measured'), approx: tc('approx'), reconstructed: tc('reconstructed') },
@@ -59,7 +60,7 @@ export default async function Page({ params }: PageProps<'/[locale]'>) {
       <span id={METRIC_HINT_ID} hidden>
         {te('open')}
       </span>
-      <EvidenceDialogs metrics={content.metrics} charts={buildCharts(content)} />
+      <EvidenceDialog />
       <EvidenceController />
       <LayerTracker />
       <StageLoader />
