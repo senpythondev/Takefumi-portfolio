@@ -28,8 +28,24 @@ const median = (xs: number[]) => {
   return s.length % 2 ? (s[m] as number) : ((s[m - 1] as number) + (s[m] as number)) / 2;
 };
 
+async function portFree(): Promise<boolean> {
+  try {
+    await fetch(`http://localhost:${PORT}/ja`);
+    return false;
+  } catch {
+    return true;
+  }
+}
+
+/** `npx next start` forks the Next server: stop the whole process group, or the old build keeps serving. */
+function stop(server: ReturnType<typeof spawn>): void {
+  if (server.pid) process.kill(-server.pid, 'SIGTERM');
+}
+
 async function serve() {
-  const server = spawn('npx', ['next', 'start', '-p', String(PORT)], { stdio: 'ignore' });
+  for (let i = 0; i < 20 && !(await portFree()); i++) await new Promise((r) => setTimeout(r, 500));
+  if (!(await portFree())) throw new Error(`port ${PORT} is still in use: a previous server would serve the wrong build`);
+  const server = spawn('npx', ['next', 'start', '-p', String(PORT)], { stdio: 'ignore', detached: true });
   for (let i = 0; i < 60; i++) {
     try {
       if ((await fetch(`http://localhost:${PORT}/ja`)).ok) return server;
@@ -58,6 +74,8 @@ try {
           const page = await context.newPage();
           await page.goto(`http://localhost:${PORT}/${locale}`, { waitUntil: 'networkidle' });
           await page.evaluate(() => document.fonts.ready);
+          const styled = await page.evaluate(() => getComputedStyle(document.documentElement).backgroundColor !== 'rgba(0, 0, 0, 0)');
+          if (!styled) throw new Error(`set ${id}: page is unstyled — wrong server or build`);
           await page.screenshot({ path: join(OUT, `${id}-${locale}-${name}.jpg`), type: 'jpeg', quality: 85 });
           await context.close();
         }
@@ -88,7 +106,7 @@ try {
       }
       lines.push(`- 画像：${['ja', 'en'].flatMap((l) => ['desktop', 'mobile'].map((d) => `${id}-${l}-${d}.jpg`)).join('、')}`, '');
     } finally {
-      server.kill();
+      stop(server);
     }
   }
 } finally {
