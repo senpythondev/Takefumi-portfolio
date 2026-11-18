@@ -255,6 +255,8 @@ if (args.includes('--check')) {
   if (args.includes('--activate') && activate) {
     if (!manifest.sets[activate]) generate([activate], texts, manifest);
     manifest.active = activate;
+  } else if (args.includes('--display')) {
+    // Only font-display changes: rewrite active.ts, keep the subsets (no sources needed).
   } else {
     const only = args.includes('--set') ? [args[args.indexOf('--set') + 1] as string] : Object.keys(SETS);
     generate(only, texts, manifest);
