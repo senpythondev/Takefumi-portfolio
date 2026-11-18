@@ -29,6 +29,7 @@ for (const c of cases) {
     });
     const cdp = await context.newCDPSession(page);
     await cdp.send('Emulation.setCPUThrottlingRate', { rate: c.rate });
+    await expect(page.locator('html')).toHaveAttribute('data-stage', 'armed', { timeout: 30_000 });
     await page.mouse.move(30, 30);
     if (c.device === devices['Pixel 7']) await page.touchscreen.tap(30, 300).catch(() => undefined);
     await expect(page.locator('html')).toHaveAttribute('data-stage', 'live', { timeout: 60_000 });

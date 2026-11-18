@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { STAGE_LIVE_TIMEOUT } from './timeouts';
+import { expectStageOff, startStage } from './stage-helpers';
 
 test.describe('boring core, depth meter, evidence extras, HUD', () => {
   test('the core has one ring link per layer and fills rings as layers are passed', async ({ page }) => {
@@ -47,8 +47,7 @@ test.describe('boring core, depth meter, evidence extras, HUD', () => {
     const urls: string[] = [];
     page.on('response', (r) => r.request().resourceType() === 'script' && urls.push(r.url()));
     await page.goto('/ja?quality=low', { waitUntil: 'networkidle' });
-    await page.mouse.move(20, 20); // also load the stage and the first scenes
-    await expect(page.locator('html')).toHaveAttribute('data-stage', 'live', { timeout: STAGE_LIVE_TIMEOUT });
+    await startStage(page); // the stage loads on the first interaction, once the page listens
     await page.waitForLoadState('networkidle');
     await expect(page.locator('.debug-hud')).toHaveCount(0);
     for (const url of urls) {

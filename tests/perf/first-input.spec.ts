@@ -18,6 +18,7 @@ async function firstInteraction(page: Page) {
     w.__events = [];
     new PerformanceObserver((list) => w.__events.push(...(list.getEntries() as PerformanceEventTiming[]))).observe({ type: 'event', durationThreshold: 16, buffered: true } as PerformanceObserverInit);
   });
+  await expect(page.locator('html')).toHaveAttribute('data-stage', 'armed', { timeout: 30_000 });
   const box = await page.locator('.layer-surface p').first().boundingBox();
   if (!box) throw new Error('no text to tap');
   await page.touchscreen.tap(box.x + 10, box.y + box.height / 2);

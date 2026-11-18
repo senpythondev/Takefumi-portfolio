@@ -15,8 +15,8 @@
     "label": "{index, select, 0 {Surface} 9 {Bedrock} 10 {Next layer} other {Layer {index}}}"
   },
   "confidence": {
-    "measured": "Measured",
-    "approx": "Approximate",
+    "measured": "Verified",
+    "approx": "Approx.",
     "reconstructed": "Reconstructed",
     "measuredDef": "Confirmed with production data, tests or an evaluation — or a direct count",
     "approxDef": "An approximate figure based on measurements at the time, or a comparison with an estimate",

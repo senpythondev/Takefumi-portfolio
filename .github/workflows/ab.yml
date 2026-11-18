@@ -1,0 +1,76 @@
+name: A/B Lighthouse
+
+# Compares two commits on the same runner with alternating Lighthouse runs (scripts/ab-lighthouse.ts),
+# because single CI runs vary more than the changes being measured (CI runs 6–8).
+# Start it by pushing an empty commit whose message is "ab: <commit A> <commit B> [runs]"
+# to a branch named ab/<anything>, e.g.
+#   git switch -c ab/evidence && git commit --allow-empty -m "ab: 64f2e4b ffaa256 5" && git push -u origin ab/evidence
+on:
+  push:
+    branches: ['ab/**']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ab-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ab:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      NEXT_PUBLIC_ENABLE_PEGASUS_LINK: 'false'
+      # Passed through the environment, never interpolated into the script (untrusted text).
+      MESSAGE: ${{ github.event.head_commit.message }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Read "ab: <A> <B> [runs]"
+        id: args
+        run: |
+          set -euo pipefail
+          read -r tag a b runs _ <<<"$(printf '%s\n' "$MESSAGE" | head -n 1)"
+          [ "$tag" = "ab:" ] || { echo "::error::commit message must be 'ab: <commit A> <commit B> [runs]'"; exit 1; }
+          [[ "${runs:-5}" =~ ^[0-9]+$ ]] || { echo "::error::runs must be a number"; exit 1; }
+          echo "a=$(git rev-parse --verify "${a}^{commit}")" >> "$GITHUB_OUTPUT"
+          echo "b=$(git rev-parse --verify "${b}^{commit}")" >> "$GITHUB_OUTPUT"
+          echo "runs=${runs:-5}" >> "$GITHUB_OUTPUT"
+
+      - run: npm ci
+
+      - name: Same fonts as CI
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends fonts-droid-fallback
+
+      - name: Build A and B
+        env:
+          A: ${{ steps.args.outputs.a }}
+          B: ${{ steps.args.outputs.b }}
+        run: |
+          set -euo pipefail
+          for side in A B; do
+            sha="${!side}"
+            git worktree add "../ab-$side" "$sha"
+            (cd "../ab-$side" && npm ci && npm run build)
+          done
+
+      - name: Lighthouse A/B (alternating)
+        env:
+          RUNS: ${{ steps.args.outputs.runs }}
+        run: node scripts/ab-lighthouse.ts ../ab-A ../ab-B "$RUNS"
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ab-results
+          path: ab-results/
+          retention-days: 14

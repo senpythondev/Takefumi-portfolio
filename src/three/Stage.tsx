@@ -185,7 +185,7 @@ export async function mountStage({ quality, adaptive, addFrameListener }: { qual
       canvas.removeEventListener('webglcontextlost', onContextLost);
       root.unmount();
       canvas.remove();
-      delete document.documentElement.dataset.stage;
+      document.documentElement.dataset.stage = 'off';
     },
   };
   return handle;

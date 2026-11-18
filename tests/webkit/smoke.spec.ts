@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { startStage } from '../e2e/stage-helpers';
 
 /**
  * Safari-specific behaviour, checked with Playwright's WebKit (PM_REVIEW_03 §8-3) on an iPhone-sized
@@ -28,9 +29,10 @@ test('3D stage mounts a single canvas in WebKit (forced medium)', async ({ page 
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
   await page.goto('/ja?quality=medium');
-  await page.touchscreen.tap(20, 300).catch(() => undefined);
-  await page.mouse.move(20, 20);
-  await expect(page.locator('html')).toHaveAttribute('data-stage', 'live', { timeout: 30_000 });
+  await startStage(page, async (p) => {
+    await p.touchscreen.tap(20, 300).catch(() => undefined);
+    await p.mouse.move(20, 20);
+  });
   await expect(page.locator('canvas')).toHaveCount(1);
   expect(errors).toEqual([]);
 });

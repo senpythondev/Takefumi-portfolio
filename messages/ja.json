@@ -15,7 +15,7 @@
     "label": "{index, select, 0 {地表} 9 {岩盤} 10 {次の地層} other {第{index}層}}"
   },
   "confidence": {
-    "measured": "実測",
+    "measured": "確認済み",
     "approx": "概算",
     "reconstructed": "再現",
     "measuredDef": "本番データ・テスト・評価で確認した値、または数えた件数",

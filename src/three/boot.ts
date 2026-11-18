@@ -20,6 +20,7 @@ export async function boot(forced: string | null): Promise<void> {
   }
   if (decision.quality === 'static') {
     scrollStore.set({ quality: 'static' });
+    document.documentElement.dataset.stage = 'off';
     return;
   }
 

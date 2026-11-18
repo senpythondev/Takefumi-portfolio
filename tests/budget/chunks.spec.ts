@@ -1,5 +1,6 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
+import { startStage } from '../e2e/stage-helpers';
 import { collectScripts, kb, sum, type ScriptSize } from './measure';
 
 /**
@@ -25,8 +26,7 @@ const between = (scripts: ScriptSize[], from: number | null, to: number | null) 
 test('deferred chunks: 3D base and scene chunks stay within budget', async ({ page }) => {
   test.setTimeout(120_000);
   await page.goto('/ja?quality=high', { waitUntil: 'networkidle' });
-  await page.mouse.move(20, 20); // the stage loads on the first interaction
-  await expect(page.locator('html')).toHaveAttribute('data-stage', 'live', { timeout: 15_000 });
+  await startStage(page); // the stage loads on the first interaction, once the page listens
   // Visit every layer so every scene chunk is requested.
   for (const id of await page.locator('section.layer[data-layer]').evaluateAll((els) => els.map((e) => e.getAttribute('data-layer') as string))) {
     await page.locator(`section[data-layer="${id}"]`).evaluate((el) => el.scrollIntoView({ block: 'start' }));
