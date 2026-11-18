@@ -49,7 +49,8 @@ jobs:
       - run: npx playwright install --with-deps chromium
 
       - name: E2E (desktop / mobile / reduced-motion)
-        run: npm run test:e2e
+        # Visual baselines are machine-specific until Phase 4 self-hosts fonts: checked locally only.
+        run: npm run test:e2e -- --grep-invert @visual
 
       - name: Initial-JS budget
         run: npm run budget

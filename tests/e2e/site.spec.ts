@@ -105,7 +105,9 @@ for (const locale of LOCALES) {
       await context.close();
     });
 
-    test('visual: first view, Genten evaluation, evidence drawer', async ({ page }) => {
+    // @visual: font rendering differs between machines until Phase 4 self-hosts subset fonts,
+    // so these baselines are checked locally and excluded on CI (re-baselined on CI in Phase 4).
+    test('visual: first view, Genten evaluation, evidence drawer', { tag: '@visual' }, async ({ page }) => {
       await page.goto(`/${locale}`);
       await expect(page).toHaveScreenshot(`${locale}-first-view.png`);
       await expect(page.locator('section[data-layer="genten"] .genten-eval')).toHaveScreenshot(`${locale}-genten-eval.png`);
