@@ -19,6 +19,38 @@
 
 ---
 
+## 2026-11-18 — PM_REVIEW_05 への対応（履歴の書き換え・CLAUDE.md・push）
+
+**モデル：** Claude Fable 5.2（オーナーが `/model fable` に切替。以降 3-8・3-9 も Fable）
+
+### やったこと
+1. **履歴の書き換え**（PM_REVIEW_05 §2-3、オーナー承認済み）
+   - 作業前に3ブランチをローカルのバックアップ `backup/pre-rewrite/{main,feat/foundation,feat/core-systems}` として残した（push しない）。
+   - `git filter-branch --tree-filter` で、古い2コミットの CLAUDE.md・BRIEF.md・PM_REVIEW_01.md・WORKLOG.md から「載せない情報」についての古い記述を、後のコミットと同じ文言に置き換えた。
+   - 確認：書き換え後の最新ツリーはバックアップと完全に一致（差分なし）。`git log -p` 全体で該当の話題に触れているのは `docs/PM_REVIEW_04.md`（PM の決定記録、値なし）だけ。
+   - コミットIDの対応（書き換え前 → 後）。**この WORKLOG の過去のエントリに出てくるIDは書き換え前のもの：**
+
+     | 書き換え前 | 書き換え後 | 内容 |
+     |---|---|---|
+     | `e72037e` | `5c110cd` | docs: import project brief, rules and Phase 1 plan |
+     | `3afd342` | `3d71e13` | docs: start WORKLOG with PM_REVIEW_01 response |
+     | `9d60374` | `9ac639c` | docs: PM reviews 02–04, sub-agent definitions, Phase 2 records |
+     | `964bb4c` | `f556506` | feat: Phase 2 foundation |
+     | `bcaa863` | `a58c0d5` | feat(three): single-canvas 3D stage foundation |
+     | `191394e` | `3bcb82d` | feat: debug HUD, boring core, depth meter, evidence charts |
+2. **計測パネルの条件**（§2-4）：`?debug` がないとき、初期JS・演出バンドル・3D基盤・シーンのどのチャンクにもパネルのコードが含まれないことを E2E テストにした（すでに満たしていた。読み込まれた全スクリプトの中身を検査）。Phase 6 で、削除するか「あなたの端末で測る」機能として残すかを決める。
+3. **CLAUDE.md の更新**（§5）：§3 の遅延読み込みの文言、「最初の操作で読み込む／それまではポスター」、§4 に 3D基盤チャンク 250KB（実測 193.5KB）と、操作直後の Long Task 100ms 以下（目標）を追加。§1 に拒否リストの記述は残っていなかった。
+4. 「Places フォルダ」はプレースホルダーのことで、対応不要と確認（§2-2）。
+5. リポジトリが PRIVATE になったことを `gh repo view` で確認してから、`origin` を設定して push。
+
+### Phase 4 への申し送り（PM_REVIEW_05 §3.1）
+ヒーローは 3D がなくても完成して見えるデザインにする。3D の静止画（ポスター）を最初から表示して CSS だけで控えめに動かし、3D の準備ができたらクロスフェード。reduced-motion と static ではポスターを動かさない。タイマーによる遅延読み込みは採らない。
+
+### 3-10 への申し送り（PM_REVIEW_05 §3.2・§3.3）
+操作直後の Long Task を 4倍スロットリングで1回あたり 100ms 以下に（初期化の分割、`compileAsync` の分割、テクスチャ転送の分散、最初は現在の地層だけ）。`/ja` と `/en` の TBT の差の原因調査。CI の値を WORKLOG に記録。
+
+---
+
 ## 2026-11-18 — Phase 3 マイルストーン 2（3-4〜3-7）
 
 **モデル：** Claude Opus 5.5

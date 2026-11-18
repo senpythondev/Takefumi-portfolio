@@ -41,6 +41,22 @@ test.describe('boring core, depth meter, evidence extras, HUD', () => {
     await context.close();
   });
 
+  test('without ?debug the HUD code is never downloaded (PM_REVIEW_05 §2-4)', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'desktop', 'once is enough');
+    test.setTimeout(60_000);
+    const urls: string[] = [];
+    page.on('response', (r) => r.request().resourceType() === 'script' && urls.push(r.url()));
+    await page.goto('/ja?quality=low', { waitUntil: 'networkidle' });
+    await page.mouse.move(20, 20); // also load the stage and the first scenes
+    await expect(page.locator('html')).toHaveAttribute('data-stage', 'live', { timeout: 15_000 });
+    await page.waitForLoadState('networkidle');
+    await expect(page.locator('.debug-hud')).toHaveCount(0);
+    for (const url of urls) {
+      const body = await (await page.request.get(url)).text();
+      expect(body.includes('debug-hud'), `${url} must not contain the HUD`).toBe(false);
+    }
+  });
+
   test('?debug=1 HUD records 10 s and outputs JSON', async ({ page, context }, testInfo) => {
     test.skip(testInfo.project.name !== 'desktop', 'once is enough');
     test.setTimeout(40_000);
