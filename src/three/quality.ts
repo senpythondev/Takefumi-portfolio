@@ -27,7 +27,10 @@ function isQuality(v: string | null): v is Quality {
 function hasWebGL(): boolean {
   try {
     const c = document.createElement('canvas');
-    return Boolean(c.getContext('webgl2') ?? c.getContext('webgl'));
+    const gl = c.getContext('webgl2') ?? c.getContext('webgl');
+    // Release the probe context right away: the page must only ever hold one (the stage).
+    gl?.getExtension('WEBGL_lose_context')?.loseContext();
+    return Boolean(gl);
   } catch {
     return false;
   }

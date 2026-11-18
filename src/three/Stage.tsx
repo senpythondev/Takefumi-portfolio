@@ -9,7 +9,7 @@
  */
 import { advance, createRoot, events, useThree, type ReconcilerRoot } from '@react-three/fiber';
 import { PerformanceMonitor, PerspectiveCamera, View } from '@react-three/drei';
-import { Suspense, useEffect, useRef, useSyncExternalStore, type RefObject } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useSyncExternalStore, type RefObject } from 'react';
 import { scrollStore, type Quality } from '@/lib/scroll/store';
 import type { FrameListener } from '@/lib/scroll/effects';
 import { DPR_CAP, stepQuality } from './quality';
@@ -70,6 +70,7 @@ function Scenes({ slots, quality }: { slots: Slot[]; quality: LiveQuality }) {
 function StageTree({ slots, core, initial, adaptive, onQuality }: { slots: Slot[]; core: RefObject<HTMLElement> | null; initial: LiveQuality; adaptive: boolean; onQuality: (q: Quality) => void }) {
   const quality = useRef<Quality>(initial);
   const live = useSyncExternalStore(scrollStore.subscribe, () => scrollStore.get().quality, () => initial);
+  const ids = useMemo(() => slots.map((s) => s.id), [slots]);
   const change = (direction: 1 | -1) => {
     const next = stepQuality(quality.current, direction);
     if (next === quality.current) return;
@@ -80,7 +81,7 @@ function StageTree({ slots, core, initial, adaptive, onQuality }: { slots: Slot[
     <>
       {adaptive ? <PerformanceMonitor flipflops={3} onIncline={() => change(1)} onDecline={() => change(-1)} onFallback={() => onQuality('low')} /> : null}
       {live !== 'static' && live !== 'pending' ? <Scenes slots={slots} quality={live} /> : null}
-      {core && live !== 'static' ? <CoreView track={core} ids={slots.map((s) => s.id)} /> : null}
+      {core && live !== 'static' && live !== 'pending' ? <CoreView track={core} ids={ids} quality={live} /> : null}
     </>
   );
 }
