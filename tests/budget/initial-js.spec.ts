@@ -17,9 +17,9 @@ for (const locale of ['ja', 'en'] as const) {
     const initial = scripts.filter((s) => stageStart === null || s.startTime < stageStart);
     const total = sum(initial);
 
-    mkdirSync('test-results/budget', { recursive: true });
+    mkdirSync('perf-results/budget', { recursive: true });
     writeFileSync(
-      `test-results/budget/initial-js-${locale}.json`,
+      `perf-results/budget/initial-js-${locale}.json`,
       JSON.stringify({ locale, measuredAt: new Date().toISOString(), budgetBytes: INITIAL_JS_BUDGET, initialJsGzipBytes: total, stageStart, scripts: initial }, null, 2),
     );
     console.log(`[${locale}] initial JS: ${kb(total)} gzip in ${initial.length} files (budget ${kb(INITIAL_JS_BUDGET)})`);

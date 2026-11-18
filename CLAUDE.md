@@ -40,7 +40,8 @@
 - **Tailwind CSS**、デザイントークンは `src/styles/tokens.ts` に集約
 - **next-intl**（`ja` を既定、`en`）
 - **zod**（コンテンツスキーマ）
-- **detect-gpu**（端末性能の判定）、**pdf-lib**（特許シーンの透かしPDFをクライアント側で生成）
+- **pdf-lib**（特許シーンの透かしPDFをクライアント側で生成）
+- 品質ティアの決め方（ライブラリなし。PM_REVIEW_06・07 で detect-gpu を外した）：簡単な判定（reduced-motion・Save-Data・WebGL2 非対応・ソフトウェア描画は static、タッチ端末は medium から、デスクトップは high から）＋ drei の `PerformanceMonitor` による実行中の自動調整
 - **Playwright**（E2E・スクリーンショット比較）、**Lighthouse CI**（性能の自動計測）
 
 ライブラリを追加するときは、理由とバンドルサイズへの影響を報告してから入れる。
@@ -61,7 +62,7 @@ src/
   three/
     Stage.tsx                     # 単一の固定Canvas（WebGLコンテキストは1つだけ）
     scenes/<layer-id>/            # 各地層の3Dシーン（動的import）
-    quality.ts                    # 品質ティア（high/medium/low/static）
+    quality.ts                    # 品質ティア（high/medium/low/static）の判定と自動調整
   lib/scroll/                     # Lenis + ScrollTrigger の統合、現在の地層の状態管理
 public/media/                     # 匿名化済み素材のみ
 ```
@@ -110,6 +111,7 @@ public/media/                     # 匿名化済み素材のみ
 2. 1シーン＝1ブランチ（`feat/layer-<id>`）。マイルストーンごとにコミットする。
 3. 実装中は `npm run dev` で実際の見た目と挙動を確認する。見た目の作業は、スクリーンショットを撮って自分の目で確認してから完了とする。
 4. 不明点・判断が分かれる点は推測で進めず、選択肢と推奨を添えて質問する。
+5. この CLAUDE.md は、**PM レビューで承認された変更に限り** Claude Code が更新してよい（オーナー承認済みの運用ルール、PM_REVIEW_07 §4）。更新したら WORKLOG に記録する。
 
 ## 7. 完了の定義（各フェーズ・各シーン共通）
 
@@ -135,6 +137,7 @@ npm run test:e2e                # Playwright（desktop / mobile / reduced-motion
 npm run test:e2e:update         # スクリーンショットの基準画像を更新
 npm run budget                  # 初期JS 180KB の計測（Playwright）
 npm run lhci                    # Lighthouse CI（モバイル、§4 の予算をアサーション）
+npm run perf                    # 操作直後の Long Task（CPU 4倍・6倍スロットリング）。budget と perf の結果は perf-results/（コミットしない）
 npm run screenshots -- <URL>    # レビュー用スクリーンショット（docs/screenshots/、コミットしない）
 ```
 

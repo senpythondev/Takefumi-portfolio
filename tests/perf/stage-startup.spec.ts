@@ -45,8 +45,8 @@ for (const c of cases) {
     }, MARKS);
     const max = Math.max(0, ...result.tasks.map((t) => t.duration));
     const blocking = result.tasks.reduce((s, t) => s + Math.max(0, t.duration - 50), 0);
-    mkdirSync('test-results/perf', { recursive: true });
-    writeFileSync(`test-results/perf/stage-startup-${c.name}.json`, JSON.stringify({ ...c, device: undefined, max, blocking, ...result }, null, 2));
+    mkdirSync('perf-results/perf', { recursive: true });
+    writeFileSync(`perf-results/perf/stage-startup-${c.name}.json`, JSON.stringify({ ...c, device: undefined, max, blocking, ...result }, null, 2));
     console.log(`[${c.name}] long tasks ${result.tasks.length}, max ${Math.round(max)} ms, blocking ${Math.round(blocking)} ms`);
     for (const t of result.tasks) console.log(`   ${String(Math.round(t.duration)).padStart(4)} ms  in ${t.phase}`);
     await context.close();

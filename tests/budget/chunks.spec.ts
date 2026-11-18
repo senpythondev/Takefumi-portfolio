@@ -43,8 +43,8 @@ test('deferred chunks: 3D base and scene chunks stay within budget', async ({ pa
     scenes: between(scripts, m['stage:scenes'] ?? null, null),
   };
 
-  mkdirSync('test-results/budget', { recursive: true });
-  writeFileSync('test-results/budget/deferred.json', JSON.stringify({ measuredAt: new Date().toISOString(), marks: m, groups }, null, 2));
+  mkdirSync('perf-results/budget', { recursive: true });
+  writeFileSync('perf-results/budget/deferred.json', JSON.stringify({ measuredAt: new Date().toISOString(), marks: m, groups }, null, 2));
   for (const [name, list] of Object.entries(groups)) {
     console.log(`${name.padEnd(8)} ${kb(sum(list)).padStart(9)} gzip in ${list.length} file(s)`);
   }

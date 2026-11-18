@@ -75,5 +75,6 @@ jobs:
           path: |
             playwright-report/
             test-results/
+            perf-results/
             .lighthouseci/
           retention-days: 14

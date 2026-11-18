@@ -28,7 +28,7 @@ const PUBLIC_EMAIL = `${EMAIL_PARTS.user}@${EMAIL_PARTS.domain}`.toLowerCase();
 
 const IMAGE_EXT = new Set(['.jpg', '.jpeg', '.png', '.webp', '.avif', '.heic', '.heif', '.tif', '.tiff']);
 const BINARY_EXT = new Set([...IMAGE_EXT, '.gif', '.ico', '.woff', '.woff2', '.ttf', '.otf', '.mp4', '.webm', '.mov', '.pdf', '.zip', '.glb', '.ktx2']);
-const SKIP_DIRS = new Set(['node_modules', '.next', '.git', 'out', 'test-results', 'playwright-report', '.lighthouseci', 'coverage']);
+const SKIP_DIRS = new Set(['node_modules', '.next', '.git', 'out', 'test-results', 'perf-results', 'playwright-report', '.lighthouseci', 'coverage']);
 
 // ── Text patterns ─────────────────────────────────────────────
 const TEXT_CHECKS: Array<{ check: string; pattern: RegExp; describe: (m: string) => string }> = [
@@ -65,12 +65,50 @@ function git(argv: string[]): string | null {
   }
 }
 
-function walk(dir: string, out: string[]): void {
+/**
+ * Without .git (Vercel builds from a source copy) the scan walks the folder instead of asking git,
+ * so it must skip the same files git would: otherwise generated, ignored files (next-env.d.ts, logs,
+ * build caches) are scanned as if they were part of the repository. Supports the .gitignore subset
+ * used here: `name`, `name/` (directory only), `dir/sub/` (anchored), `*` and `?` globs, `!` negation.
+ */
+type IgnoreRule = { re: RegExp; dirOnly: boolean; anchored: boolean; negate: boolean };
+
+function loadIgnoreRules(): IgnoreRule[] {
+  const path = join(ROOT, '.gitignore');
+  if (!existsSync(path)) return [];
+  return readFileSync(path, 'utf8')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line && !line.startsWith('#'))
+    .map((line) => {
+      const negate = line.startsWith('!');
+      let pattern = negate ? line.slice(1) : line;
+      const dirOnly = pattern.endsWith('/');
+      pattern = pattern.replace(/^\/|\/$/g, '');
+      const glob = pattern.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '[^/]*').replace(/\?/g, '[^/]');
+      return { re: new RegExp(`^${glob}$`), dirOnly, anchored: pattern.includes('/'), negate };
+    });
+}
+
+function ignored(rules: IgnoreRule[], rel: string, isDir: boolean): boolean {
+  const name = rel.slice(rel.lastIndexOf('/') + 1);
+  let result = false;
+  for (const rule of rules) {
+    if (rule.dirOnly && !isDir) continue;
+    if (rule.re.test(rule.anchored ? rel : name)) result = !rule.negate;
+  }
+  return result;
+}
+
+function walk(dir: string, out: string[], rules: IgnoreRule[] = loadIgnoreRules()): void {
   for (const entry of readdirSync(dir)) {
     if (SKIP_DIRS.has(entry)) continue;
     const full = join(dir, entry);
-    if (statSync(full).isDirectory()) walk(full, out);
-    else out.push(relative(ROOT, full));
+    const rel = relative(ROOT, full);
+    const isDir = statSync(full).isDirectory();
+    if (ignored(rules, rel, isDir)) continue;
+    if (isDir) walk(full, out, rules);
+    else out.push(rel);
   }
 }
 

@@ -14,6 +14,8 @@ next-env.d.ts
 
 # test & measurement artifacts
 test-results/
+# measurement output (budget / perf): Playwright empties test-results/ on every run, so it lives here
+perf-results/
 playwright-report/
 blob-report/
 playwright/.cache/

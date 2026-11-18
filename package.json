@@ -7,7 +7,7 @@
     "node": ">=22.18.0 <23"
   },
   "scripts": {
-    "prepare": "git config core.hooksPath .githooks || true",
+    "prepare": "git config core.hooksPath .githooks 2>/dev/null || true",
     "dev": "next dev",
     "prebuild": "npm run validate && npm run check:confidentiality",
     "build": "next build",
