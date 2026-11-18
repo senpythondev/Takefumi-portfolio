@@ -9,7 +9,7 @@
  */
 import { advance, createRoot, events, useThree, type ReconcilerRoot } from '@react-three/fiber';
 import { PerformanceMonitor, PerspectiveCamera, View } from '@react-three/drei';
-import { Suspense, useEffect, useMemo, useState, useSyncExternalStore, type RefObject } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState, useSyncExternalStore, type RefObject } from 'react';
 import { scrollStore, type Quality } from '@/lib/scroll/store';
 import type { FrameListener } from '@/lib/scroll/effects';
 import { DPR_CAP, createQualityGovernor } from './quality';
@@ -23,6 +23,9 @@ type LiveQuality = Exclude<Quality, 'static'>;
 export type StageHandle = { root: ReconcilerRoot<HTMLCanvasElement>; canvas: HTMLCanvasElement; dispose: () => void };
 
 const MOUNT_WINDOW = 1;
+
+/** The wall behind the whole page (its own chunk; mounted first, so it is drawn first). */
+const WorldView = lazy(() => import('./world/WorldView'));
 
 function readSlots(): Slot[] {
   return [...document.querySelectorAll<HTMLElement>('[data-stage-slot]')].map((el) => ({
@@ -94,11 +97,13 @@ function Scenes({ slots, quality, mounted }: { slots: Slot[]; quality: LiveQuali
   );
 }
 
-function StageTree({ slots, core, initial, adaptive, onQuality }: { slots: Slot[]; core: RefObject<HTMLElement> | null; initial: LiveQuality; adaptive: boolean; onQuality: (q: Quality) => void }) {
+function StageTree({ slots, core, world, initial, adaptive, onQuality }: { slots: Slot[]; core: RefObject<HTMLElement> | null; world: RefObject<HTMLElement> | null; initial: LiveQuality; adaptive: boolean; onQuality: (q: Quality) => void }) {
   const [governor] = useState(() => createQualityGovernor(initial));
   const live = useSyncExternalStore(scrollStore.subscribe, () => scrollStore.get().quality, () => initial);
   const ids = useMemo(() => slots.map((s) => s.id), [slots]);
   const mounted = useStagedMount(4);
+  // On narrow screens the navigator is a thin HTML progress bar: too thin for the 3D core.
+  const coreWide = useThree((s) => s.size.width) >= 700;
   const change = (direction: 1 | -1) => {
     const next = governor.step(direction);
     if (next) onQuality(next);
@@ -106,8 +111,13 @@ function StageTree({ slots, core, initial, adaptive, onQuality }: { slots: Slot[
   return (
     <>
       {adaptive ? <PerformanceMonitor onIncline={() => change(1)} onDecline={() => change(-1)} /> : null}
+      {world && live !== 'static' && live !== 'pending' ? (
+        <Suspense fallback={null}>
+          <WorldView track={world as RefObject<HTMLElement>} ids={ids} quality={live} />
+        </Suspense>
+      ) : null}
       {live !== 'static' && live !== 'pending' ? <Scenes slots={slots} quality={live} mounted={mounted} /> : null}
-      {core && live !== 'static' && live !== 'pending' && mounted >= 4 ? <CoreView track={core} ids={ids} quality={live} /> : null}
+      {core && coreWide && live !== 'static' && live !== 'pending' && mounted >= 4 ? <CoreView track={core} ids={ids} quality={live} /> : null}
     </>
   );
 }
@@ -119,11 +129,15 @@ export async function mountStage({ quality, adaptive, addFrameListener }: { qual
   canvas.dataset.stage = '';
   document.body.appendChild(canvas);
 
+  // `?dpr=0.5` renders at a reduced resolution (debugging, and tests on software-rendered WebGL).
+  const dprParam = Number(new URLSearchParams(window.location.search).get('dpr'));
+  const dprFor = (q: LiveQuality): number | [number, number] => (dprParam > 0 ? dprParam : [1, DPR_CAP[q]]);
+
   const root = createRoot(canvas);
   await root.configure({
     events,
     frameloop: 'never',
-    dpr: [1, DPR_CAP[quality]],
+    dpr: dprFor(quality),
     size: viewportSize(),
     gl: { antialias: quality === 'high', powerPreference: 'high-performance', alpha: true },
     onCreated: (state) => {
@@ -140,6 +154,7 @@ export async function mountStage({ quality, adaptive, addFrameListener }: { qual
           info: () => ({ ...state.gl.info.memory, programs: state.gl.info.programs?.length ?? 0, calls: state.gl.info.render.calls }),
           quality: () => scrollStore.get().quality,
         };
+        (window as unknown as { __world: unknown }).__world = { depth: 0, beam: 0 };
       }
     },
   });
@@ -151,7 +166,7 @@ export async function mountStage({ quality, adaptive, addFrameListener }: { qual
       handle.dispose();
       return;
     }
-    void root.configure({ dpr: [1, DPR_CAP[q]] });
+    void root.configure({ dpr: dprFor(q) });
   };
 
   // Renderer/context creation and the first React render are separate tasks.
@@ -160,13 +175,29 @@ export async function mountStage({ quality, adaptive, addFrameListener }: { qual
   const slots = readSlots();
   const coreEl = document.querySelector<HTMLElement>('[data-core-slot]');
   const core = coreEl ? { current: coreEl } : null;
+  const worldEl = document.querySelector<HTMLElement>('[data-world-slot]');
+  const world = worldEl ? { current: worldEl } : null;
   scrollStore.set({ quality });
-  root.render(<StageTree slots={slots} core={core} initial={quality} adaptive={adaptive} onQuality={setQuality} />);
+  root.render(<StageTree slots={slots} core={core} world={world} initial={quality} adaptive={adaptive} onQuality={setQuality} />);
   document.documentElement.dataset.stage = 'live';
   performance.mark('stage:live');
 
-  const removeFrame = addFrameListener((ms) => advance(ms));
-  const onResize = () => void root.configure({ size: viewportSize() });
+  // The low tier draws only while something changes (scroll, pointer, keys, resize, layer change)
+  // and for a short tail afterwards so easings settle: an idle page costs a weak device nothing.
+  let lastActivity = performance.now();
+  const poke = () => {
+    lastActivity = performance.now();
+  };
+  const ACTIVITY = ['scroll', 'pointermove', 'pointerdown', 'keydown', 'wheel', 'touchmove'] as const;
+  for (const type of ACTIVITY) window.addEventListener(type, poke, { passive: true });
+  const unsubscribe = scrollStore.subscribe(poke);
+  const removeFrame = addFrameListener((ms) => {
+    if (scrollStore.get().quality !== 'low' || performance.now() - lastActivity < 1800) advance(ms);
+  });
+  const onResize = () => {
+    poke();
+    void root.configure({ size: viewportSize() });
+  };
   const onContextLost = (e: Event) => {
     e.preventDefault();
     setQuality('static');
@@ -181,11 +212,14 @@ export async function mountStage({ quality, adaptive, addFrameListener }: { qual
       if (disposed) return;
       disposed = true;
       removeFrame();
+      unsubscribe();
+      for (const type of ACTIVITY) window.removeEventListener(type, poke);
       window.removeEventListener('resize', onResize);
       canvas.removeEventListener('webglcontextlost', onContextLost);
       root.unmount();
       canvas.remove();
       document.documentElement.dataset.stage = 'off';
+      delete document.documentElement.dataset.world;
     },
   };
   return handle;

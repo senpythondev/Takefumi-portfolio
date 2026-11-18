@@ -45,7 +45,7 @@ export async function BlockView({ block, ctx, id }: { block: Block; ctx: RichCon
         <ul className="chips">
           {block.items.map((item, i) => (
             <li key={i}>
-              <RichText text={item} ctx={ctx} />
+              <RichText text={item} ctx={ctx} compact />
             </li>
           ))}
         </ul>

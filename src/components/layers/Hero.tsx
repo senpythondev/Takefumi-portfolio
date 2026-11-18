@@ -2,6 +2,8 @@ import { getTranslations } from 'next-intl/server';
 import type { Layer, SiteContent } from '@/content';
 import { BlockView } from './Blocks';
 import { layerAnchor } from './LayerSection';
+import { CONFIDENCE_SYMBOL } from '@/components/evidence/MetricLink';
+import { phrases } from '@/components/text/Phrase';
 import { RichText, type RichContext } from './RichText';
 
 /** Layer 0 (surface). Its catch copy is the LCP element: plain server-rendered text, no JS. */
@@ -24,7 +26,7 @@ export async function Hero({ layer, person, ctx, nextAnchor }: { layer: Layer; p
           ) : null}
           <span className="hero-role">{person.role}</span>
         </h1>
-        <p className="hero-copy">{layer.title}</p>
+        <p className="hero-copy">{phrases(layer.title)}</p>
         <p className="hero-lead">
           <RichText text={layer.lead} ctx={ctx} />
         </p>
@@ -40,6 +42,9 @@ export async function Hero({ layer, person, ctx, nextAnchor }: { layer: Layer; p
             {(['measured', 'approx', 'reconstructed'] as const).map((c) => (
               <div key={c}>
                 <dt>
+                  <span className="metric-symbol" data-confidence={c} aria-hidden="true">
+                    {CONFIDENCE_SYMBOL[c]}
+                  </span>
                   <span className="metric-badge" data-confidence={c}>
                     {tc(c)}
                   </span>

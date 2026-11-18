@@ -10,7 +10,10 @@ export type MetricLabels = {
  * to the metric's evidence page; with JS, EvidenceController opens the same content in the page's
  * evidence dialog instead (PM_REVIEW_07 §2-1).
  */
-export function MetricLink({ metric, labels, locale }: { metric: Metric; labels: MetricLabels; locale: Locale }) {
+/** Compact form (hero chips, PM_REVIEW_08 §3-c): the confidence is a small symbol; its name is the accessible label. */
+export const CONFIDENCE_SYMBOL: Record<Confidence, string> = { measured: '✓', approx: '≈', reconstructed: '↺' };
+
+export function MetricLink({ metric, labels, locale, compact = false }: { metric: Metric; labels: MetricLabels; locale: Locale; compact?: boolean }) {
   return (
     <a
       className="metric"
@@ -21,7 +24,13 @@ export function MetricLink({ metric, labels, locale }: { metric: Metric; labels:
       aria-describedby={METRIC_HINT_ID}
     >
       <span className="metric-value">{metric.display}</span>
-      <span className="metric-badge">{labels.confidence[metric.confidence]}</span>
+      {compact ? (
+        <span className="metric-symbol" role="img" aria-label={labels.confidence[metric.confidence]} title={labels.confidence[metric.confidence]}>
+          {CONFIDENCE_SYMBOL[metric.confidence]}
+        </span>
+      ) : (
+        <span className="metric-badge">{labels.confidence[metric.confidence]}</span>
+      )}
     </a>
   );
 }

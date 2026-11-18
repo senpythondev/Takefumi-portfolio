@@ -15,16 +15,21 @@ async function scrollThrough(page: Page, direction: 'down' | 'up') {
   await page.waitForTimeout(600);
 }
 
+// The stage is forced on with the `low` tier: test machines render WebGL in software, where the
+// full-screen wall shader of the higher tiers takes seconds per frame and starves every other test.
+// (Real visitors on a software renderer get the static tier and no 3D at all.) `dpr=0.4` renders at
+// reduced resolution for the same reason: these tests check the stage's mechanics, not its pixels.
 test.describe('3D stage', () => {
   test.beforeEach(({}, testInfo) => {
     test.skip(testInfo.project.name !== 'desktop', 'stage tests run once, on the desktop project');
   });
 
   test('mounts one canvas / one WebGL context, without console errors', async ({ page }) => {
+    test.setTimeout(90_000);
     const errors: string[] = [];
     page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
     page.on('pageerror', (e) => errors.push(e.message));
-    await page.goto('/ja?quality=high&debug=1');
+    await page.goto('/ja?quality=low&dpr=0.4&debug=1');
     await startStage(page); // the stage loads on the first interaction, once the page listens
     await expect(page.locator('canvas')).toHaveCount(1);
     await expect.poll(async () => (await info(page)).geometries, { timeout: 10_000 }).toBeGreaterThan(0);
@@ -35,18 +40,18 @@ test.describe('3D stage', () => {
 
   test('scrolling top → bottom → top three times does not grow GPU resources', async ({ page }) => {
     test.setTimeout(150_000); // six full passes over 11 layers with software-rendered WebGL
-    await page.goto('/ja?quality=high&debug=1');
+    await page.goto('/ja?quality=low&dpr=0.4&debug=1');
     await startStage(page); // the stage loads on the first interaction, once the page listens
     // three.js counts resources once uploaded; offscreen neighbours upload on first view.
     // So the reference is the steady state after one full round trip, not the first paint.
     await scrollThrough(page, 'down');
     await scrollThrough(page, 'up');
     const steady = await info(page);
-    // Each placeholder scene owns one geometry (at most current ± 1 = 3 resident) + 1 shared by the 3D core.
-    expect(steady.geometries).toBeLessThanOrEqual(4);
+    // Wall quad + 3D core + at most current ± 1 placeholder scenes (one geometry each).
+    expect(steady.geometries).toBeLessThanOrEqual(5);
     for (let i = 0; i < 2; i += 1) {
       await scrollThrough(page, 'down');
-      expect((await info(page)).geometries).toBeLessThanOrEqual(4);
+      expect((await info(page)).geometries).toBeLessThanOrEqual(5);
       await scrollThrough(page, 'up');
     }
     await expect
@@ -61,7 +66,7 @@ test.describe('3D stage', () => {
     test.setTimeout(120_000);
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(e.message));
-    await page.goto('/ja?quality=medium&adaptive=1&debug=1');
+    await page.goto('/ja?quality=low&dpr=0.4&adaptive=1&debug=1');
     await startStage(page); // the stage loads on the first interaction, once the page listens
     const cdp = await page.context().newCDPSession(page);
     // 20×: this test proves the degrade path, so the slowdown must be unambiguous on any machine.
@@ -69,7 +74,11 @@ test.describe('3D stage', () => {
     // "25 fps or more" half of PM_REVIEW_03 §8, measured by `npm run perf`.)
     await cdp.send('Emulation.setCPUThrottlingRate', { rate: 20 });
     // PerformanceMonitor lowers the tier step by step; at 'static' the canvas is disposed.
-    await expect(page.locator('canvas')).toHaveCount(0, { timeout: 90_000 });
+    // The low tier only draws (and so only measures) while the visitor is doing something.
+    await expect(async () => {
+      await page.mouse.move(100 + Math.random() * 400, 200 + Math.random() * 200);
+      await expect(page.locator('canvas')).toHaveCount(0, { timeout: 1_000 });
+    }).toPass({ timeout: 90_000 });
     await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
     await expect(page.locator('html')).not.toHaveAttribute('data-stage', 'live');
     await expect(page.locator('.layer-stage-still').first()).toHaveCSS('opacity', '1');

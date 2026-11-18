@@ -1,79 +1,65 @@
 /**
- * 3D boring core (BRIEF §3). Drawn behind the HTML core links (src/components/layout/CoreNav.tsx),
- * which remain the accessible controls. An orthographic camera maps 1 world unit to 1 CSS pixel,
- * so each segment lines up with its ring link (same count, height and gap as the CSS grid).
+ * 3D boring core (BRIEF §3, docs/concept/core-lab.png). Drawn behind the HTML core links
+ * (src/components/layout/CoreNav.tsx), which remain the accessible controls. An orthographic
+ * camera maps 1 world unit to 1 CSS pixel, so each band lines up with its link.
  *
- * Each segment uses the sedimentary strata material in its layer colour. A ring that has just
- * been passed glows from the inside and fades over GLOW_SECONDS; the current layer keeps a faint glow.
+ * One slender cylinder, one draw call (was 11 segments): the bands of the layers passed so far
+ * stack up along it; the rest is a dark ghost, and the last band waits, faintly glowing.
  */
 import { useFrame, useThree } from '@react-three/fiber';
 import { OrthographicCamera, View } from '@react-three/drei';
-import { useEffect, useMemo, useRef, useSyncExternalStore, type RefObject } from 'react';
+import { useEffect, useMemo, useRef, type RefObject } from 'react';
 import { CylinderGeometry } from 'three';
-import { layer, type LayerColorId } from '@/styles/tokens';
 import { scrollStore, type Quality } from '@/lib/scroll/store';
-import { createStrataMaterial } from '../materials/strata';
+import { createCoreMaterial, sizeCore, type CoreMaterial } from '../materials/core';
 
-const GAP_PX = 4; // keep in sync with .core-nav ol { gap } in globals.css
 const GLOW_SECONDS = 1.6;
-const CURRENT_GLOW = 0.22;
+const TILT = 0.2; // shows the polished cut face at the top
 
-function Segments({ ids, quality }: { ids: string[]; quality: Exclude<Quality, 'static'> }) {
-  const size = useThree((s) => s.size);
-  const passed = useSyncExternalStore(scrollStore.subscribe, () => scrollStore.get().passed, () => ['surface']);
-  const n = ids.length;
-  const h = Math.max(1, (size.height - GAP_PX * (n - 1)) / n);
-  const r = Math.max(1, (size.width / 2) * 0.86);
-
-  // All segments are the same shape: one shared geometry. One material per layer colour
-  // (a single shader program is shared between them).
-  const geometry = useMemo(() => new CylinderGeometry(r, r, h * 0.98, quality === 'low' ? 16 : 32), [r, h, quality]);
-  useEffect(() => () => geometry.dispose(), [geometry]);
-  const materials = useMemo(
-    () => ids.map((id, i) => createStrataMaterial({ color: layer[id as LayerColorId] ?? layer.next, bandScale: 3.2 / h, quality, seed: i * 1.7 })),
-    [ids, h, quality],
-  );
-  useEffect(() => () => materials.forEach((m) => m.dispose()), [materials]);
-
-  // Glow bookkeeping: when a layer enters `passed`, start its glow at 1 and let it decay.
-  const glow = useRef<number[]>([]);
-  const known = useRef<Set<string> | null>(null);
-  useEffect(() => {
-    if (known.current === null) {
-      known.current = new Set(passed); // first render: no glow for layers already passed
-    } else {
-      ids.forEach((id, i) => {
-        if (passed.includes(id) && !known.current?.has(id)) glow.current[i] = 1;
-      });
-      known.current = new Set(passed);
+/** Per-frame state of the core, kept outside React (plain uniform writes). */
+function createCoreDriver(material: CoreMaterial, ids: readonly string[]) {
+  let seen = scrollStore.get().passed.length;
+  material.uniforms.uPassed.value = seen;
+  return (elapsed: number, delta: number) => {
+    const { passed, layerId } = scrollStore.get();
+    const u = material.uniforms;
+    if (passed.length > seen) {
+      u.uGlowBand.value = passed.length - 1;
+      u.uGlow.value = 1;
     }
-    ids.forEach((id, i) => materials[i]?.userData.strata.setPassed(passed.includes(id)));
-  }, [passed, ids, materials]);
+    seen = passed.length;
+    u.uPassed.value += (passed.length - u.uPassed.value) * (1 - Math.exp(-delta * 5)); // a new band grows in
+    u.uGlow.value = Math.max(0, u.uGlow.value - delta / GLOW_SECONDS);
+    u.uCurrent.value = Math.max(0, ids.indexOf(layerId));
+    u.uTime.value = elapsed;
+  };
+}
 
-  useFrame((_, delta) => {
-    const current = scrollStore.get().layerId;
-    ids.forEach((id, i) => {
-      const g = Math.max(0, (glow.current[i] ?? 0) - delta / GLOW_SECONDS);
-      glow.current[i] = g;
-      // ease-out so the glow lingers softly before it is gone
-      materials[i]?.userData.strata.setGlow(Math.max(g * g, id === current ? CURRENT_GLOW : 0));
-    });
-  });
+function Core({ ids, quality }: { ids: string[]; quality: Exclude<Quality, 'static'> }) {
+  const size = useThree((s) => s.size);
+  const radius = Math.max(1, (size.width / 2) * 0.84);
+  // The tilt foreshortens the cylinder and adds the cut face's ellipse: fit both into the slot.
+  const height = Math.max(1, (size.height - 2 * radius * Math.sin(TILT)) / Math.cos(TILT));
 
-  return (
-    <>
-      {ids.map((id, i) => (
-        <mesh key={id} geometry={geometry} material={materials[i]} position={[0, size.height / 2 - h / 2 - i * (h + GAP_PX), 0]} rotation={[0.22, 0, 0]} />
-      ))}
-    </>
-  );
+  const geometry = useMemo(() => new CylinderGeometry(radius, radius, height, quality === 'low' ? 56 : 64, 1), [radius, height, quality]);
+  useEffect(() => () => geometry.dispose(), [geometry]);
+  const material = useMemo(() => createCoreMaterial(ids, quality !== 'low'), [ids, quality]);
+  const driver = useRef<ReturnType<typeof createCoreDriver> | null>(null);
+  useEffect(() => {
+    driver.current = createCoreDriver(material, ids);
+    return () => material.dispose();
+  }, [material, ids]);
+  useEffect(() => sizeCore(material, height, radius), [material, height, radius]);
+  useFrame((state, delta) => driver.current?.(state.clock.elapsedTime, delta));
+
+  return <mesh geometry={geometry} material={material} rotation={[TILT, 0, 0]} />;
 }
 
 export function CoreView({ track, ids, quality }: { track: RefObject<HTMLElement>; ids: string[]; quality: Exclude<Quality, 'static'> }) {
   return (
     <View track={track}>
-      <OrthographicCamera makeDefault position={[0, 0, 200]} zoom={1} />
-      <Segments ids={ids} quality={quality} />
+      <OrthographicCamera makeDefault position={[0, 0, 400]} zoom={1} />
+      <Core ids={ids} quality={quality} />
     </View>
   );
 }

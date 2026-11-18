@@ -44,6 +44,10 @@ export default async function Page({ params }: PageProps<'/[locale]'>) {
 
   return (
     <>
+      {/* The world behind the page: a poster until the 3D wall is drawn over it (src/three/world). */}
+      <div className="world" data-world-slot="" aria-hidden="true">
+        <div className="world-poster" />
+      </div>
       <SiteHeader locale={locale} person={content.person} />
       <main id="main" tabIndex={-1}>
         <Hero layer={surface} person={content.person} ctx={ctx} nextAnchor={layerAnchor(rest[0].id)} />

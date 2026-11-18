@@ -1,6 +1,7 @@
 import { Fragment } from 'react';
 import type { Locale, Metric } from '@/content';
 import { MetricLink, type MetricLabels } from '@/components/evidence/MetricLink';
+import { phrases } from '@/components/text/Phrase';
 
 export type RichContext = {
   locale: Locale;
@@ -19,14 +20,14 @@ function metricFor(token: string, ctx: RichContext): Metric {
 }
 
 /** Renders text with {{metric-id}} tokens as clickable metrics. */
-export function RichText({ text, ctx }: { text: string; ctx: RichContext }) {
+export function RichText({ text, ctx, compact = false }: { text: string; ctx: RichContext; compact?: boolean }) {
   return (
     <>
       {text.split(TOKEN).map((part, i) =>
         TOKEN.test(part) ? (
-          <MetricLink key={i} metric={metricFor(part, ctx)} labels={ctx.labels} locale={ctx.locale} />
+          <MetricLink key={i} metric={metricFor(part, ctx)} labels={ctx.labels} locale={ctx.locale} compact={compact} />
         ) : (
-          <Fragment key={i}>{part}</Fragment>
+          <Fragment key={i}>{phrases(part)}</Fragment>
         ),
       )}
     </>

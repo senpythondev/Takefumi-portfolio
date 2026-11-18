@@ -25,7 +25,7 @@ const between = (scripts: ScriptSize[], from: number | null, to: number | null) 
 
 test('deferred chunks: 3D base and scene chunks stay within budget', async ({ page }) => {
   test.setTimeout(120_000);
-  await page.goto('/ja?quality=high', { waitUntil: 'networkidle' });
+  await page.goto('/ja?quality=low&dpr=0.4', { waitUntil: 'networkidle' });
   await startStage(page); // the stage loads on the first interaction, once the page listens
   // Visit every layer so every scene chunk is requested.
   for (const id of await page.locator('section.layer[data-layer]').evaluateAll((els) => els.map((e) => e.getAttribute('data-layer') as string))) {

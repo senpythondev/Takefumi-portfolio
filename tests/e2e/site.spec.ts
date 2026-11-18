@@ -30,6 +30,7 @@ for (const locale of LOCALES) {
     });
 
     test('every metric opens its evidence; Esc closes it and returns focus', async ({ page }) => {
+      test.setTimeout(90_000); // 74 open/close round trips
       await page.goto(`/${locale}`);
       const ids = await page.locator('a.metric').evaluateAll((els) => [...new Set(els.map((e) => e.getAttribute('data-metric')))]);
       expect(ids.length).toBeGreaterThan(60);

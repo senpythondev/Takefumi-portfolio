@@ -24,7 +24,7 @@ export const contentEn = {
           kind: 'summary',
           heading: 'The 30-second summary',
           items: [
-            '{{career-years}} of development in Finland and Japan',
+            'Development work in Finland and Japan for {{career-years}}',
             'Worked across SaaS, logistics, finance, Web3/NFT, generative AI, membership services, events, smart spaces, patents and security',
             'Across projects: API response times improved by {{api-speedup}}; deployment time cut by {{deploy-speedup}} through CI/CD work',
             'Core stack: Python (FastAPI), TypeScript, React/Next.js, Node.js, PHP (Laravel/WordPress), AWS, Linux',

@@ -28,7 +28,7 @@ test('3D stage mounts a single canvas in WebKit (forced medium)', async ({ page 
   test.setTimeout(60_000);
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
-  await page.goto('/ja?quality=medium');
+  await page.goto('/ja?quality=low&dpr=0.4');
   await startStage(page, async (p) => {
     await p.touchscreen.tap(20, 300).catch(() => undefined);
     await p.mouse.move(20, 20);

@@ -1,6 +1,6 @@
 'use client';
 
-import type { CSSProperties } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import { useScrollState } from '@/lib/scroll/store';
 
 export type CoreLayer = { id: string; depth: string; title: string; color: string };
@@ -15,11 +15,18 @@ export function CoreNav({ layers, label }: { layers: CoreLayer[]; label: string 
   const passed = useScrollState((s) => s.passed);
   const currentId = useScrollState((s) => s.layerId);
   const current = layers.find((l) => l.id === currentId) ?? layers[0];
+  const [open, setOpen] = useState(false);
+  // CSS reads the current layer from <html data-layer> (the poster belongs to the surface only).
+  useEffect(() => {
+    document.documentElement.dataset.layer = currentId;
+  }, [currentId]);
 
   return (
     <>
-      <nav className="core-nav" aria-label={label} data-core-slot="">
-        <ol>
+      {/* Narrow screens: the core is a thin progress bar; this button opens it into a labelled list. */}
+      <button type="button" className="core-toggle" aria-expanded={open} aria-controls="core-list" aria-label={label} onClick={() => setOpen((o) => !o)} />
+      <nav className="core-nav" aria-label={label} data-core-slot="" data-open={open ? '' : undefined}>
+        <ol id="core-list">
           {layers.map((l) => (
             <li key={l.id}>
               <a
@@ -28,8 +35,9 @@ export function CoreNav({ layers, label }: { layers: CoreLayer[]; label: string 
                 data-passed={passed.includes(l.id) ? '' : undefined}
                 aria-current={l.id === currentId ? 'location' : undefined}
                 style={{ '--ring': l.color } as CSSProperties}
+                onClick={() => setOpen(false)}
               >
-                <span className="sr-only">
+                <span className="core-label">
                   {l.depth}：{l.title}
                 </span>
               </a>
