@@ -213,9 +213,11 @@ function writeActive(id: string, display: 'swap' | 'optional'): void {
 import localFont from 'next/font/local';
 
 // next/font names each family after its constant: distinctive names, so no installed font can match.
+// Every face is preloaded: with font-display: optional, a face that is not ready within ~100 ms is not
+// used for that page view at all (the metric values above the fold showed in the fallback).
 ${decl('gtSans', 'sans', true, 'Arial')}
 ${decl('gtHeading', 'heading', true, 'Times New Roman')}
-${decl('gtMono', 'mono', false, 'Arial')}
+${decl('gtMono', 'mono', true, 'Arial')}
 
 /** CSS variables for <html>: --font-face-sans / -heading / -mono (used by the stacks in tokens.ts). */
 export const fontVariables = [gtSans, gtHeading, gtMono].flatMap((f) => (f ? [f.variable] : [])).join(' ');

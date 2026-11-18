@@ -141,7 +141,12 @@ for (const locale of LOCALES) {
     // @visual: font rendering differs between machines until Phase 4 self-hosts subset fonts,
     // so these baselines are checked locally and excluded on CI (re-baselined on CI in Phase 4).
     test('visual: first view, Genten evaluation, evidence drawer', { tag: '@visual' }, async ({ page }) => {
+      // font-display: optional keeps the fallback for a page view whose fonts arrive late (parallel
+      // test load): warm the cache with one visit, then compare the second.
       await page.goto(`/${locale}`);
+      await page.evaluate(() => document.fonts.ready);
+      await page.reload();
+      await page.evaluate(() => document.fonts.ready);
       await expect(page).toHaveScreenshot(`${locale}-first-view.png`);
       await expect(page.locator('section[data-layer="genten"] .genten-eval')).toHaveScreenshot(`${locale}-genten-eval.png`);
       await page.locator('a.metric[data-metric="auction-errors"]').first().click();

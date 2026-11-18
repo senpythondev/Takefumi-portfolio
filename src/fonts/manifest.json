@@ -1,5 +1,5 @@
 {
-  "display": "swap",
+  "display": "optional",
   "active": "a",
   "sets": {
     "a": {
