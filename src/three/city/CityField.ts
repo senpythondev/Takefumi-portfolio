@@ -20,7 +20,6 @@ import {
   InstancedBufferAttribute,
   InstancedMesh,
   Matrix4,
-  Mesh,
   ShaderMaterial,
   Vector3,
   type Camera,
@@ -38,7 +37,7 @@ export type CityOptions = {
   seed?: number;
 };
 
-type District = { center: Vector3; detail: InstancedMesh<BufferGeometry, ShaderMaterial>; block: Mesh; pulse: InstancedBufferAttribute };
+type District = { center: Vector3; detail: InstancedMesh<BufferGeometry, ShaderMaterial>; blockMatrix: Matrix4; near: boolean | null; pulse: InstancedBufferAttribute };
 
 const CELL = 1; // spacing between buildings inside a district
 const STREET = 2.2; // gap between districts
@@ -130,7 +129,8 @@ export class CityField {
   readonly size: number;
   private readonly geometry = buildingGeometry();
   private readonly material: ShaderMaterial;
-  private readonly blockMaterials: ShaderMaterial[] = [];
+  private blocks!: InstancedMesh<BufferGeometry, ShaderMaterial>;
+  private static readonly HIDDEN = new Matrix4().makeScale(0, 0, 0);
   private lodDistance: number;
 
   constructor({ heights, districtsPerSide = 15, lodDistance = 70, baseColor = '#a6806f', pulseColor = '#e5613f', fogColor = '#13110f', seed = 45000 }: CityOptions) {
@@ -154,6 +154,7 @@ export class CityField {
     this.material = new ShaderMaterial({ vertexShader, fragmentShader, uniforms });
 
     const m = new Matrix4();
+    const blockTones: number[] = [];
     let next = 0;
     for (let d = 0; d < districtCount && next < this.count; d += 1) {
       const n = Math.min(perDistrict, this.count - next);
@@ -189,33 +190,46 @@ export class CityField {
       detail.computeBoundingSphere();
       detail.matrixAutoUpdate = false;
 
-      // Far LOD: one block with the district footprint and its mean height.
-      const blockMaterial = this.material.clone();
-      blockMaterial.uniforms = { ...uniforms, uTone: { value: 0.35 + rand() * 0.3 } }; // shares time/fog/colour uniforms
-      this.blockMaterials.push(blockMaterial);
-      const block = new Mesh(this.geometry, blockMaterial);
-      block.scale.set(side * CELL * 0.92, (heightSum / n) * 0.9, side * CELL * 0.92);
-      block.position.set(cx, 0, cz);
-      block.updateMatrix();
-      block.matrixAutoUpdate = false;
-      block.visible = false;
+      // Far LOD: the district as one block (footprint × mean height), drawn by the shared block mesh.
+      const blockMatrix = new Matrix4().makeScale(side * CELL * 0.92, (heightSum / n) * 0.9, side * CELL * 0.92).setPosition(cx, 0, cz);
+      blockTones.push(0.35 + rand() * 0.3);
 
-      this.group.add(detail, block);
-      this.districts.push({ center: new Vector3(cx, 0, cz), detail, block, pulse: pulseAttr });
+      this.group.add(detail);
+      this.districts.push({ center: new Vector3(cx, 0, cz), detail, blockMatrix, near: null, pulse: pulseAttr });
     }
+
+    // All far blocks in ONE instanced draw call (was one draw call per district).
+    const bg = new BufferGeometry();
+    bg.setIndex(this.geometry.getIndex());
+    bg.setAttribute('position', this.geometry.getAttribute('position'));
+    bg.setAttribute('normal', this.geometry.getAttribute('normal'));
+    bg.setAttribute('aTone', new InstancedBufferAttribute(new Float32Array(blockTones), 1));
+    bg.setAttribute('aPulse', new InstancedBufferAttribute(new Float32Array(this.districts.length), 1));
+    this.blocks = new InstancedMesh<BufferGeometry, ShaderMaterial>(bg, this.material, this.districts.length);
+    this.blocks.matrixAutoUpdate = false;
+    this.blocks.frustumCulled = false; // spans the whole city
+    this.group.add(this.blocks);
   }
 
-  /** Call once per frame: switches each district between detail and block by camera distance. */
+  /**
+   * Call once per frame: switches each district between detail and block by camera distance.
+   * Block instance matrices are rewritten only for districts whose state changed.
+   */
   update(camera: Camera, timeSeconds: number): { detailed: number; blocks: number } {
     (this.material.uniforms.uTime as { value: number }).value = timeSeconds;
     let detailed = 0;
+    let changed = false;
     const limit = this.lodDistance * this.lodDistance;
-    for (const d of this.districts) {
+    this.districts.forEach((d, i) => {
       const near = d.center.distanceToSquared(camera.position) < limit;
-      d.detail.visible = near;
-      d.block.visible = !near;
       if (near) detailed += 1;
-    }
+      if (near === d.near) return;
+      d.near = near;
+      d.detail.visible = near;
+      this.blocks.setMatrixAt(i, near ? CityField.HIDDEN : d.blockMatrix);
+      changed = true;
+    });
+    if (changed) this.blocks.instanceMatrix.needsUpdate = true;
     return { detailed, blocks: this.districts.length - detailed };
   }
 
@@ -239,9 +253,10 @@ export class CityField {
       d.detail.geometry.dispose();
       d.detail.dispose();
     }
+    this.blocks.geometry.dispose();
+    this.blocks.dispose();
     this.geometry.dispose();
     this.material.dispose();
-    for (const m of this.blockMaterials) m.dispose();
   }
 }
 

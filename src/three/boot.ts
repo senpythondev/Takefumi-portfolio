@@ -14,7 +14,7 @@ function yieldToMain(): Promise<void> {
 }
 
 export async function boot(forced: string | null): Promise<void> {
-  const decision = await decideQuality(forced);
+  const decision = decideQuality(forced);
   if (new URLSearchParams(window.location.search).has('debug')) {
     (window as unknown as { __qualityDecision: unknown }).__qualityDecision = decision;
   }
@@ -31,6 +31,8 @@ export async function boot(forced: string | null): Promise<void> {
 
   await yieldToMain();
   performance.mark('stage:3d');
+  // One import on purpose: importing 'three' on its own pulls in the whole namespace and defeats
+  // tree-shaking (measured: 3D base 195.2 KB → 257.6 KB). A module's evaluation cannot be split.
   const { mountStage } = await import('./Stage');
   await yieldToMain();
   performance.mark('stage:scenes');

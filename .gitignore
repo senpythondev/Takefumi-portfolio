@@ -22,9 +22,6 @@ coverage/
 # review screenshots are regenerated with `npm run screenshots` (not committed)
 docs/screenshots/
 
-# generated at build time (scripts/copy-gpu-benchmarks.ts)
-public/gpu-benchmarks/
-
 # Vercel
 .vercel/
 

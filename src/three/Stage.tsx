@@ -9,7 +9,7 @@
  */
 import { advance, createRoot, events, useThree, type ReconcilerRoot } from '@react-three/fiber';
 import { PerformanceMonitor, PerspectiveCamera, View } from '@react-three/drei';
-import { Suspense, useEffect, useMemo, useRef, useSyncExternalStore, type RefObject } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState, useSyncExternalStore, type RefObject } from 'react';
 import { scrollStore, type Quality } from '@/lib/scroll/store';
 import type { FrameListener } from '@/lib/scroll/effects';
 import { DPR_CAP, stepQuality } from './quality';
@@ -44,13 +44,40 @@ function Precompile() {
   return null;
 }
 
-function Scenes({ slots, quality }: { slots: Slot[]; quality: LiveQuality }) {
+/** Next idle moment (Safari has no requestIdleCallback). */
+function whenIdle(fn: () => void): () => void {
+  const w = window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number };
+  if (typeof w.requestIdleCallback === 'function') {
+    const id = w.requestIdleCallback(fn, { timeout: 400 });
+    return () => window.cancelIdleCallback(id);
+  }
+  const id = window.setTimeout(fn, 60);
+  return () => window.clearTimeout(id);
+}
+
+/**
+ * How many of [current scene, next scene, previous scene, 3D core] are mounted. Starts at 1 and
+ * grows by one per idle slot, so the first frame only prepares the current layer and each
+ * further mount (chunk evaluation, shader compile, upload) is its own short task (PM_REVIEW_05 §3.2).
+ */
+function useStagedMount(total: number): number {
+  const [count, setCount] = useState(1);
+  useEffect(() => {
+    if (count >= total) return;
+    return whenIdle(() => setCount((c) => c + 1));
+  }, [count, total]);
+  return count;
+}
+
+function Scenes({ slots, quality, mounted }: { slots: Slot[]; quality: LiveQuality; mounted: number }) {
   const layerId = useSyncExternalStore(scrollStore.subscribe, () => scrollStore.get().layerId, () => 'surface');
   const current = Math.max(0, slots.findIndex((s) => s.id === layerId));
+  // Mount order: current (1), next (2), previous (3).
+  const allowed = new Set([current, current + 1, current - 1].slice(0, mounted));
   return (
     <>
       {slots.map((slot, i) => {
-        if (Math.abs(i - current) > MOUNT_WINDOW) return null;
+        if (Math.abs(i - current) > MOUNT_WINDOW || !allowed.has(i)) return null;
         const Scene = SCENES[slot.id];
         if (!Scene) return null;
         return (
@@ -71,6 +98,7 @@ function StageTree({ slots, core, initial, adaptive, onQuality }: { slots: Slot[
   const quality = useRef<Quality>(initial);
   const live = useSyncExternalStore(scrollStore.subscribe, () => scrollStore.get().quality, () => initial);
   const ids = useMemo(() => slots.map((s) => s.id), [slots]);
+  const mounted = useStagedMount(4);
   const change = (direction: 1 | -1) => {
     const next = stepQuality(quality.current, direction);
     if (next === quality.current) return;
@@ -80,8 +108,8 @@ function StageTree({ slots, core, initial, adaptive, onQuality }: { slots: Slot[
   return (
     <>
       {adaptive ? <PerformanceMonitor flipflops={3} onIncline={() => change(1)} onDecline={() => change(-1)} onFallback={() => onQuality('low')} /> : null}
-      {live !== 'static' && live !== 'pending' ? <Scenes slots={slots} quality={live} /> : null}
-      {core && live !== 'static' && live !== 'pending' ? <CoreView track={core} ids={ids} quality={live} /> : null}
+      {live !== 'static' && live !== 'pending' ? <Scenes slots={slots} quality={live} mounted={mounted} /> : null}
+      {core && live !== 'static' && live !== 'pending' && mounted >= 4 ? <CoreView track={core} ids={ids} quality={live} /> : null}
     </>
   );
 }
@@ -128,12 +156,16 @@ export async function mountStage({ quality, adaptive, addFrameListener }: { qual
     void root.configure({ dpr: [1, DPR_CAP[q]] });
   };
 
+  // Renderer/context creation and the first React render are separate tasks.
+  await new Promise<void>((resolve) => setTimeout(resolve, 0));
+
   const slots = readSlots();
   const coreEl = document.querySelector<HTMLElement>('[data-core-slot]');
   const core = coreEl ? { current: coreEl } : null;
   scrollStore.set({ quality });
   root.render(<StageTree slots={slots} core={core} initial={quality} adaptive={adaptive} onQuality={setQuality} />);
   document.documentElement.dataset.stage = 'live';
+  performance.mark('stage:live');
 
   const removeFrame = addFrameListener((ms) => advance(ms));
   const onResize = () => void root.configure({ size: viewportSize() });

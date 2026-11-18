@@ -10,7 +10,7 @@
  * Exposes window.__city for automated measurement.
  */
 import { useEffect, useRef, useState } from 'react';
-import { Color, PerspectiveCamera, Scene, Vector3, WebGLRenderer } from 'three';
+import { Color, CustomBlending, MeshBasicMaterial, OneFactor, PerspectiveCamera, Scene, Vector3, WebGLRenderTarget, WebGLRenderer } from 'three';
 import { CityField, sampleHeights } from './CityField';
 
 type Stats = { fps: number; low1: number; jsMs: number; calls: number; triangles: number; detailed: number; blocks: number; phase: string };
@@ -57,6 +57,7 @@ export function CityLab() {
     const T = { hold: 1.5, dive: 3.5, stay: 2.5, back: 2.5 };
     const total = T.hold + T.dive + T.stay + T.back;
     let diveStart: number | null = loop ? 0 : null;
+    let manualK: number | null = null; // __city.at(k): fixed camera position along the dive
     diveRef.current = () => {
       diveStart = performance.now() / 1000;
     };
@@ -102,6 +103,10 @@ export function CityLab() {
           phase = 'back';
         } else diveStart = null;
       }
+      if (manualK !== null) {
+        k = manualK;
+        phase = `at ${manualK}`;
+      }
       camera.position.lerpVectors(overviewPos, divePos, k);
       look.lerpVectors(overviewLook, target, k);
       camera.lookAt(look);
@@ -134,6 +139,45 @@ export function CityLab() {
       stats: () => latest,
       memory: () => ({ ...renderer.info.memory, programs: renderer.info.programs?.length ?? 0 }),
       dive: () => diveRef.current(),
+      at: (k: number | null) => {
+        manualK = k;
+      },
+      /**
+       * GPU-load estimate (PM_REVIEW_06 §2-2): renders the current view once with an additive
+       * "count" material (+1/255 per shaded fragment, depth test on, normal draw order) and reads
+       * it back. coverage = share of pixels showing buildings; mean/p95/max = fragment-shader
+       * invocations per covered pixel (≈ overdraw with early depth rejection).
+       */
+      overdraw: () => {
+        const w = Math.max(1, Math.floor(window.innerWidth / 2));
+        const h = Math.max(1, Math.floor(window.innerHeight / 2));
+        const target = new WebGLRenderTarget(w, h);
+        const counter = new MeshBasicMaterial({ color: new Color(1 / 255, 0, 0), blending: CustomBlending, blendSrc: OneFactor, blendDst: OneFactor });
+        const background = scene.background;
+        scene.background = null;
+        scene.overrideMaterial = counter;
+        renderer.setRenderTarget(target);
+        renderer.setClearColor(0x000000, 1);
+        renderer.clear();
+        renderer.render(scene, camera);
+        const px = new Uint8Array(w * h * 4);
+        renderer.readRenderTargetPixels(target, 0, 0, w, h, px);
+        renderer.setRenderTarget(null);
+        scene.overrideMaterial = null;
+        scene.background = background;
+        counter.dispose();
+        target.dispose();
+        const counts: number[] = [];
+        for (let i = 0; i < px.length; i += 4) if ((px[i] as number) > 0) counts.push(px[i] as number);
+        counts.sort((a, b) => a - b);
+        const mean = counts.reduce((s, c) => s + c, 0) / Math.max(1, counts.length);
+        return {
+          coverage: Math.round((counts.length / (w * h)) * 1000) / 10,
+          mean: Math.round(mean * 100) / 100,
+          p95: counts[Math.floor(counts.length * 0.95)] ?? 0,
+          max: counts[counts.length - 1] ?? 0,
+        };
+      },
       resetFrames: () => {
         frames.splice(0, frames.length);
         jsCost.splice(0, jsCost.length);

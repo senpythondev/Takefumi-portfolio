@@ -28,6 +28,10 @@ export default defineConfig({
     { name: 'mobile', testDir: './tests/e2e', use: { ...devices['Pixel 7'] } },
     { name: 'reduced-motion', testDir: './tests/e2e', use: { ...desktop, contextOptions: { reducedMotion: 'reduce' } } },
     { name: 'budget', testDir: './tests/budget', use: { ...devices['Pixel 7'] } },
+    // Safari behaviour (WebKit). Needs WebKit's system libraries: runs on CI.
+    { name: 'webkit', testDir: './tests/webkit', use: { ...devices['iPhone 15'] } },
+    // Substitute measurements (CPU throttling, PM_REVIEW_03 §8). Slow; run with `npm run perf`.
+    { name: 'perf', testDir: './tests/perf', use: desktop },
   ],
   webServer: {
     command: `npx next start -p ${PORT}`,

@@ -4,7 +4,7 @@ import { collectScripts, kb, sum, type ScriptSize } from './measure';
 
 /**
  * Deferred JS, attributed by the performance marks set in src/three/StageLoader.tsx and boot.ts:
- *   stage:start   → boot (quality decision, detect-gpu)
+ *   stage:start   → boot (quality decision)
  *   stage:effects → effects bundle (Lenis + GSAP/ScrollTrigger)
  *   stage:3d      → 3D base (three.js + R3F + drei), counted once — budget 250 KB gzip (PM_REVIEW_01 D8)
  *   stage:scenes  → scene chunks loaded as scenes mount — budget 250 KB gzip each (CLAUDE.md §4)
