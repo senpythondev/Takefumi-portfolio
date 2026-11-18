@@ -15,6 +15,7 @@ PM_REVIEW_07 §5 の方針に沿った、プレビュー環境の取り込み手
 | ビルドの確認 | Git の管理下にあるファイルだけをまっさらなフォルダに写し、`npm ci` → `npm run build` を3通りの環境変数で試した。①`VERCEL_ENV=preview`：`/lab/city` を含む、`noindex` あり。②`VERCEL_ENV=production`：`/lab` なし、`noindex` あり。③ ②＋`SITE_LAUNCHED=true`：`noindex` なし。3つとも警告なしで成功した。 |
 | 守秘チェック | Vercel のビルド環境には `.git` がない。そのため守秘チェックは、フォルダを走査するときも `.gitignore` に従うようにした。生成物やログをリポジトリの一部と誤認しない。 |
 | `main` | Phase 3（PM_REVIEW_07 で合格）と上記の対応までを `main` に入れた。最初の本番デプロイにも `noindex` が付く。 |
+| 計測用のブランチ | `vercel.json` の `git.deploymentEnabled`（minimatch のパターン）で、`ab/**` のブランチへの push ではデプロイを作らない（PM の指示）。`ab/*` は、CI の A/B 計測（`.github/workflows/ab.yml`）専用のブランチ。ほかのブランチはこれまでどおりプレビューになる。 |
 
 ## 1. 取り込み
 
