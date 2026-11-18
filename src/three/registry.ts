@@ -15,6 +15,7 @@ import {
   Mesh,
   MeshBasicMaterial,
   MeshStandardMaterial,
+  OrthographicCamera,
   PerspectiveCamera,
   PlaneGeometry,
 } from 'three';
@@ -28,6 +29,7 @@ extend({
   Mesh,
   MeshBasicMaterial,
   MeshStandardMaterial,
+  OrthographicCamera, // used internally by drei's <OrthographicCamera> (3D core)
   PerspectiveCamera, // used internally by drei's <PerspectiveCamera>
   PlaneGeometry,
 });

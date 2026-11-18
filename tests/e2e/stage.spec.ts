@@ -43,11 +43,11 @@ test.describe('3D stage', () => {
     await scrollThrough(page, 'down');
     await scrollThrough(page, 'up');
     const steady = await info(page);
-    // Each placeholder scene owns one geometry; at most current ± 1 = 3 scenes may be resident.
-    expect(steady.geometries).toBeLessThanOrEqual(3);
+    // Each placeholder scene owns one geometry (at most current ± 1 = 3 resident) + 1 shared by the 3D core.
+    expect(steady.geometries).toBeLessThanOrEqual(4);
     for (let i = 0; i < 2; i += 1) {
       await scrollThrough(page, 'down');
-      expect((await info(page)).geometries).toBeLessThanOrEqual(3);
+      expect((await info(page)).geometries).toBeLessThanOrEqual(4);
       await scrollThrough(page, 'up');
     }
     await expect
@@ -56,6 +56,24 @@ test.describe('3D stage', () => {
         return [now.geometries, now.textures, now.programs];
       }, { timeout: 10_000 })
       .toEqual([steady.geometries, steady.textures, steady.programs]);
+  });
+
+  test('auto-degrade: under heavy CPU throttling the stage steps down to static without breaking', async ({ page }) => {
+    test.setTimeout(120_000);
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+    await page.goto('/ja?quality=medium&adaptive=1&debug=1');
+    await page.mouse.move(20, 20);
+    await expect(page.locator('html')).toHaveAttribute('data-stage', 'live', { timeout: 15_000 });
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send('Emulation.setCPUThrottlingRate', { rate: 6 });
+    // PerformanceMonitor lowers the tier step by step; at 'static' the canvas is disposed.
+    await expect(page.locator('canvas')).toHaveCount(0, { timeout: 90_000 });
+    await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
+    await expect(page.locator('html')).not.toHaveAttribute('data-stage', 'live');
+    await expect(page.locator('.layer-stage-still').first()).toHaveCSS('opacity', '1');
+    await expect(page.locator('section[data-layer="genten"] h2')).toBeVisible();
+    expect(errors).toEqual([]);
   });
 
   test('?quality=static loads no 3D at all', async ({ page }) => {

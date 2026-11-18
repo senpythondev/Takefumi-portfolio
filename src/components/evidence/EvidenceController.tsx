@@ -21,9 +21,24 @@ export function EvidenceController() {
     const nativeCommands = 'command' in HTMLButtonElement.prototype;
     const nativeClosedBy = 'closedBy' in HTMLDialogElement.prototype;
 
+    // "Copy a link to this evidence": only usable with JS, so it is revealed here.
+    for (const b of document.querySelectorAll<HTMLButtonElement>('button[data-copy-evidence]')) b.hidden = false;
+
     const onClick = (event: MouseEvent) => {
       const target = event.target;
       if (!(target instanceof Element)) return;
+
+      const copy = target.closest<HTMLButtonElement>('button[data-copy-evidence]');
+      if (copy) {
+        const url = `${window.location.origin}${window.location.pathname}#${copy.dataset.copyEvidence}`;
+        void navigator.clipboard.writeText(url).then(
+          () => {
+            copy.textContent = copy.dataset.copiedLabel ?? copy.textContent;
+          },
+          () => undefined, // clipboard blocked: the URL hash still works when typed or shared
+        );
+        return;
+      }
 
       if (!nativeCommands) {
         const button = target.closest<HTMLButtonElement>('button[commandfor][command="show-modal"]');

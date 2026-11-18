@@ -236,6 +236,7 @@ export function parityProblems(ja: SiteContent, en: SiteContent): string[] {
     if (a.confidence !== b.confidence) problems.push(`metric ${id}: confidence ja=${a.confidence} en=${b.confidence}`);
     if (a.evidence.source !== b.evidence.source) problems.push(`metric ${id}: source ja=${a.evidence.source} en=${b.evidence.source}`);
     if ((a.evidence.method === null) !== (b.evidence.method === null)) problems.push(`metric ${id}: method present in only one locale`);
+    if (a.evidence.chart !== b.evidence.chart) problems.push(`metric ${id}: chart ja=${a.evidence.chart} en=${b.evidence.chart}`);
     if (sortedNumbers(a.display) !== sortedNumbers(b.display)) {
       problems.push(`metric ${id}: numbers differ — ja "${a.display}" vs en "${b.display}"`);
     }

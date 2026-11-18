@@ -8,7 +8,8 @@
     "summary": "30秒で見る",
     "switchLanguage": "English",
     "layers": "地層の一覧",
-    "dig": "掘る"
+    "dig": "掘る",
+    "core": "ボーリングコア（地層へ移動）"
   },
   "depth": {
     "label": "{index, select, 0 {地表} 9 {岩盤} 10 {次の地層} other {第{index}層}}"
@@ -31,7 +32,9 @@
     "note": "補足",
     "open": "根拠を表示",
     "legendTitle": "数字の読み方",
-    "legend": "数字はすべて押すと根拠が開きます。確度ラベルは次のとおりです。"
+    "legend": "数字はすべて押すと根拠が開きます。確度ラベルは次のとおりです。",
+    "copyLink": "この根拠へのリンクをコピー",
+    "copied": "リンクをコピーしました"
   },
   "source": {
     "records": "本人の実績記録",

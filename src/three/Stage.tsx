@@ -14,6 +14,7 @@ import { scrollStore, type Quality } from '@/lib/scroll/store';
 import type { FrameListener } from '@/lib/scroll/effects';
 import { DPR_CAP, stepQuality } from './quality';
 import { SCENES } from './scenes';
+import { CoreView } from './core/CoreView';
 import './registry';
 
 type Slot = { id: string; ref: RefObject<HTMLElement> };
@@ -66,7 +67,7 @@ function Scenes({ slots, quality }: { slots: Slot[]; quality: LiveQuality }) {
   );
 }
 
-function StageTree({ slots, initial, onQuality }: { slots: Slot[]; initial: LiveQuality; onQuality: (q: Quality) => void }) {
+function StageTree({ slots, core, initial, adaptive, onQuality }: { slots: Slot[]; core: RefObject<HTMLElement> | null; initial: LiveQuality; adaptive: boolean; onQuality: (q: Quality) => void }) {
   const quality = useRef<Quality>(initial);
   const live = useSyncExternalStore(scrollStore.subscribe, () => scrollStore.get().quality, () => initial);
   const change = (direction: 1 | -1) => {
@@ -77,13 +78,14 @@ function StageTree({ slots, initial, onQuality }: { slots: Slot[]; initial: Live
   };
   return (
     <>
-      <PerformanceMonitor flipflops={3} onIncline={() => change(1)} onDecline={() => change(-1)} onFallback={() => onQuality('low')} />
+      {adaptive ? <PerformanceMonitor flipflops={3} onIncline={() => change(1)} onDecline={() => change(-1)} onFallback={() => onQuality('low')} /> : null}
       {live !== 'static' && live !== 'pending' ? <Scenes slots={slots} quality={live} /> : null}
+      {core && live !== 'static' ? <CoreView track={core} ids={slots.map((s) => s.id)} /> : null}
     </>
   );
 }
 
-export async function mountStage({ quality, addFrameListener }: { quality: LiveQuality; addFrameListener: (fn: FrameListener) => () => void }): Promise<StageHandle> {
+export async function mountStage({ quality, adaptive, addFrameListener }: { quality: LiveQuality; adaptive: boolean; addFrameListener: (fn: FrameListener) => () => void }): Promise<StageHandle> {
   const canvas = document.createElement('canvas');
   canvas.className = 'stage-canvas';
   canvas.setAttribute('aria-hidden', 'true');
@@ -126,8 +128,10 @@ export async function mountStage({ quality, addFrameListener }: { quality: LiveQ
   };
 
   const slots = readSlots();
+  const coreEl = document.querySelector<HTMLElement>('[data-core-slot]');
+  const core = coreEl ? { current: coreEl } : null;
   scrollStore.set({ quality });
-  root.render(<StageTree slots={slots} initial={quality} onQuality={setQuality} />);
+  root.render(<StageTree slots={slots} core={core} initial={quality} adaptive={adaptive} onQuality={setQuality} />);
   document.documentElement.dataset.stage = 'live';
 
   const removeFrame = addFrameListener((ms) => advance(ms));

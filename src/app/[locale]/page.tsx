@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { hasLocale } from 'next-intl';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { getContent, metricMap } from '@/content';
+import { buildCharts } from '@/content/charts';
 import { routing } from '@/i18n/routing';
 import { EvidenceController } from '@/components/evidence/EvidenceController';
 import { EvidenceDialogs } from '@/components/evidence/EvidenceDialogs';
@@ -12,6 +13,9 @@ import type { RichContext } from '@/components/layers/RichText';
 import { LayerIndex, SiteFooter, SiteHeader } from '@/components/layout/SiteChrome';
 import { StageLoader } from '@/three/StageLoader';
 import { LayerTracker } from '@/lib/scroll/LayerTracker';
+import { LAYER_COLORS } from '@/lib/layer-colors';
+import { CoreNav } from '@/components/layout/CoreNav';
+import { DebugHudLoader } from '@/components/debug/DebugHudLoader';
 
 /**
  * One page, surface → bedrock. Everything here is server-rendered HTML; the only client code is
@@ -24,6 +28,8 @@ export default async function Page({ params }: PageProps<'/[locale]'>) {
 
   const content = getContent(locale);
   const tc = await getTranslations('confidence');
+  const tn = await getTranslations('nav');
+  const td = await getTranslations('depth');
   const te = await getTranslations('evidence');
   const ctx: RichContext = {
     metrics: metricMap(content),
@@ -46,13 +52,18 @@ export default async function Page({ params }: PageProps<'/[locale]'>) {
         ))}
       </main>
       <SiteFooter />
+      <CoreNav
+        label={tn('core')}
+        layers={content.layers.map((l, index) => ({ id: l.id, depth: td('label', { index }), title: l.title, color: LAYER_COLORS[l.id] ?? '#777' }))}
+      />
       <span id={METRIC_HINT_ID} hidden>
         {te('open')}
       </span>
-      <EvidenceDialogs metrics={content.metrics} />
+      <EvidenceDialogs metrics={content.metrics} charts={buildCharts(content)} />
       <EvidenceController />
       <LayerTracker />
       <StageLoader />
+      <DebugHudLoader />
     </>
   );
 }

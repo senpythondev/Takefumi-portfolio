@@ -34,5 +34,8 @@ export async function boot(forced: string | null): Promise<void> {
   const { mountStage } = await import('./Stage');
   await yieldToMain();
   performance.mark('stage:scenes');
-  await mountStage({ quality: decision.quality, addFrameListener: effects.addFrameListener });
+  // A forced tier (?quality=) is pinned for testing/debugging; add &adaptive=1 to let it adapt.
+  const params = new URLSearchParams(window.location.search);
+  const adaptive = forced === null || params.has('adaptive');
+  await mountStage({ quality: decision.quality, adaptive, addFrameListener: effects.addFrameListener });
 }

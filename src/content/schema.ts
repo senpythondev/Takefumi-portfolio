@@ -53,7 +53,10 @@ export const EvidenceSchema = z.object({
   method: z.string().min(1).nullable(),
   source: SourceSchema,
   note: z.string().min(1).optional(),
+  /** A build-time SVG chart drawn from docs/facts/ (no JS). */
+  chart: z.enum(['genten-accuracy', 'genten-citation', 'genten-time']).optional(),
 });
+export type ChartKind = NonNullable<z.infer<typeof EvidenceSchema>['chart']>;
 export type Evidence = z.infer<typeof EvidenceSchema>;
 
 export const MetricSchema = z.object({

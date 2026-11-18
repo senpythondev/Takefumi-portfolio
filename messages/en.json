@@ -8,7 +8,8 @@
     "summary": "30-second summary",
     "switchLanguage": "日本語",
     "layers": "Layers",
-    "dig": "Dig"
+    "dig": "Dig",
+    "core": "Boring core (jump to a layer)"
   },
   "depth": {
     "label": "{index, select, 0 {Surface} 9 {Bedrock} 10 {Next layer} other {Layer {index}}}"
@@ -31,7 +32,9 @@
     "note": "Note",
     "open": "Show evidence",
     "legendTitle": "How to read the numbers",
-    "legend": "Every number opens its evidence when you select it. Each one carries one of three labels:"
+    "legend": "Every number opens its evidence when you select it. Each one carries one of three labels:",
+    "copyLink": "Copy a link to this evidence",
+    "copied": "Link copied"
   },
   "source": {
     "records": "Author's project records",
