@@ -4,6 +4,8 @@ on:
   push:
     branches: [main, 'feat/**']
   pull_request:
+  # Manual runs (gh workflow run CI --ref <branch>). Needs this file on the default branch.
+  workflow_dispatch:
 
 permissions:
   contents: read
