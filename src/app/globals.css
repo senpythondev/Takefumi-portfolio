@@ -1,29 +1,10 @@
 @import 'tailwindcss';
 
-/*
- * PROVISIONAL styles for the Phase 2 HTML-only version.
- * Phase 4 replaces these values with src/styles/tokens.ts (design system).
- * Fonts are the system stack until the subset pipeline lands in Phase 4.
- */
-@theme {
-  --color-ground: #13110f;
-  --color-stratum: #1b1815;
-  --color-seam: #34302a;
-  --color-ink: #ece6dd;
-  --color-ink-muted: #b3aa9f;
-  --color-evidence: #8fcbd0;
-  --color-approx: #ddb877;
-  --color-reconstructed: #d3b9a6;
-  --color-ok: #9cc9a0;
-  --color-crisis: #e59a7a;
-  --font-sans: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', 'Yu Gothic UI', 'Meiryo', system-ui, sans-serif;
-  --font-mono: ui-monospace, 'SFMono-Regular', 'Menlo', 'Consolas', 'Hiragino Sans', 'Noto Sans JP', 'Noto Sans CJK JP', 'Yu Gothic UI', sans-serif;
-}
+/* Colours, fonts, spacing and motion come from src/styles/tokens.ts (generated; `npm run tokens`). */
+@import '../styles/tokens.generated.css';
 
 :root {
   color-scheme: dark;
-  --gutter: clamp(1rem, 4vw, 3rem);
-  --measure: 46rem;
 }
 
 html {
@@ -364,7 +345,7 @@ html.lenis body {
   inset: 0;
   border: 1px solid var(--color-seam);
   background: repeating-linear-gradient(180deg, var(--color-stratum) 0 18px, color-mix(in srgb, var(--color-stratum) 70%, var(--color-ground)) 18px 30px);
-  transition: opacity 400ms ease;
+  transition: opacity var(--duration-slow) ease;
 }
 
 html[data-stage='live'] .layer-stage-still {
@@ -1166,7 +1147,7 @@ dialog.evidence::backdrop {
 
 @media (prefers-reduced-motion: no-preference) {
   dialog.evidence[open] {
-    animation: drawer-in 220ms cubic-bezier(0.2, 0.7, 0.2, 1);
+    animation: drawer-in var(--duration-base) var(--ease-strata);
   }
 
   @keyframes drawer-in {

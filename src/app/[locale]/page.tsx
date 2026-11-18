@@ -12,7 +12,7 @@ import type { RichContext } from '@/components/layers/RichText';
 import { LayerIndex, SiteFooter, SiteHeader } from '@/components/layout/SiteChrome';
 import { StageLoader } from '@/three/StageLoader';
 import { LayerTracker } from '@/lib/scroll/LayerTracker';
-import { LAYER_COLORS } from '@/lib/layer-colors';
+import { layer as layerColor, type LayerColorId } from '@/styles/tokens';
 import { CoreNav } from '@/components/layout/CoreNav';
 import { DebugHudLoader } from '@/components/debug/DebugHudLoader';
 
@@ -55,7 +55,7 @@ export default async function Page({ params }: PageProps<'/[locale]'>) {
       <SiteFooter />
       <CoreNav
         label={tn('core')}
-        layers={content.layers.map((l, index) => ({ id: l.id, depth: td('label', { index }), title: l.title, color: LAYER_COLORS[l.id] ?? '#777' }))}
+        layers={content.layers.map((l, index) => ({ id: l.id, depth: td('label', { index }), title: l.title, color: layerColor[l.id as LayerColorId] }))}
       />
       <span id={METRIC_HINT_ID} hidden>
         {te('open')}

@@ -10,7 +10,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { OrthographicCamera, View } from '@react-three/drei';
 import { useEffect, useMemo, useRef, useSyncExternalStore, type RefObject } from 'react';
 import { CylinderGeometry } from 'three';
-import { LAYER_COLORS } from '@/lib/layer-colors';
+import { layer, type LayerColorId } from '@/styles/tokens';
 import { scrollStore, type Quality } from '@/lib/scroll/store';
 import { createStrataMaterial } from '../materials/strata';
 
@@ -30,7 +30,7 @@ function Segments({ ids, quality }: { ids: string[]; quality: Exclude<Quality, '
   const geometry = useMemo(() => new CylinderGeometry(r, r, h * 0.98, quality === 'low' ? 16 : 32), [r, h, quality]);
   useEffect(() => () => geometry.dispose(), [geometry]);
   const materials = useMemo(
-    () => ids.map((id, i) => createStrataMaterial({ color: LAYER_COLORS[id] ?? '#777777', bandScale: 3.2 / h, quality, seed: i * 1.7 })),
+    () => ids.map((id, i) => createStrataMaterial({ color: layer[id as LayerColorId] ?? layer.next, bandScale: 3.2 / h, quality, seed: i * 1.7 })),
     [ids, h, quality],
   );
   useEffect(() => () => materials.forEach((m) => m.dispose()), [materials]);

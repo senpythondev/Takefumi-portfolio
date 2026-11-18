@@ -7,7 +7,7 @@
  * - low: no per-pixel noise at all — beds are baked once into a tiny texture
  *   (MeshBasicMaterial + 4×64 DataTexture).
  *
- * Colours come from the layer colour tokens (src/lib/layer-colors.ts; tokens.ts from Phase 4).
+ * Colours come from the layer colour tokens (src/styles/tokens.ts).
  * Callers own the returned material and must dispose it (disposeStrata).
  */
 import { Color, DataTexture, MeshBasicMaterial, RGBAFormat, RepeatWrapping, ShaderMaterial, type Material } from 'three';

@@ -5,6 +5,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { getContent } from '@/content';
 import { routing } from '@/i18n/routing';
 import { siteUrl } from '@/lib/site';
+import { base } from '@/styles/tokens';
 import '../globals.css';
 
 export const dynamicParams = false;
@@ -14,7 +15,7 @@ export function generateStaticParams() {
 }
 
 export const viewport: Viewport = {
-  themeColor: '#13110f',
+  themeColor: base.ground,
   colorScheme: 'dark',
 };
 

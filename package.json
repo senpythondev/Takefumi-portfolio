@@ -15,14 +15,15 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "next typegen && tsc --noEmit",
-    "validate": "node scripts/validate-content.ts",
+    "validate": "node scripts/validate-content.ts && node scripts/build-tokens.ts --check",
     "check:confidentiality": "node scripts/check-confidentiality.ts",
     "test:e2e": "playwright test --project=desktop --project=mobile --project=reduced-motion",
     "test:e2e:update": "playwright test --project=desktop --project=mobile --project=reduced-motion --update-snapshots",
     "budget": "playwright test --project=budget",
     "lhci": "lhci autorun",
     "screenshots": "node scripts/screenshots.ts",
-    "perf": "playwright test --project=perf --workers=1"
+    "perf": "playwright test --project=perf --workers=1",
+    "tokens": "node scripts/build-tokens.ts"
   },
   "dependencies": {
     "@react-three/drei": "10.7.9",

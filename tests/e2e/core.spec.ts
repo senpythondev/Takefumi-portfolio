@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { expectStageOff, startStage } from './stage-helpers';
+import { startStage } from './stage-helpers';
 
 test.describe('boring core, depth meter, evidence extras, HUD', () => {
   test('the core has one ring link per layer and fills rings as layers are passed', async ({ page }) => {

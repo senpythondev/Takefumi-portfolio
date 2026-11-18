@@ -11,6 +11,7 @@
  */
 import { useEffect, useRef, useState } from 'react';
 import { Color, CustomBlending, MeshBasicMaterial, OneFactor, PerspectiveCamera, Scene, Vector3, WebGLRenderTarget, WebGLRenderer } from 'three';
+import { base } from '@/styles/tokens';
 import { CityField, sampleHeights } from './CityField';
 
 type Stats = { fps: number; low1: number; jsMs: number; calls: number; triangles: number; detailed: number; blocks: number; phase: string };
@@ -35,7 +36,7 @@ export function CityLab() {
     const renderer = new WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, dprCap));
     const scene = new Scene();
-    scene.background = new Color('#13110f');
+    scene.background = new Color(base.ground);
     const camera = new PerspectiveCamera(45, 1, 0.5, 600);
 
     const t0 = performance.now();

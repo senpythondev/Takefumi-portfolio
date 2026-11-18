@@ -24,6 +24,7 @@ import {
   Vector3,
   type Camera,
 } from 'three';
+import { city } from '@/styles/tokens';
 
 export type CityOptions = {
   /** Building heights in world units; one building per entry. */
@@ -133,7 +134,7 @@ export class CityField {
   private static readonly HIDDEN = new Matrix4().makeScale(0, 0, 0);
   private lodDistance: number;
 
-  constructor({ heights, districtsPerSide = 15, lodDistance = 70, baseColor = '#a6806f', pulseColor = '#e5613f', fogColor = '#13110f', seed = 45000 }: CityOptions) {
+  constructor({ heights, districtsPerSide = 15, lodDistance = 70, baseColor = city.building, pulseColor = city.pulse, fogColor = city.fog, seed = 45000 }: CityOptions) {
     this.count = heights.length;
     this.lodDistance = lodDistance;
     const rand = mulberry32(seed);
