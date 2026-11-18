@@ -18,8 +18,7 @@
 | `src/fonts/manifest.json` | 案ごとの元ファイルの SHA-256、収録した文字、サイズ | コミットする |
 | `src/fonts/active.ts` | 使う案を `next/font/local` で読み込むモジュール（生成物） | コミットする |
 
-- `npm run fonts`：全案のサブセットを作り直す（元のフォントと Python 3 が必要）。
-- `npm run fonts -- --activate <a|b|c>`：使う案を切り替える。
+- `npm run fonts`：サブセットを作り直す（元のフォントと Python 3 が必要）。
 - `npm run fonts -- --display <swap|optional>`：`font-display` を切り替える。
 - `npm run validate`（ビルドの前にも実行）は、**サイトで使う文字がサブセットに入っているか**を確認する。コンテンツに新しい文字が増えたら失敗するので、`npm run fonts` で作り直す。
   - CI と Vercel は元のフォントも Python も必要としない。
@@ -34,11 +33,9 @@ Google Fonts の公式リポジトリ（GitHub の `google/fonts`）の `ofl/<�
 ```
 cd .cache/fonts
 get() { mkdir -p "$1"; gh api "repos/google/fonts/contents/ofl/$1/$2" -H "Accept: application/vnd.github.raw" > "$1/$2"; }
-get ibmplexsansjp IBMPlexSansJP-Regular.ttf;  get ibmplexsansjp IBMPlexSansJP-SemiBold.ttf;  get ibmplexsansjp IBMPlexSansJP-Bold.ttf;  get ibmplexsansjp OFL.txt
+get ibmplexsansjp IBMPlexSansJP-Regular.ttf;  get ibmplexsansjp IBMPlexSansJP-SemiBold.ttf;  get ibmplexsansjp OFL.txt
 get shipporiminchob1 ShipporiMinchoB1-SemiBold.ttf;  get shipporiminchob1 OFL.txt
-get bizudpgothic BIZUDPGothic-Regular.ttf;  get bizudpgothic BIZUDPGothic-Bold.ttf;  get bizudpgothic OFL.txt
 get ibmplexmono IBMPlexMono-Regular.ttf;  get ibmplexmono IBMPlexMono-SemiBold.ttf;  get ibmplexmono OFL.txt
-get jetbrainsmono 'JetBrainsMono[wght].ttf';  get jetbrainsmono OFL.txt
 ```
 
 取得したファイルが前回と同じかは、`src/fonts/manifest.json` の `sourceSha256` で確かめられる。
@@ -51,18 +48,17 @@ get jetbrainsmono 'JetBrainsMono[wght].ttf';  get jetbrainsmono OFL.txt
 | IBM Plex Sans JP | **"Plex"** | 名前を変える：`GroundTruth Sans JP` |
 | IBM Plex Mono | **"Plex"** | 名前を変える：`GroundTruth Mono` |
 | Shippori Mincho B1 | なし | そのまま |
-| BIZ UDPGothic | なし | そのまま |
-| JetBrains Mono | なし | そのまま |
 
 - OFL では、**サブセットは改変版（Modified Version）にあたり、予約フォント名を名乗れない。**
 - そのため Plex のサブセットは、フォント内部の名前（family・full・PostScript・unique ID）を置き換える（`scripts/fonts/subset.py`）。著作権表示とライセンス（name ID 0・13・14）は残す。
 - 置き換えた後に "Plex" が残っていないことは、スクリプトが確認する。
 
-## 案（PM_REVIEW_08 §4）
-| 案 | 見出し | 本文 | 数字・データ |
-|---|---|---|---|
-| A 編集的 | Shippori Mincho B1（600） | IBM Plex Sans JP（400・600） | IBM Plex Mono（400・600） |
-| B 工学的 | 本文の太字（700） | IBM Plex Sans JP（400・600・700） | IBM Plex Mono（400・600） |
-| C 読みやすさ重視 | 本文の太字（700） | BIZ UDPGothic（400・700） | JetBrains Mono（可変、100〜800） |
+## 採用した書体（案 A。オーナーと PM が 2026-11-19 に決定）
+| 役割 | フォント | ウェイト |
+|---|---|---|
+| 見出し | Shippori Mincho B1 | 600 |
+| 本文 | IBM Plex Sans JP（サブセットの名前は `GroundTruth Sans JP`） | 400・600 |
+| 数字・データ | IBM Plex Mono（同 `GroundTruth Mono`） | 400・600 |
 
-日本語のウェイトは、どの案も合計3つ以内（CLAUDE.md §4）。
+- woff2 の合計は 391KB。`font-display: optional`、全フォントを preload。
+- 比較した案 B（IBM Plex のみ）・C（BIZ UDPGothic＋JetBrains Mono）・D（明朝＋BIZ UDPGothic）は不採用。計測値は `docs/WORKLOG.md` にある。

@@ -50,7 +50,7 @@ const plexMono = (weight: number, style: string, source: string): Face => ({
   rename: { family: 'GroundTruth Mono', style, postscript: `GroundTruthMono-${style.replace(/ /g, '')}` },
 });
 
-/** Candidates: A–C from PM_REVIEW_08 §4, D the PM's hybrid. Japanese weights: at most three per set (CLAUDE.md §4). */
+/** Set A is final (owner and PM, 2026-11-19); B–D were compared and dropped (docs/WORKLOG.md). Japanese weights: at most three (CLAUDE.md §4). */
 export const SETS: Record<string, FontSet> = {
   a: {
     label: 'A 編集的：見出し Shippori Mincho B1／本文 IBM Plex Sans JP／数字 IBM Plex Mono',
@@ -60,34 +60,6 @@ export const SETS: Record<string, FontSet> = {
       plexSans(600, 'SemiBold', 'IBMPlexSansJP-SemiBold.ttf'),
       plexMono(400, 'Regular', 'IBMPlexMono-Regular.ttf'),
       plexMono(600, 'SemiBold', 'IBMPlexMono-SemiBold.ttf'),
-    ],
-  },
-  b: {
-    label: 'B 工学的：IBM Plex Sans JP（見出しは太字）／数字 IBM Plex Mono',
-    faces: [
-      plexSans(400, 'Regular', 'IBMPlexSansJP-Regular.ttf'),
-      plexSans(600, 'SemiBold', 'IBMPlexSansJP-SemiBold.ttf'),
-      plexSans(700, 'Bold', 'IBMPlexSansJP-Bold.ttf'),
-      plexMono(400, 'Regular', 'IBMPlexMono-Regular.ttf'),
-      plexMono(600, 'SemiBold', 'IBMPlexMono-SemiBold.ttf'),
-    ],
-  },
-  d: {
-    label: 'D 折衷：見出し Shippori Mincho B1／本文 BIZ UDPGothic／数字 IBM Plex Mono',
-    faces: [
-      { file: 'heading-600', role: 'heading', weight: 600, source: 'shipporiminchob1/ShipporiMinchoB1-SemiBold.ttf', licence: 'shipporiminchob1' },
-      { file: 'sans-400', role: 'sans', weight: 400, source: 'bizudpgothic/BIZUDPGothic-Regular.ttf', licence: 'bizudpgothic' },
-      { file: 'sans-700', role: 'sans', weight: 700, source: 'bizudpgothic/BIZUDPGothic-Bold.ttf', licence: 'bizudpgothic' },
-      plexMono(400, 'Regular', 'IBMPlexMono-Regular.ttf'),
-      plexMono(600, 'SemiBold', 'IBMPlexMono-SemiBold.ttf'),
-    ],
-  },
-  c: {
-    label: 'C 読みやすさ重視：見出し・本文 BIZ UDPGothic／数字 JetBrains Mono',
-    faces: [
-      { file: 'sans-400', role: 'sans', weight: 400, source: 'bizudpgothic/BIZUDPGothic-Regular.ttf', licence: 'bizudpgothic' },
-      { file: 'sans-700', role: 'sans', weight: 700, source: 'bizudpgothic/BIZUDPGothic-Bold.ttf', licence: 'bizudpgothic' },
-      { file: 'mono-var', role: 'mono', weight: 0, source: 'jetbrainsmono/JetBrainsMono[wght].ttf', licence: 'jetbrainsmono' },
     ],
   },
 };
