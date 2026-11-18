@@ -34,7 +34,7 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
 
-      - name: Read "ab: <A> <B> [runs]"
+      - name: 'Read the commit message (ab: <A> <B> [runs])'
         id: args
         run: |
           set -euo pipefail
