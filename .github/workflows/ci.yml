@@ -17,7 +17,9 @@ concurrency:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # A normal run takes about 25 min (E2E alone varies 6–11 min between runners). Infrastructure
+    # headroom only: no budget or assertion depends on it.
+    timeout-minutes: 40
     env:
       NEXT_PUBLIC_ENABLE_PEGASUS_LINK: 'false'
     steps:
@@ -42,12 +44,20 @@ jobs:
       - name: Build (prebuild repeats validation + confidentiality)
         run: npm run build
 
+      - name: apt retries stalled downloads instead of hanging
+        # CI run 44510240203: an apt download for the WebKit dependencies (118 MB) stalled for 18 min
+        # and the job limit cancelled everything after it. Time out and retry instead.
+        run: |
+          printf 'Acquire::Retries "5";\nAcquire::http::Timeout "30";\nAcquire::https::Timeout "30";\n' | sudo tee /etc/apt/apt.conf.d/80-ci-retries
+
       - name: CJK fallback font
         # The site self-hosts subset fonts with font-display: optional: a page view whose font arrives
         # late renders with the system fallback, so the runner needs a CJK font for that path.
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends fonts-droid-fallback
 
-      - run: npx playwright install --with-deps chromium
+      - name: Browsers and their system packages (Chromium, WebKit), in one apt run
+        timeout-minutes: 15
+        run: npx playwright install --with-deps chromium webkit
 
       - name: E2E (desktop / mobile / reduced-motion)
         # Visual baselines are machine-specific (font rasterisation, WebGL): checked locally only.
@@ -57,7 +67,8 @@ jobs:
 
       - name: Safari behaviour (Playwright WebKit, iPhone viewport)
         if: ${{ !cancelled() }}
-        run: npx playwright install --with-deps webkit && npx playwright test --project=webkit
+        timeout-minutes: 10
+        run: npx playwright test --project=webkit
         env:
           PW_REPORT: webkit
 
