@@ -20,7 +20,7 @@
     "test:e2e": "playwright test --project=desktop --project=mobile --project=reduced-motion",
     "test:e2e:update": "playwright test --project=desktop --project=mobile --project=reduced-motion --update-snapshots",
     "budget": "playwright test --project=budget",
-    "lhci": "lhci autorun",
+    "lhci": "node scripts/lhci-calibrate.ts && lhci autorun",
     "screenshots": "node scripts/screenshots.ts",
     "perf": "playwright test --project=perf --workers=1",
     "tokens": "node scripts/build-tokens.ts",

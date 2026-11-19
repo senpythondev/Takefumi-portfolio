@@ -1,26 +1,14 @@
 /**
- * Imperative side of the wall: everything that changes per frame or per event, kept out of React
- * (uniform writes are plain mutations of a three.js object).
+ * Imperative side of the wall (acts 0–1): the lantern that follows the pointer (lantern.png) and the
+ * clock. Everything else about the wall — framing, light level — is the director's (shots.ts).
  */
-import { WALL_LAYER_COUNT, type WallMaterial } from '../materials/wall';
+import type { WallMaterial } from '../materials/wall';
 
-export type WallController = { frame: (elapsed: number, delta: number, width: number, height: number) => void; dispose: () => void };
+export type WallController = { frame: (elapsed: number, delta: number, width: number, height: number, lantern: number) => void; dispose: () => void };
 
-export function createWallController(material: WallMaterial, ids: readonly string[]): WallController {
+export function createWallController(material: WallMaterial): WallController {
   const u = material.uniforms;
-
-  // Layer tops in viewport heights, re-measured when the page's height changes.
-  const sections = ids.map((id) => document.querySelector<HTMLElement>(`section.layer[data-layer="${id}"]`));
-  const measure = () => {
-    const tops = u.uLayerTop.value;
-    for (let i = 0; i < WALL_LAYER_COUNT; i += 1) {
-      const el = sections[i];
-      tops[i] = el ? (el.getBoundingClientRect().top + window.scrollY) / window.innerHeight : 1e6;
-    }
-  };
-  measure();
-  const observer = new ResizeObserver(measure);
-  observer.observe(document.body);
+  u.uDepth.value = 0;
 
   // Lantern input. Mouse: the beam is the cursor. Touch: it drifts, and follows a drag.
   const pointer = { x: 0.62, y: 0.45, active: false, touch: window.matchMedia('(pointer: coarse)').matches, lastTouch: -1e9 };
@@ -37,11 +25,8 @@ export function createWallController(material: WallMaterial, ids: readonly strin
   let announced = false;
 
   return {
-    frame(elapsed, delta, width, height) {
-      const depth = window.scrollY / window.innerHeight;
-      u.uDepth.value = depth;
+    frame(elapsed, delta, width, height, lantern) {
       u.uTime.value = elapsed;
-
       const narrow = width / height <= 1.15;
       const drifting = pointer.touch && performance.now() - pointer.lastTouch > 2500;
       const tx = drifting ? 0.5 + 0.3 * Math.sin(elapsed * 0.23) : pointer.x;
@@ -49,34 +34,20 @@ export function createWallController(material: WallMaterial, ids: readonly strin
       const follow = 1 - Math.exp(-delta * (drifting ? 1.5 : 9));
       beam.x += (tx - beam.x) * follow;
       beam.y += (ty - beam.y) * follow;
-      // On the hero only: full strength in the first viewport, gone one viewport further down.
-      const want = (pointer.active || pointer.touch ? 1 : 0) * (narrow ? 0.32 : 1) * Math.max(0, 1 - Math.max(0, depth - 0.35) / 0.9);
+      const want = (pointer.active || pointer.touch ? 1 : 0) * (narrow ? 0.32 : 1) * lantern;
       beam.strength += (want - beam.strength) * (1 - Math.exp(-delta * 4));
       u.uPointer.value.set(beam.x, beam.y);
       u.uBeam.value = beam.strength;
 
-      // The hero shows the wall at full light; further down it sits back under the text.
-      const heroEnd = (u.uLayerTop.value[1] ?? 2) - 0.6;
-      const heroLevel = narrow ? 0.28 : 1;
-      const deepLevel = narrow ? 0.26 : 0.55;
-      const k = Math.min(1, Math.max(0, (depth - heroEnd + 0.5) / 0.8));
-      u.uDim.value = heroLevel + (deepLevel - heroLevel) * k;
-
-      // Rock textures fade in once they are loaded (uRock0 is set by WorldView).
+      // Rock textures fade in once they are loaded.
       if (u.uRock0.value && u.uRockMix.value < 1) u.uRockMix.value = Math.min(1, u.uRockMix.value + delta / 0.8);
 
       if (!announced) {
         announced = true;
         document.documentElement.dataset.world = 'live'; // the poster can fade out now
       }
-      const debug = (window as unknown as { __world?: { depth: number; beam: number } }).__world;
-      if (debug) {
-        debug.depth = depth;
-        debug.beam = beam.strength;
-      }
     },
     dispose() {
-      observer.disconnect();
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerdown', onMove);
     },

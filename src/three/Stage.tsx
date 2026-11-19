@@ -113,6 +113,8 @@ export async function mountStage({ quality, adaptive, addFrameListener }: { qual
           quality: () => scrollStore.get().quality,
         };
         (window as unknown as { __world: unknown }).__world = { depth: 0, beam: 0 };
+        // Debugging only: the scene, to look into a world from the console.
+        (window as unknown as { __scene: unknown }).__scene = state.scene;
       }
     },
   });

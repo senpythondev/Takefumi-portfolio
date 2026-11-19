@@ -430,7 +430,9 @@ void main() {
     float joint = smoothstep(0.012, 0.0, abs(fract(p.y * 2.6 + 0.3) - 0.5) - 0.006);
     float core = exp(-px * px / (0.0032 * 0.0032));
     float pulse = 0.9 + 0.1 * sin(p.y * 40.0 - uTime * 2.2);
-    col += uEvidence * (1.5 * core * pulse + 0.30 * exp(-px * 60.0) + 0.07 * exp(-px * 9.0)) * below;
+    // It breathes, irregularly (1/f-like flicker, STORYBOARD v2.1 §8.5; the same sum as worlds/kit.ts).
+    float breath = 0.5 + (sin(uTime * 0.31) + 0.707 * sin(uTime * 0.83 + 1.3) + 0.577 * sin(uTime * 1.97 + 2.1) + 0.5 * sin(uTime * 4.13 + 0.7) + 0.447 * sin(uTime * 8.71 + 4.2)) / 6.462;
+    col += uEvidence * (1.5 * core * pulse + 0.30 * exp(-px * 60.0) + 0.07 * exp(-px * 9.0)) * below * (0.84 + 0.16 * breath);
     col = mix(col, vec3(0.16, 0.2, 0.21) + uEvidence * 0.25, joint * smoothstep(0.0075, 0.0055, px) * below);
   }
 

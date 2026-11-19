@@ -39,34 +39,33 @@ function device() {
   };
 }
 
-/** Where the page is: an act of the cinematic home, the join, or the layer panels below. */
-type Act = 'act1' | 'act2' | 'join' | 'layers';
-const ACTS: Act[] = ['act1', 'act2', 'join', 'layers'];
+/**
+ * Where the page is: the act of the cinematic home (STORYBOARD v2.1 — the hero, acts 1–2, every
+ * section, the finale), so fps and frame times can be read per act.
+ */
+type Act = string;
+const ACTS: Act[] = ['hero', 'surface', 'explode', 'current', 'genten', 'pegasus', 'php-audit', 'auction', 'patent', 'deep', 'catchup', 'bedrock', 'next', 'drawer'];
 
 function actLocator() {
   let ranges: { act: Act; from: number; to: number }[] = [];
   const measure = () => {
     const vh = window.innerHeight;
-    const range = (sel: string) => {
-      const el = document.querySelector<HTMLElement>(sel);
-      if (!el) return null;
-      const top = el.getBoundingClientRect().top + window.scrollY;
-      return { top, height: el.offsetHeight, vh };
-    };
-    const s = range('[data-act="surface"]');
-    const e = range('[data-act="explode"]');
-    const j = range('[data-act-join]');
     ranges = [];
-    if (s) ranges.push({ act: 'act1', from: -Infinity, to: s.top + s.height - s.vh });
-    if (e) ranges.push({ act: 'act2', from: e.top, to: e.top + e.height - e.vh });
-    if (j) ranges.push({ act: 'join', from: j.top - j.vh, to: j.top });
+    const hero = document.querySelector<HTMLElement>('[data-hero-content]');
+    if (hero) ranges.push({ act: 'hero', from: -Infinity, to: hero.getBoundingClientRect().bottom + window.scrollY - 0.5 * vh });
+    for (const el of document.querySelectorAll<HTMLElement>('section[data-act]')) {
+      const top = el.getBoundingClientRect().top + window.scrollY;
+      const end = el.querySelector<HTMLElement>('[data-act-end]');
+      const bottom = end ? end.getBoundingClientRect().bottom + window.scrollY : top + el.offsetHeight;
+      ranges.push({ act: el.dataset.act as string, from: Math.max(top, ranges.at(-1)?.to ?? -Infinity), to: bottom - vh });
+    }
   };
   measure();
   new ResizeObserver(measure).observe(document.body);
   return (): Act => {
     const y = window.scrollY;
     for (const r of ranges) if (y >= r.from && y < r.to) return r.act;
-    return ranges.length && y < (ranges[0]?.to ?? 0) ? 'act1' : 'layers';
+    return y < (ranges[0]?.to ?? 0) ? 'hero' : 'drawer';
   };
 }
 
@@ -113,19 +112,20 @@ export function mountHud(): void {
   }
 
   const whereNow = actLocator();
-  const perAct: Record<Act, number[]> = { act1: [], act2: [], join: [], layers: [] };
+  const perAct = new Map<Act, number[]>(ACTS.map((a) => [a, []]));
+  const bucketOf = (a: Act) => perAct.get(a) ?? [];
   const loop = (now: number) => {
     const dt = now - last;
     last = now;
     rolling.push(dt);
     if (rolling.length > 120) rolling.shift();
     recording?.push(dt);
-    const bucket = perAct[whereNow()];
+    const bucket = bucketOf(whereNow());
     bucket.push(dt);
     if (bucket.length > 1200) bucket.shift();
     requestAnimationFrame(loop);
   };
-  const actSummary = () => Object.fromEntries(ACTS.filter((a) => perAct[a].length > 0).map((a) => [a, summarise(perAct[a])]));
+  const actSummary = () => Object.fromEntries(ACTS.filter((a) => bucketOf(a).length > 0).map((a) => [a, summarise(bucketOf(a))]));
   requestAnimationFrame(loop);
 
   const snapshot = () => ({
@@ -145,9 +145,9 @@ export function mountHud(): void {
       r ? `calls ${r.calls}  geo ${r.geometries}  tex ${r.textures}  prog ${r.programs}` : 'renderer: not running (static)',
       `long tasks ${longTasks}  dpr ${window.devicePixelRatio}  INP ${interactions.size ? `${inpWorst} ms (${interactions.size} interactions)` : '— (tap or press a key)'}`,
       `per act (fps avg / 1% low): ${
-        ACTS.filter((a) => perAct[a].length > 30)
+        ACTS.filter((a) => bucketOf(a).length > 30)
           .map((a) => {
-            const x = summarise(perAct[a]);
+            const x = summarise(bucketOf(a));
             return `${a} ${x.fpsAvg}/${x.fpsLow1}`;
           })
           .join('  ') || 'scroll through the page'

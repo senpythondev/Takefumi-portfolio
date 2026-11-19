@@ -17,23 +17,26 @@ function collectConsoleErrors(page: Page): string[] {
 
 for (const locale of LOCALES) {
   test.describe(`/${locale}`, () => {
-    test('renders every layer as HTML, in order, without console errors', async ({ page }) => {
+    test('renders every act as HTML, in order, without console errors', async ({ page }) => {
       const errors = collectConsoleErrors(page);
       await page.goto(`/${locale}`);
       await expect(page.locator('html')).toHaveAttribute('lang', locale);
       await expect(page.locator('h1')).toHaveCount(1);
-      const ids = await page.locator('section.layer').evaluateAll((els) => els.map((e) => e.getAttribute('data-layer')));
+      const ids = await page.locator('section[data-layer]').evaluateAll((els) => els.map((e) => e.getAttribute('data-layer')));
       expect(ids).toEqual(LAYER_IDS);
+      const acts = await page.locator('section[data-act]').evaluateAll((els) => els.map((e) => e.getAttribute('data-act')));
+      expect(acts).toEqual(['surface', 'explode', ...LAYER_IDS.slice(1)]);
       await expect(page.locator('link[rel="alternate"][hreflang="ja"]')).toHaveCount(1);
       await expect(page.locator('link[rel="alternate"][hreflang="en"]')).toHaveCount(1);
       expect(errors).toEqual([]);
     });
 
     test('every metric opens its evidence; Esc closes it and returns focus', async ({ page }) => {
-      test.setTimeout(90_000); // 74 open/close round trips
+      test.setTimeout(90_000); // one open/close round trip per number on the home
       await page.goto(`/${locale}`);
       const ids = await page.locator('a.metric').evaluateAll((els) => [...new Set(els.map((e) => e.getAttribute('data-metric')))]);
-      expect(ids.length).toBeGreaterThan(60);
+      // The home keeps only the acts' numbers; the rest are on the case studies (phase-a.spec.ts).
+      expect(ids.length).toBeGreaterThan(20);
       const dialog = page.locator('dialog#evidence-dialog');
       for (const id of ids) {
         const link = page.locator(`a.metric[data-metric="${id}"]`).first();
@@ -75,7 +78,8 @@ for (const locale of LOCALES) {
       await expect(page.locator('h1')).toHaveCount(1);
       await expect(page.locator('.evidence-figure')).toHaveText('100%');
       await expect(page.locator('.evidence-chart svg[role="img"]')).toBeVisible();
-      await expect(page.locator('.evidence-back a')).toHaveAttribute('href', `/${locale}#layer-genten`);
+      // Back to where the number is told in full: the Genten case study.
+      await expect(page.locator('.evidence-back a')).toHaveAttribute('href', `/${locale}/work/genten`);
       const other = locale === 'ja' ? 'en' : 'ja';
       await expect(page.locator('a.action-lang')).toHaveAttribute('href', `/${other}/evidence/genten-acc-genten`);
       await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', new RegExp(`/${locale}/evidence/genten-acc-genten$`));
@@ -132,10 +136,10 @@ for (const locale of LOCALES) {
       const context = await browser.newContext({ javaScriptEnabled: false });
       const page = await context.newPage();
       await page.goto(`/${locale}`);
-      await expect(page.locator('section.layer')).toHaveCount(LAYER_IDS.length);
+      await expect(page.locator('section[data-layer]')).toHaveCount(LAYER_IDS.length);
       for (const id of LAYER_IDS) await expect(page.locator(`section[data-layer="${id}"] h1, section[data-layer="${id}"] h2`).first()).toBeVisible();
-      await expect(page.locator('.genten-eval table').first()).toBeVisible();
       await expect(page.locator('.contact-fallback')).toBeVisible();
+      await expect(page.locator('#summary')).toBeVisible();
       await context.close();
     });
 
@@ -149,8 +153,10 @@ for (const locale of LOCALES) {
       await page.reload();
       await page.evaluate(() => document.fonts.ready);
       await expect(page).toHaveScreenshot(`${locale}-first-view.png`);
-      await expect(page.locator('section[data-layer="genten"] .genten-eval')).toHaveScreenshot(`${locale}-genten-eval.png`);
-      await page.locator('a.metric[data-metric="auction-errors"]').first().click();
+      await page.goto(`/${locale}/work/genten`);
+      await page.evaluate(() => document.fonts.ready);
+      await expect(page.locator('.genten-eval')).toHaveScreenshot(`${locale}-genten-eval.png`);
+      await page.locator('a.metric[data-metric="genten-acc-genten"]').first().click();
       await expect(page.locator('dialog#evidence-dialog .evidence-figure')).toBeVisible();
       await expect(page.locator('dialog#evidence-dialog')).toHaveScreenshot(`${locale}-evidence.png`);
     });

@@ -88,7 +88,7 @@ test.describe('world backdrop', () => {
       .toEqual(expect.arrayContaining(['medium', 'low']));
   });
 
-  test('live: one canvas, the wall follows the scroll, the lantern is on the hero only', async ({ page }, testInfo) => {
+  test('live: one canvas, the lantern is on the hero only', async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== 'desktop', 'stage tests run once, on the desktop project');
     test.setTimeout(120_000);
     await page.goto('/ja?quality=low&dpr=0.4&debug=1');
@@ -99,9 +99,8 @@ test.describe('world backdrop', () => {
     const read = () => page.evaluate(() => (window as unknown as { __world: { depth: number; beam: number } }).__world);
     await page.mouse.move(700, 400);
     await expect.poll(async () => (await read()).beam, { timeout: 30_000 }).toBeGreaterThan(0.5);
-    // Below the cinematic acts (which hold the wall at the surface while the camera moves).
+    // Further down the story the lantern goes out (it belongs to the surface).
     await page.locator('section[data-layer="genten"]').evaluate((el) => el.scrollIntoView({ block: 'start' }));
-    await expect.poll(async () => (await read()).depth, { timeout: 30_000 }).toBeGreaterThan(2.5);
     await expect.poll(async () => (await read()).beam, { timeout: 30_000 }).toBeLessThan(0.05);
   });
 });

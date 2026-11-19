@@ -35,6 +35,9 @@ export async function boot(forced: string | null): Promise<void> {
   const { startEffects } = await import('@/lib/scroll/effects');
   await yieldToMain();
   const effects = startEffects();
+  // The HTML side of the cinema: flights into the acts, the cursor, ripples, count-up.
+  const { startCinemaUi } = await import('@/lib/scroll/cinema-ui');
+  startCinemaUi(effects);
 
   await yieldToMain();
   performance.mark('stage:3d');

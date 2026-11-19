@@ -70,6 +70,7 @@ export async function GentenExtras({ layer, clash }: { layer: Layer; clash: Site
                 className="gate"
                 data-gate={n}
                 data-r={bits.map((b) => (b ? 1 : 0)).join('')}
+                aria-pressed="false"
                 aria-label={t('gateResult', { n, a: mark(bits[0] as boolean), b: mark(bits[1] as boolean), c: mark(bits[2] as boolean) })}
               >
                 {n}
@@ -172,6 +173,7 @@ export async function DeepExtras({ layer, ctx }: { layer: Layer; ctx: RichContex
               <span className="deep-card-industry">{p.industry}</span>
               <span className="deep-card-title">{p.title}</span>
               <span className="deep-card-period">{p.period}</span>
+              <span className="deep-card-tech">{p.tech.slice(0, 3).join(' · ')}</span>
             </a>
             {metric ? (
               <span className="deep-card-figure">

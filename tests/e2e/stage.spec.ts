@@ -5,11 +5,15 @@ type Info = { geometries: number; textures: number; programs: number; calls: num
 
 const info = (page: Page) => page.evaluate(() => (window as unknown as { __stage: { info: () => Info } }).__stage.info());
 
+/** Through every act, stopping in the middle of each (where its world is on screen). */
 async function scrollThrough(page: Page, direction: 'down' | 'up') {
-  const ids = await page.locator('section.layer[data-layer]').evaluateAll((els) => els.map((e) => e.getAttribute('data-layer') as string));
+  const ids = await page.locator('section[data-act]').evaluateAll((els) => els.map((e) => e.getAttribute('data-act') as string));
   for (const id of direction === 'down' ? ids : [...ids].reverse()) {
-    await page.locator(`section[data-layer="${id}"]`).evaluate((el) => el.scrollIntoView({ block: 'start' }));
-    await page.waitForTimeout(250);
+    await page.locator(`section[data-act="${id}"]`).evaluate((el) => {
+      const top = el.getBoundingClientRect().top + window.scrollY;
+      window.scrollTo(0, top + Math.max(0, (el as HTMLElement).offsetHeight - window.innerHeight) * 0.45);
+    });
+    await page.waitForTimeout(400);
   }
   if (direction === 'up') await page.evaluate(() => window.scrollTo(0, 0));
   await page.waitForTimeout(600);
@@ -50,13 +54,17 @@ test.describe('3D stage', () => {
     // So the reference is the steady state after one full round trip, not the first paint.
     await scrollThrough(page, 'down');
     await scrollThrough(page, 'up');
+    await page.waitForTimeout(2000);
     const steady = await info(page);
-    // Wall quad, the hero core's band geometry (shared by its 11 bands), dust, the navigator core.
-    expect(steady.geometries).toBeLessThanOrEqual(5);
+    // Back at the top only the core's own resources remain (wall, bands, dust, particles, the
+    // navigator core, the holograms): the section worlds were disposed as they were left.
+    expect(steady.geometries).toBeLessThanOrEqual(24);
     for (let i = 0; i < 2; i += 1) {
       await scrollThrough(page, 'down');
-      expect((await info(page)).geometries).toBeLessThanOrEqual(5);
+      // At most three worlds are mounted at a time (CLAUDE.md §3).
+      expect((await info(page)).geometries).toBeLessThanOrEqual(90);
       await scrollThrough(page, 'up');
+      await page.waitForTimeout(2000);
     }
     await expect
       .poll(async () => {
@@ -87,8 +95,9 @@ test.describe('3D stage', () => {
     await expect(page.locator('html')).not.toHaveAttribute('data-stage', 'live');
     // Without 3D the acts fall back to the stacked story: stills and the headline in the flow.
     await expect(page.locator('html')).not.toHaveAttribute('data-cinema');
-    await page.locator('.act-still-core').scrollIntoViewIfNeeded(); // stills load as they come near
-    await expect(page.locator('.act-still-core .act-still-image')).toHaveCSS('background-image', /act-core-/);
+    const still = page.locator('section[data-act="surface"] .act-still');
+    await still.scrollIntoViewIfNeeded(); // stills load as they come near
+    await expect(still.locator('.act-still-image')).toHaveCSS('background-image', /act-surface-/);
     await expect(page.locator('#act-core-title')).toBeVisible();
     await expect(page.locator('section[data-layer="genten"] h2')).toBeVisible();
     expect(errors).toEqual([]);

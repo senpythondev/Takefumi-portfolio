@@ -46,6 +46,7 @@ uniform float uTime;
 uniform sampler2D uRock0;
 uniform sampler2D uRock1;
 uniform float uRockMix;
+uniform float uGlow;     // 0..1 the band glows from inside in its colour (hovered in the index)
 varying vec3 vObj;
 varying vec3 vObjNormal;
 varying vec3 vNormal;
@@ -124,7 +125,11 @@ void main() {
   float fres = pow(1.0 - max(dot(n, v), 0.0), 3.0);
   col += uEvidence * uRim * fres * (cut ? 0.2 : 0.8);
 
-  col *= uDim;
+  // Hovered in the index (STORYBOARD v2.1 §1): it glows from inside in its own colour.
+  vec3 glowCol = mix(uTint * 1.9, uEvidence, 0.25);
+  col += glowCol * uGlow * (cut ? 0.55 + 0.6 * smoothstep(1.0, 0.2, length(vObj.xz / uRadius)) : 0.18 + 0.9 * fres);
+
+  col *= max(uDim, uGlow);
   gl_FragColor = vec4(col, uOpacity);
   #include <tonemapping_fragment>
   #include <colorspace_fragment>
@@ -146,6 +151,7 @@ export type BandMaterial = ShaderMaterial & {
     uRock0: { value: Texture | null };
     uRock1: { value: Texture | null };
     uRockMix: { value: number };
+    uGlow: { value: number };
   };
 };
 
@@ -169,6 +175,7 @@ export function createBandMaterial(tint: string, index: number, height: number, 
       uRock0: { value: null },
       uRock1: { value: null },
       uRockMix: { value: 0 },
+      uGlow: { value: 0 },
     },
   }) as unknown as BandMaterial;
 }

@@ -28,10 +28,13 @@ test('deferred chunks: 3D base and scene chunks stay within budget', async ({ pa
   test.setTimeout(120_000);
   await page.goto('/ja?quality=medium&dpr=0.3', { waitUntil: 'networkidle' });
   await startStage(page); // the stage loads on the first interaction, once the page listens
-  // Visit every layer so every scene chunk is requested.
-  for (const id of await page.locator('section.layer[data-layer]').evaluateAll((els) => els.map((e) => e.getAttribute('data-layer') as string))) {
-    await page.locator(`section[data-layer="${id}"]`).evaluate((el) => el.scrollIntoView({ block: 'start' }));
-    await page.waitForTimeout(250);
+  // Visit every act (the middle of each, where its world is) so every world chunk is requested.
+  for (const id of await page.locator('section[data-act]').evaluateAll((els) => els.map((e) => e.getAttribute('data-act') as string))) {
+    await page.locator(`section[data-act="${id}"]`).evaluate((el) => {
+      const top = el.getBoundingClientRect().top + window.scrollY;
+      window.scrollTo(0, top + Math.max(0, (el as HTMLElement).offsetHeight - window.innerHeight) * 0.45);
+    });
+    await page.waitForTimeout(600);
   }
   await page.waitForLoadState('networkidle');
 

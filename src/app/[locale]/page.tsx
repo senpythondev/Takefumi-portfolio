@@ -101,7 +101,7 @@ export default async function Page({ params }: PageProps<'/[locale]'>) {
         </span>
       </div>
       <SiteHeader locale={locale} person={content.person} />
-      <main id="main" tabIndex={-1}>
+      <main id="main" tabIndex={-1} data-cursor-enter={tcin('enter')} data-cursor-read={tcin('read')}>
         <Hero layer={surface} person={content.person} ctx={ctx} nextAnchor="index" coreHeadline={content.cinema.coreHeadline} />
         <ActIndex layers={content.layers} guide={content.cinema.indexGuide} locale={locale} />
         {ACTS.filter((a) => a.layer && a.layer !== 'surface').map((act) => {

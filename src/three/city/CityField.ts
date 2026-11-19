@@ -54,6 +54,7 @@ varying float vTone;
 varying float vPulse;
 varying vec3 vFace;
 varying float vDepth;
+varying vec3 vWorld;
 void main() {
   vec4 p = vec4(position, 1.0);
 #ifdef USE_INSTANCING
@@ -66,6 +67,7 @@ void main() {
 #endif
   vUp = position.y;
   vFace = normal;
+  vWorld = (modelMatrix * p).xyz;
   vec4 mv = modelViewMatrix * p;
   vDepth = -mv.z;
   gl_Position = projectionMatrix * mv;
@@ -78,11 +80,19 @@ uniform vec3 uPulse;
 uniform vec3 uFog;
 uniform float uFogDensity;
 uniform float uTime;
+uniform float uFade;
+uniform vec3 uWindow;
 varying float vUp;
 varying float vTone;
 varying float vPulse;
 varying vec3 vFace;
 varying float vDepth;
+varying vec3 vWorld;
+float cityHash(vec2 p) {
+  p = fract(p * vec2(123.34, 456.21));
+  p += dot(p, p + 45.32);
+  return fract(p.x * p.y);
+}
 void main() {
   // Face shading without lights: roofs brightest, the two wall directions differ slightly.
   float face = vFace.y > 0.5 ? 1.0 : (abs(vFace.x) > 0.5 ? 0.62 : 0.78);
@@ -92,9 +102,18 @@ void main() {
     float beat = 0.5 + 0.5 * sin(uTime * 5.0);
     col = mix(col, uPulse, 0.55 + 0.45 * beat) + uPulse * 0.35 * beat;
   }
+  // Faint warm window dots on the walls (docs/concept/city.png).
+  if (vFace.y < 0.5) {
+    float along = abs(vFace.x) > 0.5 ? vWorld.z : vWorld.x;
+    vec2 cell = vec2(along / 0.28, vWorld.y / 0.3);
+    vec2 f = fract(cell);
+    float win = step(0.3, f.x) * step(f.x, 0.7) * step(0.35, f.y) * step(f.y, 0.75);
+    float lit = step(0.86, cityHash(floor(cell) + floor(vWorld.xz * 0.37)));
+    col += uWindow * win * lit * 0.55;
+  }
   float fog = 1.0 - exp(-uFogDensity * uFogDensity * vDepth * vDepth);
   col = mix(col, uFog, clamp(fog, 0.0, 1.0));
-  gl_FragColor = vec4(col, 1.0);
+  gl_FragColor = vec4(col * uFade, 1.0);
   #include <colorspace_fragment>
 }
 `;
@@ -129,7 +148,7 @@ export class CityField {
   readonly districts: District[] = [];
   readonly size: number;
   private readonly geometry = buildingGeometry();
-  private readonly material: ShaderMaterial;
+  readonly material: ShaderMaterial;
   private blocks!: InstancedMesh<BufferGeometry, ShaderMaterial>;
   private static readonly HIDDEN = new Matrix4().makeScale(0, 0, 0);
   private lodDistance: number;
@@ -151,6 +170,8 @@ export class CityField {
       uFogDensity: { value: 0.0065 },
       uTime: { value: 0 },
       uTone: { value: 0.5 },
+      uFade: { value: 1 },
+      uWindow: { value: new Color('#ffcf8a') },
     };
     this.material = new ShaderMaterial({ vertexShader, fragmentShader, uniforms });
 

@@ -10,7 +10,7 @@ for (const locale of ['ja', 'en'] as const) {
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(e.message));
     await page.goto(`/${locale}`);
-    await expect(page.locator('section.layer')).toHaveCount(11);
+    await expect(page.locator('section[data-layer]')).toHaveCount(11);
     const width = page.viewportSize()?.width ?? 0;
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
     const metric = page.locator('a.metric[data-metric="auction-errors"]').first();

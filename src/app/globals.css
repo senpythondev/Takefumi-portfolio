@@ -1720,7 +1720,6 @@ html[data-stage='live'] .core-ring {
 }
 
 .act-metric .metric-value {
-  white-space: nowrap;
   font-size: clamp(2rem, 5.5vw, 3.25rem);
   font-weight: 400;
   line-height: 1.1;
@@ -1731,6 +1730,12 @@ html[data-stage='live'] .core-ring {
 .act-metric .metric-symbol {
   font-size: 0.9rem;
   vertical-align: super;
+}
+
+/* A number never breaks inside itself (「約45,000本」); a long English one breaks only at its spaces. */
+.act-metric .metric-value {
+  word-break: keep-all;
+  overflow-wrap: normal;
 }
 
 .act-metric-caption {
@@ -2655,4 +2660,206 @@ html[data-act-on] .core-nav:not(:focus-within) {
 .core-kanji {
   margin-left: 0.4em;
   font-family: var(--font-heading);
+}
+
+/* ── Decoding labels (Active Theory): an aria-hidden overlay rolls symbols into the real text,
+   which stays in the DOM (transparent meanwhile). Set by the director. ── */
+[data-decoding] {
+  position: relative;
+}
+
+[data-decoding] > * {
+  color: transparent !important;
+}
+
+[data-decoding]::after {
+  content: attr(data-scramble) / '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: var(--color-evidence);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* Count-up (STORYBOARD §3): the counting copy is drawn over the real value, which keeps its place. */
+.metric-value[data-ticker] {
+  position: relative;
+  color: transparent;
+}
+
+.metric-value[data-ticker]::after {
+  content: attr(data-ticker) / '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: var(--color-ink);
+  white-space: nowrap;
+}
+
+/* Ripples (§8.6): a soft ring of light spreads from what was pressed. */
+.ripple {
+  position: fixed;
+  z-index: 60;
+  width: 18rem;
+  height: 18rem;
+  margin: -9rem 0 0 -9rem;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(circle, transparent 54%, color-mix(in srgb, var(--color-evidence) 55%, transparent) 60%, transparent 68%);
+  mix-blend-mode: plus-lighter;
+}
+
+.ripple-on {
+  animation: ripple 1.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes ripple {
+  0% {
+    opacity: 0.85;
+    transform: scale(0.08);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1);
+  }
+}
+
+/* The cursor that follows (§8.7): a ring and a dot, a little behind the pointer; it grows with a
+   word over a band (入る) or a link (読む), and wears the lantern's warm light on the surface and
+   the bedrock. Fine pointers only (cinema-ui.ts); the system cursor stays. */
+.cursor {
+  --s: 1;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 70;
+  pointer-events: none;
+  transition: opacity 300ms ease-out;
+}
+
+.cursor[data-hidden] {
+  opacity: 0;
+}
+
+.cursor-ring {
+  position: absolute;
+  left: -14px;
+  top: -14px;
+  width: 28px;
+  height: 28px;
+  border: 1px solid color-mix(in srgb, var(--color-evidence) 75%, transparent);
+  border-radius: 50%;
+  transform: scale(var(--s));
+}
+
+.cursor[data-lantern] .cursor-ring {
+  box-shadow: 0 0 40px 18px rgb(255 214 160 / 0.12);
+}
+
+.cursor-dot {
+  position: absolute;
+  left: -2px;
+  top: -2px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--color-evidence);
+}
+
+.cursor-label {
+  position: absolute;
+  left: 0;
+  top: 0;
+  font: 600 0.6875rem/1 var(--font-sans);
+  letter-spacing: 0.12em;
+  color: var(--color-ink);
+  white-space: nowrap;
+  opacity: 0;
+  transform: translate(-50%, -50%);
+  transition: opacity 250ms ease-out;
+}
+
+.cursor[data-label] .cursor-label {
+  opacity: 1;
+}
+
+.cursor[data-label] .cursor-dot {
+  opacity: 0;
+}
+
+/* Steps lit by the world (3-1 gates, 3-6 stations): the section's data-step counts the steps passed. */
+.act[data-step='1'] .act-steps li[data-step='0'],
+.act[data-step='2'] .act-steps li:is([data-step='0'], [data-step='1']),
+.act[data-step='3'] .act-steps li:is([data-step='0'], [data-step='1'], [data-step='2']),
+.act[data-step='4'] .act-steps li {
+  border-color: var(--color-evidence);
+  color: var(--color-ink);
+}
+
+.act-current[data-step='2'] .current-gates li[data-step='1'] {
+  border-color: var(--color-approx);
+}
+
+.deep-card-tech {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--color-evidence);
+}
+
+/* 5: the four durations appear one at a time from the first change of rock (data-seq). */
+html[data-cinema] .act-catchup[data-seq] > .act-frame > .act-result {
+  opacity: 1;
+  transform: translate(-50%, 0);
+  pointer-events: auto;
+}
+
+/* 3-2: the clash is told in the middle of the screen, then gives way to the race. */
+html[data-cinema] .act-genten .clash {
+  position: fixed;
+  left: 50%;
+  top: 40svh;
+  width: min(40rem, calc(100vw - 2 * var(--gutter)));
+  transform: translateX(-50%);
+  transition: opacity 800ms var(--ease-strata);
+}
+
+html[data-cinema] .act-genten[data-raced] .clash {
+  opacity: 0;
+  pointer-events: none;
+}
+
+html[data-cinema] .act-genten .gates {
+  position: fixed;
+  left: 50%;
+  bottom: calc(8svh + 9rem);
+  width: min(46rem, calc(100vw - 2 * var(--gutter)));
+  max-width: none;
+  grid-template-columns: repeat(25, 1fr);
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 800ms var(--ease-strata);
+}
+
+html[data-cinema] .act-genten[data-raced] .gates,
+html[data-cinema] .act-genten .gates:focus-within {
+  opacity: 1;
+}
+
+html[data-cinema] .act-genten .gate {
+  min-height: 1.75rem;
+  font-size: 0.625rem;
+}
+
+/* 6: with the 3D the principles are carved in the rock and read by light; the list stays for
+   screen readers (and is the plain version without the 3D). */
+html[data-cinema] .act-bedrock .creeds {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
 }

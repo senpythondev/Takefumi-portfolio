@@ -63,15 +63,16 @@ export function startEffects(): Effects {
       }),
     );
   }
-  const join = document.querySelector<HTMLElement>('[data-act-join]');
-  if (join) {
+  // The finale's drawer (STORYBOARD v2.1 act 7): the empty band opens as its content rises.
+  const drawer = document.querySelector<HTMLElement>('[data-act-drawer]');
+  if (drawer) {
     triggers.push(
       ScrollTrigger.create({
-        trigger: join,
+        trigger: drawer,
         start: 'top bottom',
-        end: 'top top',
+        end: 'top 35%',
         onUpdate: (self) => {
-          scrollLive.acts.join = self.progress;
+          scrollLive.acts.drawer = self.progress;
         },
       }),
     );

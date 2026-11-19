@@ -59,3 +59,47 @@ for (const locale of ['ja', 'en'] as const) {
     await context.close();
   });
 }
+
+/**
+ * The cinema's own interactions (STORYBOARD v2.1 §1, §5): choosing a band in the index (the flight
+ * into its world) and moving a slider. The stage is forced on (`low`, reduced resolution: CI renders
+ * WebGL in software); the 3D frames compete with the interactions, as they do on a real phone.
+ */
+test('INP in the cinema: a band chosen in the index, a slider moved (mobile, CPU 4×)', async ({ browser }) => {
+  test.setTimeout(240_000);
+  const context = await browser.newContext({ ...devices['Pixel 7'] });
+  const page = await context.newPage();
+  await page.addInitScript(() => {
+    const w = window as unknown as { __events: PerformanceEntry[] };
+    w.__events = [];
+    new PerformanceObserver((list) => w.__events.push(...list.getEntries())).observe({ type: 'event', durationThreshold: 16, buffered: true } as PerformanceObserverInit);
+  });
+  await page.goto('/ja?quality=low&dpr=0.4&debug=1');
+  await expect(page.locator('html')).toHaveAttribute('data-world', 'live', { timeout: 120_000 });
+  // Into the index (act 2), then throttle: the interactions are measured, not the loading.
+  await page.locator('section[data-act="explode"]').evaluate((el) => {
+    const top = el.getBoundingClientRect().top + window.scrollY;
+    window.scrollTo(0, top + ((el as HTMLElement).offsetHeight - window.innerHeight) * 0.7);
+  });
+  await page.waitForTimeout(4000);
+  const cdp = await context.newCDPSession(page);
+  await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
+  await page.waitForTimeout(1000);
+  const link = page.locator('.band-labels a[data-band-link="auction"]');
+  const box = await link.boundingBox();
+  if (!box) throw new Error('no band label to tap');
+  await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2);
+  await expect.poll(() => page.evaluate(() => (window as unknown as { __world: { act?: string } }).__world.act), { timeout: 60_000 }).toBe('auction');
+  await page.waitForTimeout(3000);
+  const slider = page.locator('[data-control="bidders"]');
+  await slider.focus();
+  for (let i = 0; i < 3; i += 1) {
+    await page.keyboard.press('ArrowRight');
+    await page.waitForTimeout(300);
+  }
+  const results = await interactions(page);
+  for (const r of results) console.log(`[cinema] INP ${r.inp} ms (${r.events})`);
+  expect(results.length, 'interactions recorded').toBeGreaterThanOrEqual(3);
+  expect(Math.max(...results.map((r) => r.inp)), 'worst interaction (INP)').toBeLessThanOrEqual(200);
+  await context.close();
+});
