@@ -39,4 +39,4 @@ docs/screenshots/
 .cache/
 
 # Concept reference images (owner-generated visual targets, ~10 MB; not site assets)
-docs/concept/*.png
+docs/concept/**/*.png

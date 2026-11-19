@@ -50,17 +50,20 @@ export function createWallController(material: WallMaterial, ids: readonly strin
       beam.x += (tx - beam.x) * follow;
       beam.y += (ty - beam.y) * follow;
       // On the hero only: full strength in the first viewport, gone one viewport further down.
-      const want = (pointer.active || pointer.touch ? 1 : 0) * (narrow ? 0.55 : 1) * Math.max(0, 1 - Math.max(0, depth - 0.35) / 0.9);
+      const want = (pointer.active || pointer.touch ? 1 : 0) * (narrow ? 0.32 : 1) * Math.max(0, 1 - Math.max(0, depth - 0.35) / 0.9);
       beam.strength += (want - beam.strength) * (1 - Math.exp(-delta * 4));
       u.uPointer.value.set(beam.x, beam.y);
       u.uBeam.value = beam.strength;
 
       // The hero shows the wall at full light; further down it sits back under the text.
       const heroEnd = (u.uLayerTop.value[1] ?? 2) - 0.6;
-      const heroLevel = narrow ? 0.34 : 1;
+      const heroLevel = narrow ? 0.28 : 1;
       const deepLevel = narrow ? 0.26 : 0.55;
       const k = Math.min(1, Math.max(0, (depth - heroEnd + 0.5) / 0.8));
       u.uDim.value = heroLevel + (deepLevel - heroLevel) * k;
+
+      // Rock textures fade in once they are loaded (uRock0 is set by WorldView).
+      if (u.uRock0.value && u.uRockMix.value < 1) u.uRockMix.value = Math.min(1, u.uRockMix.value + delta / 0.8);
 
       if (!announced) {
         announced = true;

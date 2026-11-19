@@ -15,7 +15,7 @@
  *
  * Procedural placeholders stand in for the rock textures the PM will issue (MEDIA_PROMPTS.md).
  */
-import { Color, ShaderMaterial, Vector2 } from 'three';
+import { Color, ShaderMaterial, Vector2, type Texture } from 'three';
 import { base, city, layer, signal } from '@/styles/tokens';
 
 export type WallQuality = 'high' | 'medium' | 'low';
@@ -56,6 +56,10 @@ uniform vec3 uCrisis;
 uniform vec3 uGround;
 uniform vec3 uCity;
 uniform vec3 uCityLit;
+uniform sampler2D uRock0;
+uniform sampler2D uRock1;
+uniform sampler2D uRock2;
+uniform float uRockMix;   // 0 until the rock textures are loaded, then fades to 1
 
 const float HORIZON = 0.118;
 const float BEDS = 10.5;
@@ -204,22 +208,22 @@ vec3 river(vec2 u) {
 float circuits(vec2 q, float v) {
   float b = floor(v);
   float f = fract(v);
-  if (hash1(b * 3.1 + 5.0) < 0.3) return 0.0;
-  float x = q.x * 9.0 + hash1(b) * 9.0;
+  if (hash1(b * 3.1 + 5.0) < 0.14) return 0.0;
+  float x = q.x * 11.0 + hash1(b) * 9.0;
   float cx = floor(x);
   float fx = fract(x);
   float o1 = 0.25 + 0.5 * hash(vec2(cx, b));
   float o2 = 0.25 + 0.5 * hash(vec2(cx + 1.0, b));
   float lane = mix(o1, o2, smoothstep(0.78, 0.92, fx));
   float line = smoothstep(0.035, 0.01, abs(f - lane));
-  float node = step(0.55, hash(vec2(cx, b + 9.0))) * smoothstep(0.11, 0.05, length(vec2((fx - 0.78) * 0.9, f - o1)));
+  float node = step(0.4, hash(vec2(cx, b + 9.0))) * smoothstep(0.11, 0.05, length(vec2((fx - 0.78) * 0.9, f - o1)));
   return line * 0.75 + node;
 }
 
 float wireCube(vec2 q) {
   vec2 g = q * 2.6 + 4.3;
   vec2 gi = floor(g);
-  if (hash(gi + 21.0) < 0.62) return 0.0;
+  if (hash(gi + 21.0) < 0.45) return 0.0;
   vec2 l = (fract(g) - 0.5) * 3.2 + (vec2(hash(gi), hash(gi + 5.0)) - 0.5) * 1.2;
   vec2 o = vec2(0.22, -0.16);
   float d = 10.0;
@@ -311,6 +315,17 @@ void main() {
     float hy = heightAt(q + vec2(0.0, e)) - hq;
     vec3 n = normalize(vec3(-hx, -hy, e * 7.0));
 #endif
+    // Rock texture (medium/high): it follows the bedding, one of three rock types per bed.
+    float rockTone = 1.0;
+#if WALL_STEPS > 0
+    if (uRockMix > 0.001) {
+      vec2 tuv = vec2(q.x * 1.25 + hash1(b * 7.3) * 5.0, v / BEDS * 1.25);
+      float pick = hash1(b * 4.1 + 9.0);
+      vec3 tx = pick < 0.42 ? texture2D(uRock0, tuv).xyz : (pick < 0.74 ? texture2D(uRock1, tuv).xyz : texture2D(uRock2, tuv).xyz);
+      n = normalize(n + vec3((tx.xy - 0.5) * 2.6 * uRockMix, 0.0));
+      rockTone = mix(1.0, 0.35 + 1.3 * tx.z, uRockMix);
+    }
+#endif
     vec3 L = normalize(vec3(0.3, -0.8, 0.42));
     float diff = max(dot(n, L), 0.0);
     diff = diff * diff * 1.5;
@@ -331,7 +346,7 @@ void main() {
     albedo *= mix(0.35, 1.0, smoothstep(0.0, 0.05, f));                      // seam
     albedo *= 0.86 + 0.14 * sin(v * 52.0 + noise(q * 7.0) * 7.0);            // laminae
 #if WALL_STEPS > 0
-    albedo *= 0.7 + 0.6 * ridged(q * vec2(60.0, 95.0));                      // fractured grain
+    albedo *= mix(0.7 + 0.6 * ridged(q * vec2(60.0, 95.0)), 1.0, uRockMix * 0.8) * rockTone;   // grain: procedural until the texture arrives
 #else
     albedo *= 0.75 + 0.5 * noise(q * vec2(60.0, 95.0));
 #endif
@@ -385,7 +400,8 @@ void main() {
       vec3 warm = vec3(1.0, 0.8, 0.54);
       col += albedo * warm * (0.4 + 1.5 * diff * shadow) * beam * 1.5 * rockFace;
       float reveal = beam * beam * rockFace;
-      float veins = circuits(q, v) + circuits(q * 2.3 + 7.0, v * 2.0 + 3.0) * 0.7 + wireCube(q) + wireCube(q * 1.9 + 3.0) * 0.8;
+      float veins = circuits(q, v) + circuits(q * 1.7 + 3.0, v * 1.6 + 5.0) * 0.8 + circuits(q * 2.9 + 7.0, v * 2.7 + 3.0) * 0.6
+        + wireCube(q) + wireCube(q * 1.7 + 3.0) * 0.85 + wireCube(q * 2.9 + 8.0) * 0.6;
       vec2 sp = q * 150.0;
       veins += step(0.992, hash(floor(sp))) * smoothstep(0.5, 0.15, length(fract(sp) - 0.5)) * (0.6 + 0.4 * sin(uTime * 2.0 + hash(floor(sp)) * 6.28));
       col = mix(col, col * 0.7 + uEvidence * 0.06, reveal * 0.55);                 // the rock turns glassy
@@ -423,38 +439,54 @@ export type WallMaterial = ShaderMaterial & {
     uGeoScale: { value: number };
     uGeoShift: { value: number };
     uLayerTop: { value: number[] };
+    uRock0: { value: Texture | null };
+    uRock1: { value: Texture | null };
+    uRock2: { value: Texture | null };
+    uRockMix: { value: number };
   };
 };
 
-/** Layer ids in page order; `tops` are their top edges in viewport heights (see world/depth.ts). */
-export function createWallMaterial(quality: WallQuality, ids: readonly string[]): WallMaterial {
-  const steps = STEPS[quality];
+export type WallUniforms = WallMaterial['uniforms'] & Record<string, { value: unknown }>;
+
+/** One set of uniforms shared by every tier's material, so switching tier needs no re-sync. */
+export function createWallUniforms(ids: readonly string[]): WallUniforms {
   const colors = Array.from({ length: WALL_LAYER_COUNT }, (_, i) => new Color(layer[(ids[i] ?? 'next') as keyof typeof layer] ?? layer.next));
+  return {
+    uRes: { value: new Vector2(1, 1) },
+    uDepth: { value: 0 },
+    uTime: { value: 0 },
+    uPointer: { value: new Vector2(0.7, 0.5) },
+    uBeam: { value: 0 },
+    uShaftX: { value: 0.8 },
+    uCalm: { value: 1 },
+    uDim: { value: 1 },
+    uGeoScale: { value: 1 },
+    uGeoShift: { value: 1 },
+    uLayerColor: { value: colors },
+    uLayerTop: { value: Array.from({ length: WALL_LAYER_COUNT }, (_, i) => i * 2) },
+    uEvidence: { value: new Color(signal.evidence) },
+    uCrisis: { value: new Color(signal.crisis) },
+    uGround: { value: new Color(base.ground) },
+    uCity: { value: new Color(city.building) },
+    uCityLit: { value: new Color(city.buildingLit) },
+    uRock0: { value: null },
+    uRock1: { value: null },
+    uRock2: { value: null },
+    uRockMix: { value: 0 },
+  };
+}
+
+/** The wall material of one tier. Pass shared uniforms to keep several tiers in step. */
+export function createWallMaterial(quality: WallQuality, idsOrUniforms: readonly string[] | WallUniforms): WallMaterial {
+  const steps = STEPS[quality];
+  const uniforms = Array.isArray(idsOrUniforms) ? createWallUniforms(idsOrUniforms as readonly string[]) : (idsOrUniforms as WallUniforms);
   const material = new ShaderMaterial({
     vertexShader,
     fragmentShader,
     defines: { WALL_STEPS: steps.march, WALL_SHADOW: steps.shadow },
     depthTest: false,
     depthWrite: false,
-    uniforms: {
-      uRes: { value: new Vector2(1, 1) },
-      uDepth: { value: 0 },
-      uTime: { value: 0 },
-      uPointer: { value: new Vector2(0.7, 0.5) },
-      uBeam: { value: 0 },
-      uShaftX: { value: 0.8 },
-      uCalm: { value: 1 },
-      uDim: { value: 1 },
-      uGeoScale: { value: 1 },
-      uGeoShift: { value: 1 },
-      uLayerColor: { value: colors },
-      uLayerTop: { value: Array.from({ length: WALL_LAYER_COUNT }, (_, i) => i * 2) },
-      uEvidence: { value: new Color(signal.evidence) },
-      uCrisis: { value: new Color(signal.crisis) },
-      uGround: { value: new Color(base.ground) },
-      uCity: { value: new Color(city.building) },
-      uCityLit: { value: new Color(city.buildingLit) },
-    },
+    uniforms,
   });
   return material as unknown as WallMaterial;
 }

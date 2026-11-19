@@ -7,12 +7,14 @@
  *   ?q=high         tier (high | medium | low)
  *   ?beam=0.62,0.5  lantern position (uv); omit for no beam
  *   ?t=3            freeze time (seconds) for repeatable captures
+ *   ?norock         procedural rock only (as before the textures load)
  * window.__wall.webp(quality) returns the frame as a WebP data URL (scripts/build-poster.ts).
  */
 import { useEffect, useRef } from 'react';
 import { Mesh, OrthographicCamera, PlaneGeometry, Scene, WebGLRenderer } from 'three';
 import { LAYER_IDS } from '@/content/schema';
 import { createWallMaterial, frameWall, type WallQuality } from '../materials/wall';
+import { loadRock, type Rock } from './rock';
 
 export function WallLab() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -52,7 +54,18 @@ export function WallLab() {
       document.documentElement.dataset.wall = String(frames);
       if (frozen === null) raf = requestAnimationFrame(draw);
     };
-    raf = requestAnimationFrame(draw);
+    // Same order as the site: textures first (medium/high), so captures match the live wall.
+    let rock: Rock | null = null;
+    void (quality === 'low' || q.has('norock') ? Promise.resolve(null) : loadRock(renderer)).then((loaded) => {
+      rock = loaded;
+      if (loaded) {
+        material.uniforms.uRock0.value = loaded.textures[0] ?? null;
+        material.uniforms.uRock1.value = loaded.textures[1] ?? null;
+        material.uniforms.uRock2.value = loaded.textures[2] ?? null;
+        material.uniforms.uRockMix.value = 1;
+      }
+      raf = requestAnimationFrame(draw);
+    });
     (window as unknown as { __wall: unknown }).__wall = {
       webp: (quality_ = 0.8) => canvas.toDataURL('image/webp', quality_),
       calls: () => renderer.info.render.calls,
@@ -60,6 +73,7 @@ export function WallLab() {
     return () => {
       cancelAnimationFrame(raf);
       window.removeEventListener('resize', resize);
+      rock?.dispose();
       material.dispose();
       quad.geometry.dispose();
       renderer.dispose();

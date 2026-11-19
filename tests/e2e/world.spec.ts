@@ -72,6 +72,22 @@ test.describe('world backdrop', () => {
     await expect(page.locator('.chips .metric-badge')).toHaveCount(0);
   });
 
+  test('rock textures load only with the 3D; lower tiers are compiled ahead of a step-down', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'desktop', 'stage tests run once, on the desktop project');
+    test.setTimeout(180_000);
+    const rock: string[] = [];
+    page.on('request', (r) => r.url().includes('/media/rock') && rock.push(r.url()));
+    await page.goto('/ja?quality=medium&dpr=0.3&debug=1', { waitUntil: 'networkidle' });
+    expect(rock, 'no texture request with the initial page').toEqual([]);
+    await startStage(page);
+    await expect(page.locator('html')).toHaveAttribute('data-world', 'live', { timeout: 60_000 });
+    await expect.poll(() => rock.length, { timeout: 60_000 }).toBe(1);
+    // The low tier's wall shader exists before any step-down (PM decision: no compile while frames drop).
+    await expect
+      .poll(() => page.evaluate(() => (window as unknown as { __world: { tiers?: string[] } }).__world.tiers ?? []), { timeout: 120_000 })
+      .toEqual(expect.arrayContaining(['medium', 'low']));
+  });
+
   test('live: one canvas, the wall follows the scroll, the lantern is on the hero only', async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== 'desktop', 'stage tests run once, on the desktop project');
     test.setTimeout(120_000);

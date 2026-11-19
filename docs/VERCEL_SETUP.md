@@ -4,7 +4,7 @@ PM_REVIEW_07 §5 の方針に沿った、プレビュー環境の取り込み手
 
 - **守られる範囲：** Vercel 認証（Standard Protection）で守られるのは、プレビューと、各デプロイに固有の URL だけ。**本番のドメイン（`<プロジェクト名>.vercel.app`）は誰でも見られる。**
 - **最初のデプロイ：** 新しいプロジェクトでは、最初のデプロイが `main` の本番扱いになる。これは避けられないので、プロジェクト名を推測されにくくし、`noindex` を付けて検索エンジンに載せない。
-- **取り込み後：** 本番のブランチを、まだ存在しない `release` に切り替える。以後の push はすべてプレビュー（保護あり）になる。
+- **取り込み後：** 本番のブランチを `release` に切り替える（Phase 7 まで push しないブランチ）。以後の push はすべてプレビュー（保護あり）になる。
 
 ## 0. 取り込みの前に済ませたこと（Claude Code）
 
@@ -36,7 +36,9 @@ PM_REVIEW_07 §5 の方針に沿った、プレビュー環境の取り込み手
 
 1. **本番のブランチを `release` にする**
    - 場所：**Settings → Environments → Production → Branch Tracking**（画面によっては **Settings → Git → Production Branch**）。
-   - `main` を `release` に変える。`release` ブランチは作らない。
+   - `main` を `release` に変える。
+   - Vercel は存在しないブランチを保存できないため、**`release` ブランチは作成済み**（2026-11-19、オーナーと PM の承認。当時の `main` と同じコミット）。作成時に本番デプロイが1回だけ作られた。中身はそれまでの本番と同じで、`noindex` のまま。
+   - **`release` には、Phase 7（公開）まで push しない。**
    - これで `main` と `feat/*` への push は、すべてプレビューになる。
 2. **Settings → Deployment Protection → Vercel Authentication** が **Standard Protection** になっていることを確認する（Hobby の既定）。
 3. **Settings → General → Node.js Version** を **22.x** にする。`package.json` の `engines`（`>=22.18.0 <23`）が優先されるが、揃えておく。
@@ -75,4 +77,4 @@ PM_REVIEW_07 §5 の方針に沿った、プレビュー環境の取り込み手
 
 1. Production の環境変数に `SITE_LAUNCHED=true` と `NEXT_PUBLIC_SITE_URL=<本番ドメイン>` を設定する。
 2. ドメインを追加する。
-3. `release` ブランチを作って push する。これが公開版の本番デプロイになる。
+3. 公開する版を `release` ブランチに push する（ブランチは作成済み）。これが公開版の本番デプロイになる。

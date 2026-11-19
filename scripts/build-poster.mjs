@@ -11,10 +11,10 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { chromium } from '@playwright/test';
 
 const base = process.argv[2] ?? 'http://localhost:3000';
-// `dim` matches the hero light level in src/three/world/controller.ts (wide 1, narrow 0.34).
+// `dim` matches the hero light level in src/three/world/controller.ts (wide 1, narrow 0.28).
 const POSTERS = [
   { file: 'poster-wide.webp', width: 1280, height: 720, query: 'q=high&t=3', quality: 0.55 },
-  { file: 'poster-tall.webp', width: 640, height: 1280, query: 'q=high&t=3&dim=0.34', quality: 0.6 },
+  { file: 'poster-tall.webp', width: 640, height: 1280, query: 'q=high&t=3&dim=0.28', quality: 0.6 },
 ];
 
 mkdirSync('public/media', { recursive: true });

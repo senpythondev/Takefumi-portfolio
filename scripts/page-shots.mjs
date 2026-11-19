@@ -23,7 +23,7 @@ for (const shot of shots) {
     const [px, py] = pointer.split(',').map(Number);
     await page.mouse.move(px * width, py * height);
   } else await page.mouse.move(2, height - 2);
-  await page.waitForTimeout(3500);
+  await page.waitForTimeout(Number(process.env.SHOT_WAIT ?? 3500));
   await page.screenshot({ path: `${out}/${name}.png` });
   if (errors.length) console.log(name, [...new Set(errors)].slice(0, 4).join('\n').slice(0, 1200));
   await context.close();

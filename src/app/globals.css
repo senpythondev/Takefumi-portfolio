@@ -1455,3 +1455,17 @@ html[data-stage='live'] .core-ring {
     white-space: normal;
   }
 }
+
+/* Narrow screens: the wall is behind the hero text, so the text gets its own dark ground. */
+@media (max-aspect-ratio: 115/100), (max-width: 899px) {
+  .hero-header {
+    margin-inline: calc(var(--gutter) * -1);
+    padding-inline: var(--gutter);
+    padding-bottom: 1rem;
+    background: linear-gradient(180deg, transparent, rgb(19 17 15 / 0.66) 22%, rgb(19 17 15 / 0.66) 86%, transparent);
+  }
+}
+
+.availability {
+  background: color-mix(in srgb, var(--color-ground) 82%, transparent);
+}

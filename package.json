@@ -25,7 +25,8 @@
     "perf": "playwright test --project=perf --workers=1",
     "tokens": "node scripts/build-tokens.ts",
     "fonts": "node scripts/build-fonts.ts",
-    "poster": "node scripts/build-poster.mjs"
+    "poster": "node scripts/build-poster.mjs",
+    "textures": "python3 scripts/textures/build.py"
   },
   "dependencies": {
     "@react-three/drei": "10.7.9",
