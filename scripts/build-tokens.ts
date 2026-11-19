@@ -6,10 +6,12 @@
  *                                          (part of `npm run validate`)
  *
  * Rules checked: every colour is #rrggbb; neighbouring layer colours differ by at least
- * LAYER_NEIGHBOUR_MIN_CONTRAST; body text keeps WCAG AA (4.5:1) on the backgrounds.
+ * LAYER_NEIGHBOUR_MIN_CONTRAST; body text keeps WCAG AA (4.5:1) on the backgrounds; the kintsugi
+ * gold is used in exactly its two places (STORYBOARD v2.1 §8.4).
  */
-import { readFileSync, writeFileSync } from 'node:fs';
-import { base, city, confidence, font, layer, LAYER_NEIGHBOUR_MIN_CONTRAST, motion, signal, space } from '../src/styles/tokens.ts';
+import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { join, relative } from 'node:path';
+import { base, city, confidence, font, kintsugi, layer, layerName, LAYER_NEIGHBOUR_MIN_CONTRAST, motion, signal, space } from '../src/styles/tokens.ts';
 
 const ROOT = new URL('..', import.meta.url).pathname;
 const CSS_PATH = 'src/styles/tokens.generated.css';
@@ -40,6 +42,7 @@ const colours: Record<string, string> = {
   ...Object.fromEntries(Object.entries(layer).map(([k, v]) => [`layer-${k}`, v])),
   ...Object.fromEntries(Object.entries(city).map(([k, v]) => [`city-${kebab(k)}`, v])),
 };
+if (!/^#[0-9a-f]{6}$/.test(kintsugi)) problems.push(`kintsugi must be #rrggbb, got ${kintsugi}`);
 for (const [name, value] of Object.entries(colours)) if (!/^#[0-9a-f]{6}$/.test(value)) problems.push(`colour ${name} must be #rrggbb, got ${value}`);
 
 const layers = Object.entries(layer);
@@ -53,6 +56,21 @@ for (const bg of ['ground', 'stratum'] as const) {
   for (const fg of ['ink', 'inkMuted'] as const) {
     const ratio = contrast(base[fg], base[bg]);
     if (ratio < 4.5) problems.push(`text ${fg} on ${bg}: ${ratio.toFixed(2)} < 4.5`);
+  }
+}
+
+// Kintsugi (§8.4): the gold appears only where something broken is mended, and nowhere else.
+const KINTSUGI_HOMES = ['src/three/worlds/php-audit/', 'src/three/worlds/finale/'];
+const walk = (dir: string): string[] =>
+  readdirSync(join(ROOT, dir)).flatMap((name) => {
+    const path = join(dir, name);
+    return statSync(join(ROOT, path)).isDirectory() ? walk(path) : [path];
+  });
+for (const file of walk('src')) {
+  const rel = relative('.', file);
+  if (rel === 'src/styles/tokens.ts' || !/\.(tsx?|css)$/.test(rel)) continue;
+  if (/\bkintsugi\b/.test(readFileSync(join(ROOT, rel), 'utf8')) && !KINTSUGI_HOMES.some((home) => rel.startsWith(home))) {
+    problems.push(`${rel}: the kintsugi gold belongs only to ${KINTSUGI_HOMES.join(' and ')}`);
   }
 }
 
@@ -110,6 +128,18 @@ ${row(['reconstructed', '再現／Reconstructed', `\`${confidence.reconstructed}
 ${row(['地層', '値', '次の地層との比'])}
 ${row(['---', '---', '---'])}
 ${layers.map(([id, v], i) => row([id, `\`${v}\``, neighbours[i] ? neighbours[i].ratio.toFixed(2) : '—'])).join('\n')}
+
+## 伝統色の名前（帯のラベルとケーススタディの見出しに小さく添える。値は上の表のまま）
+${row(['地層', '色名', 'ローマ字'])}
+${row(['---', '---', '---'])}
+${Object.entries(layerName)
+  .map(([id, n]) => row([id, n.ja, n.romaji]))
+  .join('\n')}
+
+## 金継ぎ（PHP診断の亀裂の封じ込めと、終幕のコアの継ぎ目の2か所だけ）
+${row(['名前', '値'])}
+${row(['---', '---'])}
+${row(['kintsugi', `\`${kintsugi}\``])}
 
 ## 都市（地層4）
 ${row(['名前', '値'])}

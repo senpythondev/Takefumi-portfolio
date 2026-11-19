@@ -537,6 +537,26 @@ export const contentJa = {
   cinema: {
     // STORYBOARD act 1. "一本" is written in kanji: it is not a counted fact (every digit goes through a Metric).
     coreHeadline: '{{career-years}}分の地層を、一本のコアに。',
+    indexGuide: '帯を選ぶか、そのまま掘り進む',
+    // The amounts come from the Genten citation (single source); these are only who says them.
+    gentenClash: { left: '英語の解説', right: '金融庁' },
+    // STORYBOARD v2.1 §4. Headlines are copy, not facts: every number is a metric.
+    acts: {
+      current: { headline: '初見のコードを、短時間で読み解く。', metrics: [] },
+      genten: {
+        headline: '答えに、原典を添える。',
+        metrics: ['genten-acc-closed', 'genten-acc-keyword', 'genten-acc-genten'],
+        then: ['genten-cite-closed', 'genten-cite-keyword', 'genten-cite-genten'],
+      },
+      pegasus: { headline: 'URL資産を、ひとつも失わずに運ぶ。', metrics: ['pegasus-downtime', 'pegasus-posts', 'pegasus-plugins'] },
+      'php-audit': { headline: '攻撃の道筋を、該当するコード行まで。', metrics: ['php-files', 'php-duration', 'php-size'] },
+      auction: { headline: '推測で増やさず、実測で冷ます。', metrics: ['auction-hours', 'auction-bids', 'auction-errors'] },
+      patent: { headline: '書類に、受け手の名を透かす。', metrics: ['patent-typical', 'patent-duration', 'patent-capacity'] },
+      deep: { headline: '業界を渡り、経験を積む。', metrics: ['deep-count'] },
+      catchup: { headline: '初めての地層でも、速く掘る。', metrics: ['genten-days', 'php-duration', 'auction-duration', 'patent-duration'] },
+      bedrock: { headline: '掘る前に、信条がある。', metrics: [] },
+      next: { headline: 'まだ掘っていない地層がある。次は、あなたの案件だ。', metrics: [] },
+    },
   },
   metrics: [
     // ── 地表・横断 ──────────────────────────────

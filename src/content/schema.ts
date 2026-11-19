@@ -13,12 +13,12 @@
 import { z } from 'zod';
 // The layer ids live in a zod-free module so the 3D code can use them without pulling zod into
 // the 3D base chunk (perf-auditor, 2026-11-19).
-import { LAYER_IDS } from './layer-ids.ts';
+import { LAYER_IDS, type LayerId } from './layer-ids.ts';
 
 export { LAYER_IDS };
+export type { LayerId };
 
 export const LayerIdSchema = z.enum(LAYER_IDS);
-export type LayerId = z.infer<typeof LayerIdSchema>;
 
 /** 実測 / 概算 / 再現 (BRIEF §3, §6「確度ラベルの付け方」) */
 export const ConfidenceSchema = z.enum(['measured', 'approx', 'reconstructed']);
@@ -180,6 +180,18 @@ export const LayerSchema = z.object({
 });
 export type Layer = z.infer<typeof LayerSchema>;
 
+/**
+ * One act of the cinematic home: a one-line headline and its big numbers (STORYBOARD v2.1 §3).
+ * At most three numbers, except the catch-up act, whose four durations appear one at a time.
+ */
+export const ActCopySchema = z.object({
+  headline: RichTextSchema,
+  metrics: z.array(IdSchema).max(4),
+  /** The numbers the result switches to afterwards (Genten: accuracy → answered with an official source). */
+  then: z.array(IdSchema).max(3).optional(),
+});
+export type ActCopy = z.infer<typeof ActCopySchema>;
+
 export const SiteContentSchema = z.object({
   locale: z.enum(['ja', 'en']),
   person: z.object({
@@ -188,10 +200,16 @@ export const SiteContentSchema = z.object({
     role: z.string().min(1),
   }),
   layers: z.array(LayerSchema).length(LAYER_IDS.length),
-  /** Lines of the cinematic home (docs/STORYBOARD.md): one headline per act, metrics as {{tokens}}. */
+  /** Lines of the cinematic home (docs/STORYBOARD.md v2.1): one headline per act, metrics as {{tokens}}. */
   cinema: z.object({
     /** Act 1: the core lies on its side, filling the screen. */
     coreHeadline: RichTextSchema,
+    /** Act 2: the small guide once the split core is the index. */
+    indexGuide: z.string().min(1),
+    /** Acts 3–7, one per layer after the surface. */
+    acts: z.object(Object.fromEntries(LAYER_IDS.filter((id) => id !== 'surface').map((id) => [id, ActCopySchema])) as Record<Exclude<LayerId, 'surface'>, typeof ActCopySchema>),
+    /** Act 3-2: who says which amount in the quoted clash (the amounts themselves come from the citation). */
+    gentenClash: z.object({ left: z.string().min(1), right: z.string().min(1) }),
   }),
   metrics: z.array(MetricSchema).min(1),
 });

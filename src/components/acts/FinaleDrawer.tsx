@@ -5,19 +5,28 @@ import { BlockView } from '@/components/layers/Blocks';
 import type { RichContext } from '@/components/layers/RichText';
 
 /**
- * Where the cinematic acts hand over to the layer panels (`[data-act-join]`). While it scrolls in,
- * the director closes the core, flies it to the navigator at the edge and descends the borehole to
- * the first layer — so the panels arrive on the same wall, with no cut. Holds the 30-second summary
- * and the legend of the confidence labels.
+ * Act 7: what the empty band holds when it slides open like a drawer (STORYBOARD v2.1 §4) — the
+ * terms, the contact, the links, the 30-second summary and the legend of the confidence labels.
+ * It is ordinary HTML in the normal flow after the pinned frame, so it reads the same with or
+ * without JavaScript; with the cinema on, the director opens the 3D band as it scrolls in.
  */
-export async function ActJoin({ surface, ctx }: { surface: Layer; ctx: RichContext }) {
+export async function FinaleDrawer({ next, surface, ctx }: { next: Layer; surface: Layer; ctx: RichContext }) {
+  const t = await getTranslations('cinema');
   const te = await getTranslations('evidence');
   const tc = await getTranslations('confidence');
   const summary = surface.blocks.filter((b) => b.kind === 'summary');
   return (
-    <section className="act-join" data-act-join="" aria-label={te('legendTitle')}>
+    <div id="finale-drawer" className="finale-drawer" data-act-drawer="" aria-labelledby="finale-drawer-title">
+      <h3 id="finale-drawer-title" className="finale-drawer-title">
+        {t('drawerTitle')}
+      </h3>
+      <div className="finale-drawer-grid">
+        {next.blocks.map((block, i) => (
+          <BlockView key={i} block={block} ctx={ctx} id={`finale-b${i}`} />
+        ))}
+      </div>
       {summary.map((block, i) => (
-        <BlockView key={i} block={block} ctx={ctx} id={`act-join-b${i}`} />
+        <BlockView key={`s${i}`} block={block} ctx={ctx} id={`finale-s${i}`} />
       ))}
       <aside className="legend" aria-labelledby="legend-title">
         <h2 id="legend-title">{te('legendTitle')}</h2>
@@ -38,6 +47,6 @@ export async function ActJoin({ surface, ctx }: { surface: Layer; ctx: RichConte
           ))}
         </dl>
       </aside>
-    </section>
+    </div>
   );
 }

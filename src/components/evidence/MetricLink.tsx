@@ -13,7 +13,35 @@ export type MetricLabels = {
 /** Compact form (hero chips, PM_REVIEW_08 §3-c): the confidence is a small symbol; its name is the accessible label. */
 export const CONFIDENCE_SYMBOL: Record<Confidence, string> = { measured: '✓', approx: '≈', reconstructed: '↺' };
 
-export function MetricLink({ metric, labels, locale, compact = false }: { metric: Metric; labels: MetricLabels; locale: Locale; compact?: boolean }) {
+/**
+ * `upright`: inside a vertical headline (STORYBOARD v2.1 §8.2) a run of one or two digits stands
+ * upright in the column (tate-chu-yoko, `.tcy`); in horizontal text the spans change nothing.
+ */
+function uprightDigits(display: string) {
+  return display.split(/(?<![\d,.])(\d{1,2})(?![\d,.])/).map((part, i) =>
+    i % 2 === 1 ? (
+      <span key={i} className="tcy">
+        {part}
+      </span>
+    ) : (
+      part
+    ),
+  );
+}
+
+export function MetricLink({
+  metric,
+  labels,
+  locale,
+  compact = false,
+  upright = false,
+}: {
+  metric: Metric;
+  labels: MetricLabels;
+  locale: Locale;
+  compact?: boolean;
+  upright?: boolean;
+}) {
   return (
     <a
       className="metric"
@@ -23,7 +51,7 @@ export function MetricLink({ metric, labels, locale, compact = false }: { metric
       aria-haspopup="dialog"
       aria-describedby={METRIC_HINT_ID}
     >
-      <span className="metric-value">{metric.display}</span>
+      <span className="metric-value">{upright ? uprightDigits(metric.display) : metric.display}</span>
       {compact ? (
         <span className="metric-symbol" role="img" aria-label={labels.confidence[metric.confidence]} title={labels.confidence[metric.confidence]}>
           {CONFIDENCE_SYMBOL[metric.confidence]}

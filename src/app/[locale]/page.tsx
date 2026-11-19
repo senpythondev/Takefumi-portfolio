@@ -1,17 +1,20 @@
 import { notFound } from 'next/navigation';
 import { hasLocale } from 'next-intl';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import { getContent, metricMap } from '@/content';
+import type { ReactNode } from 'react';
+import { getContent, metricLayers, metricMap, type Layer } from '@/content';
+import { ACTS, isWorkId, kanjiOf, type Act as ActDef } from '@/content/acts';
 import { routing } from '@/i18n/routing';
 import { EvidenceController } from '@/components/evidence/EvidenceController';
 import { EvidenceDialog } from '@/components/evidence/EvidenceDialog';
 import { METRIC_HINT_ID } from '@/components/evidence/ids';
 import { Hero } from '@/components/layers/Hero';
-import { layerAnchor, LayerSection } from '@/components/layers/LayerSection';
 import type { RichContext } from '@/components/layers/RichText';
 import { SiteFooter, SiteHeader } from '@/components/layout/SiteChrome';
-import { ActExplode } from '@/components/acts/ActExplode';
-import { ActJoin } from '@/components/acts/ActJoin';
+import { Act } from '@/components/acts/Act';
+import { ActIndex } from '@/components/acts/ActIndex';
+import { AuctionExtras, BedrockExtras, CatchupExtras, CurrentExtras, DeepExtras, GentenExtras, PatentExtras, PhpExtras } from '@/components/acts/ActExtras';
+import { FinaleDrawer } from '@/components/acts/FinaleDrawer';
 import { StageLoader } from '@/three/StageLoader';
 import { LayerTracker } from '@/lib/scroll/LayerTracker';
 import { layer as layerColor, type LayerColorId } from '@/styles/tokens';
@@ -19,9 +22,11 @@ import { CoreNav } from '@/components/layout/CoreNav';
 import { DebugHudLoader } from '@/components/debug/DebugHudLoader';
 
 /**
- * One page, surface → bedrock. Everything here is server-rendered HTML; the only client code is
- * EvidenceController (evidence dialog) and EmailReveal (address assembled in the browser).
- * Each metric's evidence lives on its own static page (/[locale]/evidence/[id]), not in this HTML.
+ * The cinematic home (docs/STORYBOARD.md v2.1): acts only. The hero (acts 0–1), the split core as
+ * the index (act 2), then one act per layer — each a pinned frame with its headline, two or three
+ * big numbers and the link to its case study (/[locale]/work/[id], where the long texts live).
+ * Everything here is server-rendered HTML; the 3D worlds behind are aria-hidden decoration.
+ * Each metric's evidence lives on its own static page (/[locale]/evidence/[id]).
  */
 export default async function Page({ params }: PageProps<'/[locale]'>) {
   const { locale } = await params;
@@ -42,8 +47,47 @@ export default async function Page({ params }: PageProps<'/[locale]'>) {
     },
   };
 
-  const [surface, ...rest] = content.layers;
-  if (!surface || !rest[0]) throw new Error('content must contain the surface layer and at least one more');
+  const layers = new Map(content.layers.map((l) => [l.id, l]));
+  const layerAt = (id: string) => layers.get(id as Layer['id']) as Layer;
+  const surface = layerAt('surface');
+  // Catch-up: each duration is captioned with the project it belongs to.
+  const firstLayer = metricLayers(content);
+  const projectCaptions = Object.fromEntries(
+    content.cinema.acts.catchup.metrics.map((id) => {
+      const metric = ctx.metrics.get(id);
+      const project = layerAt(firstLayer.get(id) ?? 'catchup');
+      return [id, `${project.title}：${metric?.label ?? ''}`];
+    }),
+  );
+
+  const extras = (act: ActDef, layer: Layer): ReactNode => {
+    switch (act.id) {
+      case 'current':
+        return <CurrentExtras />;
+      case 'genten':
+        return <GentenExtras layer={layer} clash={content.cinema.gentenClash} />;
+      case 'php-audit':
+        return <PhpExtras />;
+      case 'auction':
+        return <AuctionExtras />;
+      case 'patent':
+        return <PatentExtras />;
+      case 'deep':
+        return <DeepExtras layer={layer} ctx={ctx} />;
+      case 'catchup':
+        return <CatchupExtras layer={layer} />;
+      case 'bedrock':
+        return <BedrockExtras layer={layer} />;
+      case 'next':
+        return (
+          <a className="act-drawer-open" href="#finale-drawer">
+            {tcin('openDrawer')} <span aria-hidden="true">↓</span>
+          </a>
+        );
+      default:
+        return null;
+    }
+  };
 
   return (
     <>
@@ -58,17 +102,32 @@ export default async function Page({ params }: PageProps<'/[locale]'>) {
       </div>
       <SiteHeader locale={locale} person={content.person} />
       <main id="main" tabIndex={-1}>
-        <Hero layer={surface} person={content.person} ctx={ctx} nextAnchor={layerAnchor(rest[0].id)} coreHeadline={content.cinema.coreHeadline} />
-        <ActExplode layers={content.layers} />
-        <ActJoin surface={surface} ctx={ctx} />
-        {rest.map((layer, i) => (
-          <LayerSection key={layer.id} layer={layer} index={i + 1} ctx={ctx} />
-        ))}
+        <Hero layer={surface} person={content.person} ctx={ctx} nextAnchor="index" coreHeadline={content.cinema.coreHeadline} />
+        <ActIndex layers={content.layers} guide={content.cinema.indexGuide} locale={locale} />
+        {ACTS.filter((a) => a.layer && a.layer !== 'surface').map((act) => {
+          const layer = layerAt(act.layer as string);
+          const index = content.layers.indexOf(layer);
+          return (
+            <Act
+              key={act.id}
+              act={act}
+              layer={layer}
+              index={index}
+              copy={content.cinema.acts[act.id as keyof typeof content.cinema.acts]}
+              ctx={ctx}
+              captions={act.id === 'catchup' ? projectCaptions : undefined}
+              work={isWorkId(act.id)}
+              after={act.id === 'next' ? <FinaleDrawer next={layer} surface={surface} ctx={ctx} /> : undefined}
+            >
+              {extras(act, layer)}
+            </Act>
+          );
+        })}
       </main>
       <SiteFooter />
       <CoreNav
         label={tn('core')}
-        layers={content.layers.map((l, index) => ({ id: l.id, depth: td('label', { index }), title: l.title, color: layerColor[l.id as LayerColorId] }))}
+        layers={content.layers.map((l, index) => ({ id: l.id, depth: td('label', { index }), title: l.title, color: layerColor[l.id as LayerColorId], kanji: kanjiOf(l.id) }))}
       />
       <span id={METRIC_HINT_ID} hidden>
         {te('open')}

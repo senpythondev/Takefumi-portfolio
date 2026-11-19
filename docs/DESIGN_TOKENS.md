@@ -41,6 +41,26 @@
 | bedrock | `#86776c` | 2.15 |
 | next | `#4d463f` | — |
 
+## 伝統色の名前（帯のラベルとケーススタディの見出しに小さく添える。値は上の表のまま）
+| 地層 | 色名 | ローマ字 |
+| --- | --- | --- |
+| surface | 胡桃染 | kurumizome |
+| current | 藍鼠 | ainezu |
+| genten | 青磁色 | seiji-iro |
+| pegasus | 紺鼠 | konnezu |
+| php-audit | 錆色 | sabi-iro |
+| auction | 黄土色 | ōdo-iro |
+| patent | 藍鉄色 | aitetsu-iro |
+| deep | 鳩羽色 | hatoba-iro |
+| catchup | 鉄色 | tetsu-iro |
+| bedrock | 煤竹色 | susutake-iro |
+| next | 墨色 | sumi-iro |
+
+## 金継ぎ（PHP診断の亀裂の封じ込めと、終幕のコアの継ぎ目の2か所だけ）
+| 名前 | 値 |
+| --- | --- |
+| kintsugi | `#d4a94e` |
+
 ## 都市（地層4）
 | 名前 | 値 |
 | --- | --- |

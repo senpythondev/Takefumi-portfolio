@@ -5,7 +5,7 @@
 import { scrollStore } from './store';
 
 export function startLayerObserver(): () => void {
-  const sections = [...document.querySelectorAll<HTMLElement>('section.layer[data-layer]')];
+  const sections = [...document.querySelectorAll<HTMLElement>('section[data-layer]')];
   const order = sections.map((s) => s.dataset.layer as string);
   if (sections.length === 0) return () => {};
 

@@ -34,7 +34,7 @@ export function startEffects(): Effects {
   gsap.ticker.lagSmoothing(0);
 
   // Progress 0–1 per layer, read by the scenes every frame. No pinning: the sticky layout is CSS.
-  const triggers = [...document.querySelectorAll<HTMLElement>('section.layer[data-layer]')].map((section) => {
+  const triggers = [...document.querySelectorAll<HTMLElement>('section[data-layer]')].map((section) => {
     const id = section.dataset.layer as string;
     return ScrollTrigger.create({
       trigger: section,
@@ -49,10 +49,13 @@ export function startEffects(): Effects {
   // Acts of the cinematic home: pinned sections (position: sticky in CSS), 0–1 over their scroll length.
   for (const section of document.querySelectorAll<HTMLElement>('[data-act]')) {
     const id = section.dataset.act as string;
+    // An act with content after its pinned part (the finale's drawer) ends at its spacer.
+    const endTrigger = section.querySelector<HTMLElement>('[data-act-end]') ?? section;
     triggers.push(
       ScrollTrigger.create({
         trigger: section,
         start: 'top top',
+        endTrigger,
         end: 'bottom bottom',
         onUpdate: (self) => {
           scrollLive.acts[id] = self.progress;

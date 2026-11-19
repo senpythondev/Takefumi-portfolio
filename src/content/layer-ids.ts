@@ -12,3 +12,5 @@ export const LAYER_IDS = [
   'bedrock',
   'next',
 ] as const;
+
+export type LayerId = (typeof LAYER_IDS)[number];

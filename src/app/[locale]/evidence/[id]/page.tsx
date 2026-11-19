@@ -7,7 +7,8 @@ import { buildCharts } from '@/content/charts';
 import { routing } from '@/i18n/routing';
 import { evidenceHtml, getEvidenceLabels } from '@/components/evidence/evidence-html';
 import { evidencePath, EVIDENCE_TITLE_ID } from '@/components/evidence/ids';
-import { layerAnchor } from '@/components/layers/LayerSection';
+import { layerAnchor, workPath } from '@/components/acts/anchors';
+import { isWorkId } from '@/content/acts';
 import { SiteFooter } from '@/components/layout/SiteChrome';
 import { evidenceParams } from './params';
 
@@ -71,7 +72,8 @@ export default async function EvidencePage({ params }: PageProps<'/[locale]/evid
       <main id="main" tabIndex={-1} className="evidence-page">
         <article className="evidence-panel" aria-labelledby={EVIDENCE_TITLE_ID} dangerouslySetInnerHTML={{ __html: html }} />
         <p className="evidence-back">
-          <a href={layer ? `/${locale}#${layerAnchor(layer)}` : `/${locale}`}>{t('back')}</a>
+          {/* Back to where the number is told in full: its case study, or the home for the hero's numbers. */}
+          <a href={layer && isWorkId(layer) ? workPath(locale, layer) : layer ? `/${locale}#${layerAnchor(layer)}` : `/${locale}`}>{t('back')}</a>
         </p>
       </main>
       <SiteFooter />

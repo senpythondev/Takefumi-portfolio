@@ -30,4 +30,4 @@ export function metricLayers(content: SiteContent): Map<string, LayerId> {
   return map;
 }
 
-export type { Block, Confidence, Layer, LayerId, Metric, SiteContent, Source } from './schema.ts';
+export type { ActCopy, Block, Confidence, Layer, LayerId, Metric, SiteContent, Source } from './schema.ts';

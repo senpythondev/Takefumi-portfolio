@@ -72,6 +72,53 @@
     "rights": "© 2026 Takefumi Ono"
   },
   "cinema": {
-    "drilling": "掘削中"
+    "drilling": "掘削中",
+    "readCase": "ケーススタディを読む",
+    "enter": "入る",
+    "read": "読む",
+    "reconstructedNote": "この区間の画面はすべて再現です。実在のデータやコードは使っていません。",
+    "confirmed": "確定",
+    "inferred": "推測",
+    "confirmedNote": "不正に設置されたファイルを無害化（既存ファイルは無変更）し、SHA-256 ハッシュで証拠を保全",
+    "inferredNote": "アクセスログの応答サイズの差から、攻撃手法を推定",
+    "threshold": "応答サイズの閾値",
+    "bidders": "同時入札者数",
+    "fewer": "少ない",
+    "more": "多い",
+    "moreServers": "サーバーを闇雲に増やす",
+    "yourName": "お名前（透かしに使います）",
+    "nameNote": "入力した名前はどこにも送信・保存しません。この画面の中だけで使います。",
+    "stations": "書類が通る4つの駅",
+    "openDrawer": "引き出しを開く",
+    "drawerTitle": "参画条件と連絡先",
+    "gates": "25問の門",
+    "gate": "第{n}問",
+    "gateResult": "第{n}問：モデル単体 {a}、キーワード検索 {b}、Genten {c}",
+    "quoteSource": "出典",
+    "cards": "8つの現場",
+    "aiYears": "AIツールの使用開始",
+    "creeds": "信条",
+    "hubCase": "この地層へ",
+    "back": "ホームのこの地層へ戻る",
+    "prev": "前の地層",
+    "next": "次の地層",
+    "workIndex": "ケーススタディ",
+    "patentStations": [
+      "NDAの電子署名",
+      "SMSの本人確認",
+      "法人番号の照合",
+      "透かし入りPDF"
+    ],
+    "currentGates": [
+      "AI検証",
+      "担当者レビュー"
+    ],
+    "lanes": [
+      "モデル単体",
+      "キーワード検索",
+      "Genten"
+    ],
+    "correctShort": "○",
+    "incorrectShort": "×"
   }
 }

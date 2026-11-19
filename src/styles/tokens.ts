@@ -51,6 +51,32 @@ export const layer = {
 
 export type LayerColorId = keyof typeof layer;
 
+/**
+ * The nearest traditional Japanese colour name for each stratum (STORYBOARD v2.1 §8.8), shown small
+ * on the band labels and the case-study headers. A name, not a new value: the hex above stays the
+ * single source and keeps the neighbour-contrast rule.
+ */
+export const layerName: Record<LayerColorId, { ja: string; romaji: string }> = {
+  surface: { ja: '胡桃染', romaji: 'kurumizome' },
+  current: { ja: '藍鼠', romaji: 'ainezu' },
+  genten: { ja: '青磁色', romaji: 'seiji-iro' },
+  pegasus: { ja: '紺鼠', romaji: 'konnezu' },
+  'php-audit': { ja: '錆色', romaji: 'sabi-iro' },
+  auction: { ja: '黄土色', romaji: 'ōdo-iro' },
+  patent: { ja: '藍鉄色', romaji: 'aitetsu-iro' },
+  deep: { ja: '鳩羽色', romaji: 'hatoba-iro' },
+  catchup: { ja: '鉄色', romaji: 'tetsu-iro' },
+  bedrock: { ja: '煤竹色', romaji: 'susutake-iro' },
+  next: { ja: '墨色', romaji: 'sumi-iro' },
+};
+
+/**
+ * Kintsugi gold (STORYBOARD v2.1 §8.4): used in exactly two places, the sealed cracks of the PHP
+ * audit and the seams of the rebuilt core in the finale. Not a CSS variable on purpose; a unit test
+ * fails (`npm run validate`, scripts/build-tokens.ts) if any other module uses it.
+ */
+export const kintsugi = '#d4a94e'; // oklch(0.75 0.11 82)
+
 /** Minimum WCAG contrast ratio between neighbouring layer colours (bands must read apart in the core). */
 export const LAYER_NEIGHBOUR_MIN_CONTRAST = 1.4;
 

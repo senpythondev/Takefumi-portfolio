@@ -3,7 +3,7 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import { useScrollState } from '@/lib/scroll/store';
 
-export type CoreLayer = { id: string; depth: string; title: string; color: string };
+export type CoreLayer = { id: string; depth: string; title: string; color: string; kanji: string };
 
 /**
  * Boring-core navigator (BRIEF §3) — HTML version, always present and keyboard/no-JS usable:
@@ -38,7 +38,11 @@ export function CoreNav({ layers, label }: { layers: CoreLayer[]; label: string 
                 onClick={() => setOpen(false)}
               >
                 <span className="core-label">
-                  {l.depth}：{l.title}
+                  {l.depth}
+                  <span className="core-kanji" aria-hidden="true">
+                    {l.kanji}
+                  </span>
+                  ：{l.title}
                 </span>
               </a>
             </li>

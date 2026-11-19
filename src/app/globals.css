@@ -302,72 +302,45 @@ html.lenis body {
   pointer-events: none;
 }
 
-/* ── Layers ───────────────────────────── */
-.layer {
-  padding: clamp(3rem, 9vw, 6rem) var(--gutter);
-  border-top: 1px solid var(--color-seam);
-  scroll-margin-top: 3.5rem;
+/* ── Case studies (/[locale]/work/[id]) and the finale drawer: the long texts left the home ── */
+.work-page {
+  padding: clamp(2.5rem, 7vw, 5rem) var(--gutter) clamp(3rem, 8vw, 6rem);
 }
 
-.layer > * {
+.work,
+.work-nav {
   max-width: var(--measure);
   margin-inline: auto;
 }
 
-/* Layers stay transparent: the fixed 3D canvas is drawn behind the content. */
-
-/* ── Layer panels: one centred column (the wall behind is their scene; no side stage) ── */
-.layer {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  grid-template-areas: 'header' 'body';
+.work-header {
+  padding-bottom: 1.5rem;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid var(--color-seam);
+  box-shadow: inset 0 -3px 0 -2px var(--layer, var(--color-seam));
 }
 
-/* In grid layers, children follow the column: auto margins would make them fit-content and let a
-   wide table push them past the screen on phones; min-width:auto would do the same. */
-.layer:not(.layer-surface) > * {
-  width: 100%;
-  min-width: 0;
-  margin-inline: 0;
-  justify-self: center;
-}
-
-.layer-header {
-  grid-area: header;
-}
-
-.layer-body {
-  grid-area: body;
-}
-
-.layer-surface {
-  position: relative;
-  grid-template-areas: none;
-  display: block;
-}
-
-.hero-stage {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-.layer-depth {
+.work-eyebrow {
   display: flex;
   flex-wrap: wrap;
   gap: 0.25rem 1rem;
-  margin: 0 0 0.5rem;
+  margin: 0 0 0.75rem;
   font-family: var(--font-mono);
   font-size: 0.8125rem;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
+  color: var(--color-evidence);
+}
+
+.work-eyebrow-mark {
   color: var(--color-ink-muted);
 }
 
-.layer h2 {
+.work h1 {
   margin: 0 0 1rem;
-  font-size: clamp(1.5rem, 4.5vw, 2.25rem);
-  line-height: 1.35;
-  font-weight: 700;
+  font-family: var(--font-heading);
+  font-size: clamp(1.75rem, 5vw, 2.5rem);
+  font-weight: 600;
+  line-height: 1.4;
 }
 
 .title-link {
@@ -375,30 +348,57 @@ html.lenis body {
   font-weight: 400;
 }
 
-.layer-lead {
-  margin: 0 0 2rem;
+.work-lead {
+  margin: 0;
   font-size: 1.125rem;
 }
 
-.layer-body > * + * {
+:is(.work-body, .finale-drawer-grid) > * + * {
   margin-top: 2rem;
 }
 
-.layer h3 {
+:is(.work-body, .finale-drawer) h3 {
   margin: 0 0 0.75rem;
   font-size: 1rem;
   font-weight: 700;
   letter-spacing: 0.02em;
 }
 
-.layer ul,
-.layer ol {
+:is(.work-body, .finale-drawer) :is(ul, ol) {
   margin: 0;
   padding-left: 1.25rem;
 }
 
-.layer li + li {
+:is(.work-body, .finale-drawer) li + li {
   margin-top: 0.4rem;
+}
+
+.work-nav {
+  display: grid;
+  gap: 1.25rem;
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--color-seam);
+}
+
+.work-steps {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.work-steps a,
+.work-back {
+  display: grid;
+  min-height: 24px;
+  color: var(--color-ink);
+}
+
+.work-step-label {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-ink-muted);
 }
 
 .tech-list {
@@ -599,19 +599,14 @@ html.lenis body {
   letter-spacing: 0.2em;
 }
 
-/* ── Layer index ───────────────────────────── */
-.layer-index {
-  padding: 2rem var(--gutter);
-  border-top: 1px solid var(--color-seam);
-}
-
+/* ── Band index (act 2) — the stacked version: a plain list ───────────────────────────── */
 .layer-index > * {
   max-width: var(--measure);
   margin-inline: auto;
 }
 
 .layer-index h2 {
-  margin-bottom: 0.75rem;
+  margin: 0 0 0.75rem;
   font-size: 0.9375rem;
   color: var(--color-ink-muted);
 }
@@ -619,26 +614,55 @@ html.lenis body {
 .layer-index ol {
   display: grid;
   gap: 0.25rem;
+  margin: 0;
   padding: 0;
   list-style: none;
 }
 
 .layer-index a {
   display: grid;
-  grid-template-columns: 6.5rem 1fr;
-  gap: 1rem;
+  grid-template-columns: 9rem 8rem 1fr;
+  gap: 0.25rem 1rem;
   padding: 0.3rem 0;
   color: var(--color-ink);
   text-decoration: none;
 }
 
-.layer-index a:hover .layer-index-title {
+.layer-index .band-label-title {
+  grid-column: 3;
+}
+
+.layer-index a:hover .band-label-title {
   color: var(--color-evidence);
 }
 
-.layer-index-depth {
+.band-label-head,
+.band-label-period {
   font-family: var(--font-mono);
   font-size: 0.8125rem;
+  color: var(--color-ink-muted);
+}
+
+.band-label-mark {
+  margin-left: 0.6em;
+  font-family: var(--font-heading);
+  color: var(--color-ink-muted);
+}
+
+@media (max-width: 599px) {
+  .layer-index a {
+    grid-template-columns: 1fr;
+  }
+
+  .layer-index .band-label-title {
+    grid-column: auto;
+  }
+}
+
+.index-guide {
+  margin: 1rem auto 0;
+  font-size: 0.8125rem;
+  letter-spacing: 0.08em;
   color: var(--color-ink-muted);
 }
 
@@ -1299,16 +1323,6 @@ html[data-world='live'] :is(.world-poster, .world-drill, .world-drill-meter) {
   background: color-mix(in srgb, var(--color-ground) 80%, transparent);
 }
 
-/* Below the hero the text sits on the rock: a soft dark ground keeps it at AA contrast. */
-.layer:not(.layer-surface) > .layer-header,
-.layer:not(.layer-surface) > .layer-body {
-  background: color-mix(in srgb, var(--color-ground) 78%, transparent);
-  box-shadow: 0 0 0 1.25rem color-mix(in srgb, var(--color-ground) 78%, transparent);
-  border-radius: 2px;
-}
-
-.layer,
-.layer-index,
 .site-footer {
   background: transparent;
 }
@@ -1378,12 +1392,12 @@ html[data-stage='live'] .core-ring {
 }
 
 /* ── Text: Japanese breaks at phrase boundaries (<wbr> from BudouX, PM_REVIEW_08 §3-a) ───────────── */
-:lang(ja) :is(.hero-copy, .hero-lead, .layer-lead, .layer h2, .layer h3, .layer p, .layer li, .evidence-panel dd) {
+:lang(ja) :is(.hero-copy, .hero-lead, .work-lead, .work h1, .work h3, .work p, .work li, .finale-drawer p, .finale-drawer li, .act p, .act li, .evidence-panel dd) {
   word-break: keep-all;
   overflow-wrap: anywhere;
 }
 
-:is(.hero-lead, .layer-lead, .layer p, .layer li) {
+:is(.hero-lead, .work-lead, .work p, .work li, .finale-drawer li) {
   text-wrap: pretty;
 }
 
@@ -1503,12 +1517,16 @@ html[data-stage='live'] .core-ring {
   background: color-mix(in srgb, var(--color-ground) 82%, transparent);
 }
 
-/* ── Acts of the cinematic home (docs/STORYBOARD.md) ─────────────────────────────
-   Default (no JS, reduced motion, static tier): the story is stacked — hero; the act headline over a
-   still of the core; a still of the exploded core with the layer index; the summary and legend.
-   `html[data-cinema]` (set by boot.ts when the 3D will run): the acts are tall sections whose
-   frame is pinned, and the director (src/three/director) drives the CSS variables used here from
-   the scroll: --hero-fade, --reveal (headline), and --x / --y / --on (band labels). */
+/* ── Acts of the cinematic home (docs/STORYBOARD.md v2.1) ─────────────────────────────
+   Default (no JS, reduced motion, static tier): the story is stacked — every act shows its kanji
+   mark, headline, numbers, case-study link and a still of its scene.
+   `html[data-cinema]` (set by boot.ts when the 3D will run): every act is a tall section whose frame
+   is pinned for `--len` viewport heights, and consecutive acts overlap by one screen, so the story
+   never stops between them. The director (src/three/director) marks each act's state on its own
+   section (never on <html>, which would restyle the page): data-on (the act owns the screen),
+   data-entered (the kanji mark), data-lit (the headline inks in), data-result (the numbers),
+   data-step / data-then (beats inside an act); and drives --hero-fade and the band labels'
+   --x / --y / --on. */
 .hero-content {
   max-width: var(--measure);
   margin-inline: auto;
@@ -1526,16 +1544,79 @@ html[data-stage='live'] .core-ring {
   max-width: none;
 }
 
-.act .act-headline {
-  max-width: 19em;
-  margin: clamp(3.5rem, 12vw, 7rem) auto 0;
-  font-size: clamp(1.75rem, 5vw, 3.25rem);
+/* ── Stacked acts ── */
+.act-world,
+.act-explode {
+  position: relative;
+  padding: clamp(3rem, 9vw, 6rem) var(--gutter);
+  border-top: 1px solid var(--color-seam);
+  scroll-margin-top: 3.5rem;
+}
+
+.act-world > .act-frame {
+  position: relative;
+  max-width: 60rem;
+  margin-inline: auto;
+}
+
+.act-surface > .act-frame {
+  position: relative;
+  max-width: 60rem;
+  margin: clamp(3rem, 9vw, 6rem) auto 0;
+}
+
+/* The one-character mark of the section (§8.3): large, faint, behind. */
+.act-kanji {
+  position: absolute;
+  top: -0.15em;
+  right: 0;
+  font-family: var(--font-heading);
+  font-size: clamp(7rem, 22vw, 15rem);
   font-weight: 600;
-  line-height: 1.45;
-  letter-spacing: 0.03em;
-  text-align: center;
+  line-height: 1;
+  color: var(--color-ink);
+  opacity: 0.05;
+  pointer-events: none;
+  user-select: none;
+}
+
+.act-eyebrow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.9rem;
+  margin: 0 0 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  color: var(--color-evidence);
+}
+
+.act-eyebrow-mark {
+  font-family: var(--font-heading);
+  color: var(--color-ink-muted);
+}
+
+.act-eyebrow-colour {
+  margin-left: 0.5em;
+  font-family: var(--font-mono);
+}
+
+.act .act-headline {
+  position: relative;
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: clamp(1.75rem, 5vw, 3rem);
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: 0.04em;
   text-wrap: balance;
-  text-shadow: 0 2px 20px rgb(0 0 0 / 0.85);
+  /* Proportional kana and trimmed leading punctuation: the care Japanese readers notice (§8.2). */
+  font-feature-settings: 'palt';
+  text-spacing-trim: trim-start;
+}
+
+.act .act-headline:focus {
+  outline: none;
 }
 
 :lang(ja) :is(.act-headline, .band-labels) {
@@ -1543,8 +1624,9 @@ html[data-stage='live'] .core-ring {
   overflow-wrap: anywhere;
 }
 
-/* A number inside a Mincho headline: same size, a lighter weight so it sits in the line. */
+/* A number inside a Mincho headline: same face and size, a lighter weight so it sits in the line. */
 .act-headline .metric-value {
+  font-family: inherit;
   font-weight: 400;
 }
 
@@ -1553,8 +1635,459 @@ html[data-stage='live'] .core-ring {
   vertical-align: super;
 }
 
+/* §8.2: the headlines of the Japanese desktop are vertical Mincho, beside the world's object. */
+.tcy {
+  text-combine-upright: all;
+}
+
+@media (min-aspect-ratio: 115/100) and (min-width: 900px) {
+  html[lang='ja'] .act .act-headline {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    /* In vertical text the inline axis is the column height. */
+    max-inline-size: min(60svh, 30rem);
+    font-size: clamp(2rem, 3vw, 2.75rem);
+    line-height: 1.75;
+    letter-spacing: 0.14em;
+    text-wrap: wrap;
+    font-feature-settings: normal;
+  }
+
+  html[lang='ja'] .act .act-headline .metric-symbol {
+    text-orientation: upright;
+    vertical-align: baseline;
+  }
+
+  html[lang='ja'] .act-world > .act-frame,
+  html[lang='ja'] .act-surface > .act-frame {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: auto auto 1fr;
+    column-gap: clamp(2rem, 5vw, 4rem);
+  }
+
+  html[lang='ja'] .act-world > .act-frame > .act-head {
+    grid-row: 1 / span 3;
+  }
+
+  html[lang='ja'] .act-world[data-side='R'] > .act-frame > .act-head {
+    grid-column: 2;
+    justify-self: end;
+  }
+
+  html[lang='ja'] .act-world[data-side='R'] > .act-frame > :is(.act-extras, .act-result) {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  html[lang='ja'] .act-head .act-eyebrow {
+    flex-direction: column;
+  }
+}
+
+.act-extras {
+  margin-top: 1.5rem;
+}
+
+.act-result {
+  margin-top: 2rem;
+}
+
+.act-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem 2.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.act-metrics-then {
+  margin-top: 1.25rem;
+}
+
+.act-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  max-width: 18rem;
+}
+
+.act-metric .metric {
+  margin: 0;
+  padding: 0;
+  border-bottom: 0;
+}
+
+.act-metric .metric-value {
+  white-space: nowrap;
+  font-size: clamp(2rem, 5.5vw, 3.25rem);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  border-bottom: 1px dashed color-mix(in srgb, var(--color-evidence) 60%, transparent);
+}
+
+.act-metric .metric-symbol {
+  font-size: 0.9rem;
+  vertical-align: super;
+}
+
+.act-metric-caption {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--color-ink-muted);
+}
+
+:is(.act-case, .act-drawer-open) {
+  display: inline-flex;
+  gap: 0.5em;
+  align-items: center;
+  margin-top: 1.5rem;
+  padding: 0.55rem 1.1rem;
+  border: 1px solid color-mix(in srgb, var(--color-evidence) 55%, transparent);
+  border-radius: 999px;
+  color: var(--color-ink);
+  font-size: 0.9375rem;
+  text-decoration: none;
+  background: color-mix(in srgb, var(--color-ground) 70%, transparent);
+}
+
+:is(.act-case, .act-drawer-open):hover {
+  border-color: var(--color-evidence);
+  color: var(--color-evidence);
+}
+
+/* Controls that only make sense with the 3D: hidden in the stacked version. */
+html:not([data-cinema]) .needs-cinema {
+  display: none !important;
+}
+
+.act-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.act-steps li {
+  padding: 0.3rem 0.75rem;
+  border: 1px solid var(--color-seam);
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  color: var(--color-ink-muted);
+  background: color-mix(in srgb, var(--color-ground) 70%, transparent);
+  transition: border-color 600ms var(--ease-strata), color 600ms var(--ease-strata);
+}
+
+.act-steps li[data-on] {
+  border-color: var(--color-evidence);
+  color: var(--color-ink);
+}
+
+.current-gates li[data-step='1'][data-on] {
+  border-color: var(--color-approx);
+}
+
+/* 3-2: the quoted clash (a quotation with its source, not a Metric). */
+.clash {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem 1.5rem;
+  margin: 0 0 1.5rem;
+}
+
+.clash-side {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+}
+
+.clash-who {
+  font-size: 0.8125rem;
+  color: var(--color-ink-muted);
+}
+
+.clash-amount {
+  font-family: var(--font-mono);
+  font-size: clamp(1.75rem, 4.5vw, 2.75rem);
+  line-height: 1.15;
+}
+
+.clash-side[data-side='left'] .clash-amount {
+  color: var(--color-ink-muted);
+  text-decoration: line-through 2px color-mix(in srgb, var(--color-crisis) 80%, transparent);
+}
+
+.clash-source {
+  grid-column: 1 / -1;
+  font-size: 0.75rem;
+  color: var(--color-ink-muted);
+}
+
+/* 3-2: one button per question; hover, focus or a click shows that gate's three answers. */
+.gates {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(2.25rem, 1fr));
+  gap: 0.3rem;
+  max-width: 30rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gate {
+  position: relative;
+  width: 100%;
+  min-height: 2.25rem;
+  border: 1px solid var(--color-seam);
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--color-ground) 70%, transparent);
+  color: var(--color-ink-muted);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.gate:not([data-r='111']) {
+  border-color: color-mix(in srgb, var(--color-crisis) 55%, var(--color-seam));
+}
+
+.gate:is(:hover, :focus-visible, [aria-pressed='true'], [data-hover]) {
+  border-color: var(--color-evidence);
+  color: var(--color-ink);
+}
+
+.gate:is(:hover, :focus-visible, [aria-pressed='true'], [data-hover])::after {
+  content: attr(aria-label);
+  position: absolute;
+  bottom: calc(100% + 0.4rem);
+  left: 50%;
+  z-index: 2;
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--color-seam);
+  background: var(--color-stratum);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+/* 3-4: the reconstruction notice stays on screen for the whole section. */
+.act-badge {
+  display: flex;
+  gap: 0.6rem;
+  align-items: baseline;
+  max-width: 34rem;
+  margin: 0 0 1rem;
+  padding: 0.55rem 0.85rem;
+  border-left: 3px solid var(--color-reconstructed);
+  background: color-mix(in srgb, var(--color-ground) 82%, transparent);
+  font-size: 0.8125rem;
+}
+
+.act-badge .metric-badge {
+  margin-left: 0;
+}
+
+.act-slider {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.8125rem;
+  color: var(--color-ink-muted);
+}
+
+.act-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.act-slider input[type='range'] {
+  width: min(18rem, 56vw);
+  min-height: 44px;
+  accent-color: var(--color-evidence);
+}
+
+.act-dead-button {
+  margin-top: 0.75rem;
+  padding: 0.5rem 1rem;
+  border: 1px dashed var(--color-seam);
+  border-radius: 4px;
+  background: none;
+  color: var(--color-ink-muted);
+  font: inherit;
+  font-size: 0.875rem;
+  opacity: 0.6;
+  cursor: not-allowed;
+  transition:
+    transform 1400ms var(--ease-drill),
+    opacity 1400ms var(--ease-strata);
+}
+
+.act[data-fall] .act-dead-button {
+  opacity: 0;
+  transform: translateY(30svh) rotate(9deg);
+}
+
+.php-notes {
+  display: grid;
+  gap: 0.5rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.8125rem;
+}
+
+.php-notes li {
+  display: flex;
+  gap: 0.6rem;
+  align-items: baseline;
+}
+
+.php-note-tag {
+  flex: none;
+  padding: 0 0.4em;
+  border: 1px solid currentColor;
+  border-radius: 3px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+}
+
+.php-notes [data-tone='inferred'] {
+  color: var(--color-approx);
+}
+
+.watermark label {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.8125rem;
+  color: var(--color-ink-muted);
+}
+
+/* 16px: no zoom on iOS when the field takes focus. */
+.watermark input {
+  width: min(20rem, 70vw);
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--color-seam);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--color-ground) 85%, transparent);
+  color: var(--color-ink);
+  font: inherit;
+  font-size: 1rem;
+}
+
+.watermark-note {
+  margin: 0.4rem 0 0;
+  font-size: 0.75rem;
+  color: var(--color-ink-muted);
+}
+
+/* 4: the thin-section cards. */
+.deep-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.deep-cards li {
+  display: grid;
+  align-content: start;
+  gap: 0.5rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--color-seam);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--color-stratum) 75%, transparent);
+}
+
+.deep-card {
+  display: grid;
+  gap: 0.15rem;
+  color: var(--color-ink);
+  text-decoration: none;
+}
+
+.deep-card-industry,
+.deep-card-period {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.05em;
+  color: var(--color-ink-muted);
+}
+
+.deep-card-title {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.deep-card-figure {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.deep-card-figure .metric {
+  margin: 0;
+  padding: 0;
+}
+
+.ai-years {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.8125rem;
+  color: var(--color-ink-muted);
+}
+
+.ai-years-when {
+  margin-right: 0.5em;
+  font-family: var(--font-mono);
+  color: var(--color-evidence);
+}
+
+.act .creeds li {
+  font-family: var(--font-heading);
+  font-weight: 600;
+}
+
+.bedrock-line {
+  margin: 1rem 0 0;
+  color: var(--color-ink-muted);
+}
+
+/* 7: what the empty band holds. */
+.finale-drawer {
+  position: relative;
+  display: grid;
+  gap: 2rem;
+  max-width: var(--measure);
+  margin: 3rem auto 0;
+}
+
+.finale-drawer-title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.finale-drawer > .summary-card,
+.finale-drawer > .legend {
+  margin: 0;
+}
+
+/* Stills of the scenes (stacked version only; see ActStill). */
 .act-still {
-  max-width: 64rem;
+  max-width: 60rem;
   margin: 2rem auto 0;
 }
 
@@ -1566,9 +2099,6 @@ html[data-stage='live'] .core-ring {
   border: 1px solid var(--color-seam);
 }
 
-/* With JavaScript: the box from hydration on (data-stage is set), the picture only once the page has
-   settled on the stacked version and the still comes near the viewport (`data-near`, StageLoader).
-   Without: the <noscript> image (src/components/acts/ActStill.tsx). */
 .act-still-image {
   display: none;
   aspect-ratio: 16 / 9;
@@ -1579,12 +2109,8 @@ html[data-stage] .act-still-image {
   display: block;
 }
 
-html[data-stage='off'] .act-still-core[data-near] .act-still-image {
-  background-image: url('/media/act-core-wide.webp');
-}
-
-html[data-stage='off'] .act-still-explode[data-near] .act-still-image {
-  background-image: url('/media/act-explode-wide.webp');
+html[data-stage='off'] .act-still[data-near] .act-still-image {
+  background-image: var(--still-wide);
 }
 
 @media (max-aspect-ratio: 115/100) {
@@ -1593,15 +2119,11 @@ html[data-stage='off'] .act-still-explode[data-near] .act-still-image {
   }
 
   .act-still {
-    max-width: min(64rem, 60svh);
+    max-width: min(60rem, 60svh);
   }
 
-  html[data-stage='off'] .act-still-core[data-near] .act-still-image {
-    background-image: url('/media/act-core-tall.webp');
-  }
-
-  html[data-stage='off'] .act-still-explode[data-near] .act-still-image {
-    background-image: url('/media/act-explode-tall.webp');
+  html[data-stage='off'] .act-still[data-near] .act-still-image {
+    background-image: var(--still-tall);
   }
 }
 
@@ -1613,21 +2135,7 @@ html[data-stage='off'] .act-still-explode[data-near] .act-still-image {
 .act-explode > .act-still {
   order: -1;
   width: 100%;
-  margin-bottom: 1rem;
-  padding-inline: var(--gutter);
-}
-
-.act-join {
-  padding: clamp(2.5rem, 7vw, 4.5rem) var(--gutter);
-}
-
-.act-join > * {
-  max-width: var(--measure);
-  margin-inline: auto;
-}
-
-.act-join > * + * {
-  margin-top: 1.5rem;
+  margin: 0 0 1rem;
 }
 
 /* ── Cinema: pinned frames ── */
@@ -1639,6 +2147,8 @@ html[data-cinema] .act > .act-frame {
   position: sticky;
   top: 0;
   height: 100svh;
+  max-width: none;
+  margin: 0;
   overflow: clip;
   pointer-events: none;
 }
@@ -1665,45 +2175,301 @@ html[data-cinema] .act-surface .hero-content:focus-within {
 }
 
 html[data-cinema] .act-surface > .act-frame {
+  display: block;
   margin: -100svh calc(var(--pad-r) * -1) 0 calc(var(--pad-l) * -1);
 }
 
-html[data-cinema] .act .act-headline {
-  position: absolute;
+/* Every later act: pinned for --len viewport heights, starting where the previous one ends. */
+html[data-cinema] :is(.act-explode, .act-world) {
+  display: block;
+  height: calc(var(--len) * 1svh + 100svh);
+  margin-top: -100svh;
+  padding: 0;
+  border: 0;
+}
+
+html[data-cinema] .act-explode {
+  --len: 150;
+}
+
+/* The finale: the frame stays pinned while the drawer's content rises over it. */
+html[data-cinema] .act-next {
+  height: auto;
+}
+
+html[data-cinema] .act-next .act-spacer {
+  height: calc(var(--len) * 1svh);
+}
+
+html[data-cinema] .finale-drawer {
+  margin: 0 auto;
+  padding: 2rem clamp(1.25rem, 3vw, 2.5rem) 4rem;
+  border: 1px solid var(--color-seam);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--color-ground) 90%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+/* The kanji mark appears at the back as the act enters, and slowly goes. */
+html[data-cinema] .act > .act-frame > .act-kanji {
+  top: 50%;
   left: 50%;
-  bottom: 10svh;
-  width: min(19em, calc(100vw - 2 * var(--gutter)));
-  margin: 0;
-  transform: translateX(-50%);
+  right: auto;
+  font-size: min(62svh, 44vw);
+  opacity: 0;
+  transform: translate(-50%, -50%);
 }
 
-html[data-cinema] .act .act-headline[data-on] {
-  pointer-events: auto;
+html[data-cinema] .act[data-entered] > .act-frame > .act-kanji {
+  animation: kanji-breath 5.5s var(--ease-strata) both;
 }
 
-/* Phrase by phrase, dim to bright: each phrase takes two "steps" of --reveal to light up. */
-html[data-cinema] .act-headline .reveal-unit {
-  opacity: clamp(0, calc((var(--reveal, 0) * (var(--n) + 2) - var(--i)) / 2), 1);
-}
+@keyframes kanji-breath {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.06);
+  }
 
-html[data-cinema] .act-headline:focus-within .reveal-unit {
-  opacity: 1;
-}
+  30% {
+    opacity: 0.075;
+  }
 
-@media (max-aspect-ratio: 115/100) {
-  html[data-cinema] .act .act-headline {
-    bottom: 5svh;
-    font-size: clamp(1.5rem, 6.4vw, 2.25rem);
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1);
   }
 }
 
-/* Act 2 (explode): 150 viewport heights, starting where act 1 ends (no dead scroll between). */
-html[data-cinema] .act-explode {
-  display: block;
-  height: 250svh;
-  margin-top: -100svh;
+/* Headline and eyebrow beside the world: left or right by act (data-side). */
+html[data-cinema] .act > .act-frame > .act-head {
+  position: absolute;
+  top: 13svh;
+  left: clamp(1.25rem, 6vw, 6rem);
+  max-width: min(26rem, 38vw);
+  opacity: 0;
+  transition: opacity 900ms var(--ease-strata);
 }
 
+html[data-cinema] .act[data-side='R'] > .act-frame > .act-head {
+  left: auto;
+  right: calc(clamp(1.25rem, 6vw, 6rem) + 3rem);
+}
+
+html[data-cinema] .act[data-on] > .act-frame > .act-head,
+html[data-cinema] .act > .act-frame > .act-head:focus-within {
+  opacity: 1;
+}
+
+html[data-cinema] .act .act-headline {
+  text-shadow: 0 2px 20px rgb(0 0 0 / 0.85);
+  opacity: 0;
+  transition: opacity 450ms ease-out;
+}
+
+/* §8.2: one character at a time, 35 ms apart, like ink bleeding into paper; scrolling back dims it. */
+html[data-cinema] .act[data-lit] .act-headline,
+html[data-cinema] .act .act-headline:focus-within {
+  opacity: 1;
+  transition: none;
+}
+
+html[data-cinema] .act[data-lit] .act-headline .ink {
+  animation: ink-in 1.2s var(--ease-strata) both;
+  animation-delay: calc(var(--i) * 35ms);
+}
+
+@keyframes ink-in {
+  0% {
+    opacity: 0;
+    color: transparent;
+    text-shadow: 0 0 0.6em rgb(236 230 221 / 0.9);
+  }
+
+  40% {
+    opacity: 1;
+    color: color-mix(in srgb, var(--color-ink) 35%, transparent);
+    text-shadow: 0 0 0.3em rgb(236 230 221 / 0.5);
+  }
+
+  100% {
+    opacity: 1;
+    color: var(--color-ink);
+    text-shadow: 0 2px 20px rgb(0 0 0 / 0.85);
+  }
+}
+
+html[data-cinema] .act-world > .act-frame > .act-extras {
+  position: absolute;
+  top: 13svh;
+  right: calc(clamp(1.25rem, 6vw, 6rem) + 3rem);
+  max-width: min(24rem, 34vw);
+  margin: 0;
+  opacity: 0;
+  transition: opacity 900ms var(--ease-strata);
+}
+
+html[data-cinema] .act-world[data-side='R'] > .act-frame > .act-extras {
+  left: clamp(1.25rem, 6vw, 6rem);
+  right: auto;
+}
+
+html[data-cinema] .act-world[data-main] > .act-frame > .act-extras,
+html[data-cinema] .act-world > .act-frame > .act-extras:focus-within {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* The numbers: a row at the bottom, after the result (Apple), held through the pause (§8.1). */
+html[data-cinema] .act-world > .act-frame > .act-result {
+  position: absolute;
+  left: 50%;
+  bottom: 8svh;
+  display: grid;
+  justify-items: center;
+  width: min(56rem, calc(100vw - 2 * var(--gutter) - 3rem));
+  margin: 0;
+  text-align: center;
+  opacity: 0;
+  transform: translate(-50%, 1.25rem);
+  transition:
+    opacity 1100ms var(--ease-strata),
+    transform 1400ms var(--ease-strata);
+}
+
+html[data-cinema] .act-world[data-result] > .act-frame > .act-result,
+html[data-cinema] .act-world > .act-frame > .act-result:focus-within {
+  opacity: 1;
+  transform: translate(-50%, 0);
+  pointer-events: auto;
+}
+
+html[data-cinema] .act-result .act-metrics {
+  grid-area: 1 / 1;
+  justify-content: center;
+  transition: opacity 900ms var(--ease-strata);
+}
+
+html[data-cinema] .act-result .act-metric {
+  align-items: center;
+}
+
+html[data-cinema] .act-result .act-metrics-then {
+  margin: 0;
+  opacity: 0;
+  visibility: hidden;
+}
+
+html[data-cinema] .act[data-then] .act-result .act-metrics:not(.act-metrics-then) {
+  opacity: 0;
+  visibility: hidden;
+}
+
+html[data-cinema] .act[data-then] .act-result .act-metrics-then {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Catch-up: the four durations take turns in one place (data-step 0–3). */
+html[data-cinema] .act-catchup .act-metric {
+  grid-area: 1 / 1;
+  opacity: 0;
+  transition: opacity 600ms var(--ease-strata);
+}
+
+html[data-cinema] .act-catchup .act-metrics {
+  display: grid;
+}
+
+html[data-cinema] .act-catchup[data-step='0'] .act-metric:nth-child(1),
+html[data-cinema] .act-catchup[data-step='1'] .act-metric:nth-child(2),
+html[data-cinema] .act-catchup[data-step='2'] .act-metric:nth-child(3),
+html[data-cinema] .act-catchup[data-step='3'] .act-metric:nth-child(4),
+html[data-cinema] .act-catchup .act-metric:focus-within {
+  opacity: 1;
+}
+
+html[data-cinema] .act-world .act-case {
+  margin-top: 1.25rem;
+}
+
+/* 3-2: the two amounts travel toward each other (--clash 0–1, set by the director). */
+html[data-cinema] .clash-side {
+  transition: opacity 700ms var(--ease-strata);
+}
+
+html[data-cinema] .clash-side[data-side='left'] {
+  transform: translateX(calc((1 - var(--clash, 0)) * -30vw));
+}
+
+html[data-cinema] .clash-side[data-side='right'] {
+  transform: translateX(calc((1 - var(--clash, 0)) * 30vw));
+}
+
+html[data-cinema] .act[data-clashed] .clash-side[data-side='left'] {
+  opacity: 0;
+}
+
+/* 4: with the 3D the cards are drawn in the world; the HTML keeps the links and the front card's figure. */
+html[data-cinema] .act-deep .deep-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+html[data-cinema] .act-deep .deep-cards li {
+  grid-area: 1 / 1;
+  opacity: 0;
+  transition: opacity 600ms var(--ease-strata);
+}
+
+html[data-cinema] .act-deep .deep-cards li:is([data-front], :focus-within) {
+  opacity: 1;
+}
+
+/* Mobile and narrow screens: text above and below the world. */
+@media (max-aspect-ratio: 115/100), (max-width: 899px) {
+  html[data-cinema] .act > .act-frame > .act-head,
+  html[data-cinema] .act[data-side='R'] > .act-frame > .act-head {
+    top: 10svh;
+    left: var(--gutter);
+    right: calc(var(--gutter) + 1rem);
+    max-width: none;
+  }
+
+  html[data-cinema] .act .act-headline {
+    font-size: clamp(1.5rem, 6.4vw, 2.1rem);
+  }
+
+  html[data-cinema] .act-world > .act-frame > .act-extras,
+  html[data-cinema] .act-world[data-side='R'] > .act-frame > .act-extras {
+    top: auto;
+    bottom: calc(8svh + 9.5rem);
+    left: var(--gutter);
+    right: var(--gutter);
+    max-width: none;
+  }
+
+  html[data-cinema] .act-world > .act-frame > .act-result {
+    bottom: 5svh;
+  }
+
+  html[data-cinema] .act-metric .metric-value {
+    font-size: clamp(1.5rem, 7vw, 2.25rem);
+  }
+
+  html[data-cinema] .act-metrics {
+    gap: 0.75rem 1.5rem;
+  }
+
+  html[data-cinema] .act-metric-caption {
+    font-size: 0.6875rem;
+  }
+
+  html[data-cinema] .gates {
+    grid-template-columns: repeat(13, 1fr);
+  }
+}
+
+/* ── Act 2: the band labels over the split core ── */
 html[data-cinema] .band-labels {
   position: absolute;
   inset: 0;
@@ -1761,41 +2527,41 @@ html[data-cinema] .band-labels li::after {
 html[data-cinema] .band-labels a {
   display: block;
   padding: 0.25rem 0.1rem;
+  color: var(--color-ink);
   line-height: 1.35;
   text-align: center;
+  text-decoration: none;
   text-shadow: 0 1px 8px rgb(0 0 0 / 0.95);
 }
 
-html[data-cinema] .band-labels .layer-index-depth {
-  position: relative;
+html[data-cinema] .band-labels :is(.band-label-head, .band-label-period) {
   display: block;
   font-size: 0.6875rem;
   letter-spacing: 0.06em;
   color: var(--color-evidence);
 }
 
-.layer-index-scramble {
-  display: none;
+html[data-cinema] .band-labels .band-label-period {
+  color: var(--color-ink-muted);
 }
 
-html[data-cinema] .band-labels li[data-scrambling] .layer-index-depth-text {
-  visibility: hidden;
-}
-
-html[data-cinema] .band-labels li[data-scrambling] .layer-index-scramble {
-  position: absolute;
-  inset: 0;
-  display: block;
-  white-space: nowrap;
-}
-
-html[data-cinema] .band-labels .layer-index-title {
+html[data-cinema] .band-labels .band-label-title {
   display: -webkit-box;
-  text-wrap: balance;
   overflow: hidden;
   font-size: 0.8125rem;
+  text-wrap: balance;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+}
+
+/* The hovered or focused band: its label glows (the band itself slides forward in 3D). */
+html[data-cinema] .band-labels li[data-hover] a {
+  color: var(--color-evidence);
+}
+
+html[data-cinema] .band-labels li[data-hover]::after {
+  width: 2px;
+  background: linear-gradient(180deg, var(--color-evidence), color-mix(in srgb, var(--color-evidence) 20%, transparent));
 }
 
 @media (min-aspect-ratio: 115/100) {
@@ -1831,12 +2597,27 @@ html[data-cinema] .band-labels .layer-index-title {
   }
 }
 
-/* Keyboard: entering the index shows it as a plain list, whatever the scroll position. */
-html[data-cinema] .band-labels:focus-within {
+html[data-cinema] .act-explode .index-guide {
+  position: absolute;
+  left: 50%;
+  bottom: 6svh;
+  margin: 0;
+  opacity: 0;
+  transform: translateX(-50%);
+  transition: opacity 900ms var(--ease-strata);
+  white-space: nowrap;
+}
+
+html[data-cinema] .act-explode[data-hub] .index-guide {
+  opacity: 1;
+}
+
+/* Keyboard outside the hub: entering the index shows it as a plain list, whatever the scroll position. */
+html[data-cinema] .act-explode:not([data-hub]) .band-labels:focus-within {
   inset: auto;
   left: 50%;
   top: 50%;
-  width: min(24rem, calc(100vw - 2 * var(--gutter)));
+  width: min(26rem, calc(100vw - 2 * var(--gutter)));
   padding: 1rem 1.25rem;
   border: 1px solid var(--color-seam);
   background: color-mix(in srgb, var(--color-ground) 92%, transparent);
@@ -1844,39 +2625,34 @@ html[data-cinema] .band-labels:focus-within {
   pointer-events: auto;
 }
 
-html[data-cinema] .band-labels:focus-within li {
+html[data-cinema] .act-explode:not([data-hub]) .band-labels:focus-within li {
   position: static;
   max-width: none;
   opacity: 1;
   transform: none;
 }
 
-html[data-cinema] .band-labels:focus-within li::after {
+html[data-cinema] .act-explode:not([data-hub]) .band-labels:focus-within li::after {
   display: none;
 }
 
-html[data-cinema] .band-labels:focus-within a {
+html[data-cinema] .act-explode:not([data-hub]) .band-labels:focus-within a {
   display: grid;
-  grid-template-columns: 7.5rem 1fr;
+  grid-template-columns: 8rem 1fr;
   gap: 0.75rem;
   text-align: left;
 }
 
-html[data-cinema] .band-labels:focus-within .layer-index-title {
-  display: block;
-}
-
-/* The join: the core flies to the navigator and the wall descends to the first layer while this
-   section scrolls in; its text arrives after the core has gone. */
-html[data-cinema] .act-join {
-  padding-top: 60svh;
-}
-
-/* While the hero core owns the screen the navigator steps back (the 3D one fades with it). */
+/* While a hero object owns the screen the navigator steps back (the 3D one fades with it). */
 .core-nav {
   transition: opacity 600ms var(--ease-strata);
 }
 
 html[data-act-on] .core-nav:not(:focus-within) {
   opacity: 0;
+}
+
+.core-kanji {
+  margin-left: 0.4em;
+  font-family: var(--font-heading);
 }

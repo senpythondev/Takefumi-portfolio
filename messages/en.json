@@ -72,6 +72,53 @@
     "rights": "© 2026 Takefumi Ono"
   },
   "cinema": {
-    "drilling": "Drilling"
+    "drilling": "Drilling",
+    "readCase": "Read the case study",
+    "enter": "Enter",
+    "read": "Read",
+    "reconstructedNote": "Everything shown in this section is a reconstruction. No real data or code is used.",
+    "confirmed": "Confirmed",
+    "inferred": "Inferred",
+    "confirmedNote": "Planted files neutralised, existing files untouched; evidence preserved with SHA-256 hashes",
+    "inferredNote": "Attack technique inferred from differences in response sizes in the access logs",
+    "threshold": "Response-size threshold",
+    "bidders": "Concurrent bidders",
+    "fewer": "Fewer",
+    "more": "More",
+    "moreServers": "Just add more servers",
+    "yourName": "Your name (used for the watermark)",
+    "nameNote": "The name you type is never sent or stored. It is used only on this screen.",
+    "stations": "The four stations a document passes",
+    "openDrawer": "Open the drawer",
+    "drawerTitle": "Terms and contact",
+    "gates": "The 25 gates",
+    "gate": "Question {n}",
+    "gateResult": "Question {n}: model only {a}, keyword search {b}, Genten {c}",
+    "quoteSource": "Source",
+    "cards": "Eight projects",
+    "aiYears": "Started using AI tools",
+    "creeds": "Principles",
+    "hubCase": "Go to this layer",
+    "back": "Back to this layer on the home page",
+    "prev": "Previous layer",
+    "next": "Next layer",
+    "workIndex": "Case studies",
+    "patentStations": [
+      "NDA e-signature",
+      "Identity check by SMS",
+      "Corporate number check",
+      "Watermarked PDF"
+    ],
+    "currentGates": [
+      "Automated AI checks",
+      "Human reviewer"
+    ],
+    "lanes": [
+      "Model only",
+      "Keyword search",
+      "Genten"
+    ],
+    "correctShort": "correct",
+    "incorrectShort": "wrong"
   }
 }

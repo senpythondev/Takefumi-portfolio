@@ -186,6 +186,20 @@ export const DERIVED_NUMBERS: Record<string, string> = {
 /** Every human-readable string of the cinematic home (docs/STORYBOARD.md). */
 export function* cinemaStrings(c: SiteContent): Generator<{ path: string; text: string; rich: boolean; citation?: boolean }> {
   yield { path: 'cinema.coreHeadline', text: c.cinema.coreHeadline, rich: true };
+  yield { path: 'cinema.indexGuide', text: c.cinema.indexGuide, rich: false };
+  yield { path: 'cinema.gentenClash.left', text: c.cinema.gentenClash.left, rich: false };
+  yield { path: 'cinema.gentenClash.right', text: c.cinema.gentenClash.right, rich: false };
+  for (const [id, act] of Object.entries(c.cinema.acts)) yield { path: `cinema.acts.${id}.headline`, text: act.headline, rich: true };
+}
+
+/** The big numbers of each act (STORYBOARD §3: two or three; the catch-up act shows four, one at a time). */
+export function actMetricIds(c: SiteContent): string[] {
+  return Object.values(c.cinema.acts).flatMap((a) => [...a.metrics, ...(a.then ?? [])]);
+}
+
+/** The two quoted amounts of the Genten clash (STORYBOARD §4 act 3-2), in the order the quote gives them. */
+export function clashAmounts(quote: string): string[] {
+  return quote.match(/¥[\d,.]+ million|[\d,]+万円/g) ?? [];
 }
 
 /** Structural checks for one locale. */
@@ -222,6 +236,18 @@ export function structureProblems(c: SiteContent): string[] {
       }
     }
   }
+  for (const [id, act] of Object.entries(c.cinema.acts)) {
+    const max = id === 'catchup' ? 4 : 3;
+    if (act.metrics.length > max) problems.push(`[${c.locale}] cinema.acts.${id}: at most ${max} big numbers, got ${act.metrics.length}`);
+    for (const m of [...act.metrics, ...(act.then ?? [])]) {
+      used.add(m);
+      if (!metricIds.has(m)) problems.push(`[${c.locale}] cinema.acts.${id}: unknown metric ${m}`);
+    }
+  }
+  const citation = c.layers.flatMap((l) => l.blocks).find((b) => b.kind === 'citation');
+  if (citation?.kind === 'citation' && clashAmounts(citation.citation.quote).length !== 2) {
+    problems.push(`[${c.locale}] the Genten citation must quote exactly two amounts for the clash (act 3-2)`);
+  }
   for (const id of metricIds) if (!used.has(id)) problems.push(`[${c.locale}] metric ${id} is defined but never shown`);
   problems.push(...derivedFactProblems(c));
   return problems;
@@ -249,6 +275,10 @@ export function parityProblems(ja: SiteContent, en: SiteContent): string[] {
   }
   const cinemaTokens = (x: SiteContent) => [...cinemaStrings(x)].flatMap((s) => tokensIn(s.text)).sort().join(',');
   if (cinemaTokens(ja) !== cinemaTokens(en)) problems.push('cinema: metric references differ between ja and en');
+  for (const id of Object.keys(ja.cinema.acts) as (keyof SiteContent['cinema']['acts'])[]) {
+    const ids = (x: SiteContent) => [...x.cinema.acts[id].metrics, '|', ...(x.cinema.acts[id].then ?? [])].join(',');
+    if (ids(ja) !== ids(en)) problems.push(`cinema.acts.${id}: big numbers differ between ja and en`);
+  }
   for (const [i, l] of ja.layers.entries()) {
     const e = en.layers[i];
     if (!e || e.id !== l.id) continue;

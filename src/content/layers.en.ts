@@ -540,6 +540,24 @@ export const contentEn = {
   cinema: {
     // STORYBOARD act 1.
     coreHeadline: '{{career-years}} of strata, in a single core.',
+    indexGuide: 'Choose a band, or keep digging',
+    gentenClash: { left: 'English guides', right: 'The FSA' },
+    acts: {
+      current: { headline: 'Reading unfamiliar code, quickly.', metrics: [] },
+      genten: {
+        headline: 'Every answer, backed by its source.',
+        metrics: ['genten-acc-closed', 'genten-acc-keyword', 'genten-acc-genten'],
+        then: ['genten-cite-closed', 'genten-cite-keyword', 'genten-cite-genten'],
+      },
+      pegasus: { headline: 'A move that lost not a single URL.', metrics: ['pegasus-downtime', 'pegasus-posts', 'pegasus-plugins'] },
+      'php-audit': { headline: 'Tracing each attack to its line of code.', metrics: ['php-files', 'php-duration', 'php-size'] },
+      auction: { headline: 'Cooled by measurement, not by guesswork.', metrics: ['auction-hours', 'auction-bids', 'auction-errors'] },
+      patent: { headline: 'Every document carries its reader’s name.', metrics: ['patent-typical', 'patent-duration', 'patent-capacity'] },
+      deep: { headline: 'Industry after industry, layer on layer.', metrics: ['deep-count'] },
+      catchup: { headline: 'New ground, dug fast.', metrics: ['genten-days', 'php-duration', 'auction-duration', 'patent-duration'] },
+      bedrock: { headline: 'Before the digging, the principles.', metrics: [] },
+      next: { headline: 'There are layers I have not dug into yet. The next one could be your project.', metrics: [] },
+    },
   },
   metrics: [
     // ── Surface / across projects ──────────────────────────────
