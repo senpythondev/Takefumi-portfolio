@@ -11,20 +11,11 @@
  * relative imports only, `.ts` extensions, no enums/namespaces.
  */
 import { z } from 'zod';
+// The layer ids live in a zod-free module so the 3D code can use them without pulling zod into
+// the 3D base chunk (perf-auditor, 2026-11-19).
+import { LAYER_IDS } from './layer-ids.ts';
 
-export const LAYER_IDS = [
-  'surface',
-  'current',
-  'genten',
-  'pegasus',
-  'php-audit',
-  'auction',
-  'patent',
-  'deep',
-  'catchup',
-  'bedrock',
-  'next',
-] as const;
+export { LAYER_IDS };
 
 export const LayerIdSchema = z.enum(LAYER_IDS);
 export type LayerId = z.infer<typeof LayerIdSchema>;
@@ -197,6 +188,11 @@ export const SiteContentSchema = z.object({
     role: z.string().min(1),
   }),
   layers: z.array(LayerSchema).length(LAYER_IDS.length),
+  /** Lines of the cinematic home (docs/STORYBOARD.md): one headline per act, metrics as {{tokens}}. */
+  cinema: z.object({
+    /** Act 1: the core lies on its side, filling the screen. */
+    coreHeadline: RichTextSchema,
+  }),
   metrics: z.array(MetricSchema).min(1),
 });
 export type SiteContent = z.infer<typeof SiteContentSchema>;

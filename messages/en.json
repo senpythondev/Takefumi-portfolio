@@ -70,5 +70,8 @@
   "footer": {
     "builtWith": "Everything on this site can be read as plain HTML.",
     "rights": "© 2026 Takefumi Ono"
+  },
+  "cinema": {
+    "drilling": "Drilling"
   }
 }

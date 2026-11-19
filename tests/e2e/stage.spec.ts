@@ -47,7 +47,7 @@ test.describe('3D stage', () => {
     await scrollThrough(page, 'down');
     await scrollThrough(page, 'up');
     const steady = await info(page);
-    // Wall quad + 3D core + at most current ± 1 placeholder scenes (one geometry each).
+    // Wall quad, the hero core's band geometry (shared by its 11 bands), dust, the navigator core.
     expect(steady.geometries).toBeLessThanOrEqual(5);
     for (let i = 0; i < 2; i += 1) {
       await scrollThrough(page, 'down');
@@ -81,7 +81,10 @@ test.describe('3D stage', () => {
     }).toPass({ timeout: 90_000 });
     await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
     await expect(page.locator('html')).not.toHaveAttribute('data-stage', 'live');
-    await expect(page.locator('.layer-stage-still').first()).toHaveCSS('opacity', '1');
+    // Without 3D the acts fall back to the stacked story: stills and the headline in the flow.
+    await expect(page.locator('html')).not.toHaveAttribute('data-cinema');
+    await expect(page.locator('.act-still-core .act-still-image')).toHaveCSS('background-image', /act-core-/);
+    await expect(page.locator('#act-core-title')).toBeVisible();
     await expect(page.locator('section[data-layer="genten"] h2')).toBeVisible();
     expect(errors).toEqual([]);
   });

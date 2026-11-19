@@ -534,6 +534,10 @@ export const contentJa = {
       ],
     },
   ],
+  cinema: {
+    // STORYBOARD act 1. "一本" is written in kanji: it is not a counted fact (every digit goes through a Metric).
+    coreHeadline: '{{career-years}}分の地層を、一本のコアに。',
+  },
   metrics: [
     // ── 地表・横断 ──────────────────────────────
     {

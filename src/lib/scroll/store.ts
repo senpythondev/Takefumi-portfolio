@@ -45,7 +45,20 @@ export const scrollStore = {
   },
 };
 
-export const scrollLive: { progress: Record<string, number> } = { progress: {} };
+export const scrollLive: {
+  /** Per layer: 0 when its top enters the bottom of the viewport, 1 when its bottom leaves the top. */
+  progress: Record<string, number>;
+  /**
+   * Per act of the cinematic home (docs/STORYBOARD.md): 0–1 across its pinned scroll length
+   * (`[data-act]`: top of the section at the top of the viewport → bottom at the bottom), and
+   * `join`: 0–1 while the section after the acts scrolls in (`[data-act-join]`).
+   */
+  acts: Record<string, number>;
+  /** 0–1: the navigator's 3D core steps back while the hero core owns the screen (set by the director). */
+  navOpacity: number;
+  /** The director's springs are still moving: the low tier keeps drawing until they settle. */
+  settling: boolean;
+} = { progress: {}, acts: {}, navOpacity: 1, settling: false };
 
 export function useScrollState<T>(select: (s: ScrollState) => T): T {
   return useSyncExternalStore(

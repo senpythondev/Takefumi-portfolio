@@ -9,7 +9,9 @@ import { METRIC_HINT_ID } from '@/components/evidence/ids';
 import { Hero } from '@/components/layers/Hero';
 import { layerAnchor, LayerSection } from '@/components/layers/LayerSection';
 import type { RichContext } from '@/components/layers/RichText';
-import { LayerIndex, SiteFooter, SiteHeader } from '@/components/layout/SiteChrome';
+import { SiteFooter, SiteHeader } from '@/components/layout/SiteChrome';
+import { ActExplode } from '@/components/acts/ActExplode';
+import { ActJoin } from '@/components/acts/ActJoin';
 import { StageLoader } from '@/three/StageLoader';
 import { LayerTracker } from '@/lib/scroll/LayerTracker';
 import { layer as layerColor, type LayerColorId } from '@/styles/tokens';
@@ -31,6 +33,7 @@ export default async function Page({ params }: PageProps<'/[locale]'>) {
   const tn = await getTranslations('nav');
   const td = await getTranslations('depth');
   const te = await getTranslations('evidence');
+  const tcin = await getTranslations('cinema');
   const ctx: RichContext = {
     locale,
     metrics: metricMap(content),
@@ -47,11 +50,17 @@ export default async function Page({ params }: PageProps<'/[locale]'>) {
       {/* The world behind the page: a poster until the 3D wall is drawn over it (src/three/world). */}
       <div className="world" data-world-slot="" aria-hidden="true">
         <div className="world-poster" />
+        {/* Act 0: the borehole is drilled as the 3D loads (StageLoader sets --drill 0–1). */}
+        <div className="world-drill" />
+        <span className="world-drill-meter">
+          {tcin('drilling')} <span data-drill-pct="">0%</span>
+        </span>
       </div>
       <SiteHeader locale={locale} person={content.person} />
       <main id="main" tabIndex={-1}>
-        <Hero layer={surface} person={content.person} ctx={ctx} nextAnchor={layerAnchor(rest[0].id)} />
-        <LayerIndex layers={content.layers} />
+        <Hero layer={surface} person={content.person} ctx={ctx} nextAnchor={layerAnchor(rest[0].id)} coreHeadline={content.cinema.coreHeadline} />
+        <ActExplode layers={content.layers} />
+        <ActJoin surface={surface} ctx={ctx} />
         {rest.map((layer, i) => (
           <LayerSection key={layer.id} layer={layer} index={i + 1} ctx={ctx} />
         ))}

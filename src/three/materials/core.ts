@@ -36,6 +36,7 @@ uniform float uCurrent;   // index of the current band
 uniform float uGlow;      // 0..1, glow of the band that was just passed
 uniform float uGlowBand;
 uniform float uTime;
+uniform float uOpacity;  // steps back while the hero core owns the screen (director)
 varying vec3 vObj;
 varying vec3 vObjNormal;
 varying vec3 vNormal;
@@ -117,7 +118,7 @@ void main() {
   float glow = uGlow * (1.0 - step(0.5, abs(i - uGlowBand))) + 0.16 * (1.0 - step(0.5, abs(i - uCurrent)));
   col += tint * glow * (0.5 + 0.7 * pow(max(n.z, 0.0), 1.5)) * passed;
 
-  gl_FragColor = vec4(col, 1.0);
+  gl_FragColor = vec4(col, uOpacity);
   #include <colorspace_fragment>
 }
 `;
@@ -131,6 +132,7 @@ export type CoreMaterial = ShaderMaterial & {
     uGlow: { value: number };
     uGlowBand: { value: number };
     uTime: { value: number };
+    uOpacity: { value: number };
   };
 };
 
@@ -150,7 +152,9 @@ export function createCoreMaterial(ids: readonly string[], detail: boolean): Cor
       uGlow: { value: 0 },
       uGlowBand: { value: -1 },
       uTime: { value: 0 },
+      uOpacity: { value: 1 },
     },
+    transparent: true,
   }) as unknown as CoreMaterial;
 }
 

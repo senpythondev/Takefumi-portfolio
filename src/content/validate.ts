@@ -183,6 +183,11 @@ export const DERIVED_NUMBERS: Record<string, string> = {
   '2': 'countries = Finland and Japan',
 };
 
+/** Every human-readable string of the cinematic home (docs/STORYBOARD.md). */
+export function* cinemaStrings(c: SiteContent): Generator<{ path: string; text: string; rich: boolean; citation?: boolean }> {
+  yield { path: 'cinema.coreHeadline', text: c.cinema.coreHeadline, rich: true };
+}
+
 /** Structural checks for one locale. */
 export function structureProblems(c: SiteContent): string[] {
   const problems: string[] = [];
@@ -196,8 +201,9 @@ export function structureProblems(c: SiteContent): string[] {
   }
 
   const used = new Set<string>();
-  for (const layer of c.layers) {
-    for (const s of layerStrings(layer)) {
+  const groups = [...c.layers.map((layer) => ({ layer: layer as Layer | null, strings: [...layerStrings(layer)] })), { layer: null, strings: [...cinemaStrings(c)] }];
+  for (const { layer, strings } of groups) {
+    for (const s of strings) {
       const tokens = tokensIn(s.text);
       if (tokens.length > 0 && !s.rich) problems.push(`[${c.locale}] ${s.path}: {{tokens}} are not allowed here`);
       for (const t of tokens) {
@@ -209,10 +215,10 @@ export function structureProblems(c: SiteContent): string[] {
         problems.push(`[${c.locale}] ${s.path}: number(s) ${stray.join(', ')} outside a Metric — use {{metric-id}} ("${s.text}")`);
       }
     }
-    for (const block of layer.blocks) {
+    for (const block of layer?.blocks ?? []) {
       for (const id of blockMetricRefs(block)) {
         used.add(id);
-        if (!metricIds.has(id)) problems.push(`[${c.locale}] layers.${layer.id}: unknown metric ${id}`);
+        if (!metricIds.has(id)) problems.push(`[${c.locale}] layers.${layer?.id}: unknown metric ${id}`);
       }
     }
   }
@@ -241,6 +247,8 @@ export function parityProblems(ja: SiteContent, en: SiteContent): string[] {
       problems.push(`metric ${id}: numbers differ — ja "${a.display}" vs en "${b.display}"`);
     }
   }
+  const cinemaTokens = (x: SiteContent) => [...cinemaStrings(x)].flatMap((s) => tokensIn(s.text)).sort().join(',');
+  if (cinemaTokens(ja) !== cinemaTokens(en)) problems.push('cinema: metric references differ between ja and en');
   for (const [i, l] of ja.layers.entries()) {
     const e = en.layers[i];
     if (!e || e.id !== l.id) continue;

@@ -537,6 +537,10 @@ export const contentEn = {
       ],
     },
   ],
+  cinema: {
+    // STORYBOARD act 1.
+    coreHeadline: '{{career-years}} of strata, in a single core.',
+  },
   metrics: [
     // ── Surface / across projects ──────────────────────────────
     {

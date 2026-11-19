@@ -10,6 +10,12 @@ import { loadDefaultJapaneseParser } from 'budoux';
 const parser = loadDefaultJapaneseParser();
 const JAPANESE = /[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}]/u;
 
+/** The phrases of a text (Japanese: BudouX; other text: words, keeping their spaces). */
+export function phraseChunks(text: string): string[] {
+  if (JAPANESE.test(text)) return parser.parse(text);
+  return text.split(/(?<=\s)/);
+}
+
 export function phrases(text: string): ReactNode {
   if (!JAPANESE.test(text)) return text;
   const chunks = parser.parse(text);

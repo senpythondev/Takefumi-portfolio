@@ -70,5 +70,8 @@
   "footer": {
     "builtWith": "このサイトはHTMLだけでも全文が読めるように作っています。",
     "rights": "© 2026 Takefumi Ono"
+  },
+  "cinema": {
+    "drilling": "掘削中"
   }
 }

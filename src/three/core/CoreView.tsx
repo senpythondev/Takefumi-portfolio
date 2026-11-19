@@ -10,7 +10,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { OrthographicCamera, View } from '@react-three/drei';
 import { useEffect, useMemo, useRef, type RefObject } from 'react';
 import { CylinderGeometry } from 'three';
-import { scrollStore, type Quality } from '@/lib/scroll/store';
+import { scrollLive, scrollStore, type Quality } from '@/lib/scroll/store';
 import { createCoreMaterial, sizeCore, type CoreMaterial } from '../materials/core';
 
 const GLOW_SECONDS = 1.6;
@@ -32,6 +32,7 @@ function createCoreDriver(material: CoreMaterial, ids: readonly string[]) {
     u.uGlow.value = Math.max(0, u.uGlow.value - delta / GLOW_SECONDS);
     u.uCurrent.value = Math.max(0, ids.indexOf(layerId));
     u.uTime.value = elapsed;
+    u.uOpacity.value = scrollLive.navOpacity;
   };
 }
 
@@ -57,7 +58,8 @@ function Core({ ids, quality }: { ids: string[]; quality: Exclude<Quality, 'stat
 
 export function CoreView({ track, ids, quality }: { track: RefObject<HTMLElement>; ids: string[]; quality: Exclude<Quality, 'static'> }) {
   return (
-    <View track={track}>
+    // index 2: drawn after the director's full-screen pass (priority 1), so it sits on top of it.
+    <View track={track} index={2}>
       <OrthographicCamera makeDefault position={[0, 0, 400]} zoom={1} />
       <Core ids={ids} quality={quality} />
     </View>

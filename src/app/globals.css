@@ -316,12 +316,11 @@ html.lenis body {
 
 /* Layers stay transparent: the fixed 3D canvas is drawn behind the content. */
 
-/* ── Stage slots: same size in every tier, so loading 3D never shifts the layout ── */
+/* ── Layer panels: one centred column (the wall behind is their scene; no side stage) ── */
 .layer {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  grid-template-areas: 'header' 'stage' 'body';
-  column-gap: 3rem;
+  grid-template-areas: 'header' 'body';
 }
 
 /* In grid layers, children follow the column: auto margins would make them fit-content and let a
@@ -339,48 +338,6 @@ html.lenis body {
 
 .layer-body {
   grid-area: body;
-}
-
-.layer-stage {
-  grid-area: stage;
-  position: relative;
-  width: 100%;
-  aspect-ratio: 16 / 10;
-  margin-bottom: 2rem;
-}
-
-.layer-stage-still {
-  position: absolute;
-  inset: 0;
-  border: 1px solid var(--color-seam);
-  background: repeating-linear-gradient(180deg, var(--color-stratum) 0 18px, color-mix(in srgb, var(--color-stratum) 70%, var(--color-ground)) 18px 30px);
-  transition: opacity var(--duration-slow) ease;
-}
-
-html[data-stage='live'] .layer-stage-still {
-  opacity: 0;
-}
-
-@media (min-width: 1100px) {
-  .layer:not(.layer-surface) {
-    grid-template-columns: minmax(0, var(--measure)) minmax(18rem, 30rem);
-    grid-template-areas: 'header stage' 'body stage';
-    justify-content: center;
-    align-items: start;
-  }
-
-  .layer:not(.layer-surface) > * {
-    max-width: none;
-    margin-inline: 0;
-  }
-
-  .layer-stage {
-    position: sticky;
-    top: 4.5rem;
-    aspect-ratio: auto;
-    height: min(calc(100svh - 6rem), 40rem);
-    margin-bottom: 0;
-  }
 }
 
 .layer-surface {
@@ -514,8 +471,13 @@ html[data-stage='live'] .layer-stage-still {
 
 /* ── Hero ───────────────────────────── */
 .layer-surface {
+  --pad-t: clamp(2.5rem, 8vw, 5rem);
+  --pad-l: var(--gutter);
+  --pad-r: var(--gutter);
   border-top: 0;
-  padding-top: clamp(2.5rem, 8vw, 5rem);
+  padding-top: var(--pad-t);
+  padding-left: var(--pad-l);
+  padding-right: var(--pad-r);
 }
 
 .hero-header h1 {
@@ -1174,7 +1136,6 @@ dialog.evidence::backdrop {
   .dig,
   .core-nav,
   .depth-meter,
-  .layer-stage,
   .stage-canvas {
     display: none;
   }
@@ -1193,23 +1154,101 @@ dialog.evidence::backdrop {
   background: var(--color-ground);
 }
 
+/* Scaled to the viewport height and anchored at the borehole's x (80 % landscape, 50 % portrait),
+   like the live wall, so the drilled line and the canvas take over without a jump. The posters are
+   rendered wide enough (2.4:1 and 3:4) to cover the usual screens at that scale. */
 .world-poster {
   position: absolute;
   inset: 0;
-  background: center top / cover no-repeat url('/media/poster-wide.webp');
-  transition: opacity var(--duration-slow) ease;
+  background: 80% 0 / auto 100% no-repeat url('/media/poster-wide.webp');
+  transition: opacity var(--duration-slow) var(--ease-strata);
+}
+
+@media (min-aspect-ratio: 12/5) {
+  .world-poster {
+    background-size: cover;
+  }
 }
 
 @media (max-aspect-ratio: 115/100) {
   .world-poster {
     background-image: url('/media/poster-tall.webp');
+    background-position: 50% 0;
+  }
+}
+
+@media (max-aspect-ratio: 3/4) {
+  .world-poster {
+    background-size: auto 100%;
+  }
+}
+
+@media (min-aspect-ratio: 3/4) and (max-aspect-ratio: 115/100) {
+  .world-poster {
+    background-size: cover;
+  }
+}
+
+/* Act 0: the borehole is drilled down the poster as the 3D loads (StageLoader sets --drill 0–1 at
+   each real loading step; the percentage is the real one). The live wall continues from there.
+   The ground line is WALL_HORIZON (src/three/materials/wall.ts) below the top. */
+.world-drill {
+  position: absolute;
+  left: 80%;
+  top: 11.8%;
+  width: 2px;
+  height: 88.2%;
+  background: linear-gradient(180deg, var(--color-evidence), color-mix(in srgb, var(--color-evidence) 70%, white));
+  box-shadow: 0 0 6px 1px color-mix(in srgb, var(--color-evidence) 70%, transparent), 0 0 24px 4px color-mix(in srgb, var(--color-evidence) 22%, transparent);
+  transform: translateX(-50%) scaleY(var(--drill, 1));
+  transform-origin: top;
+  transition: transform 900ms var(--ease-drill), opacity var(--duration-slow) var(--ease-strata);
+}
+
+/* The drill bit and its readout ride at the bottom of the line. */
+.world-drill-meter {
+  position: absolute;
+  left: 80%;
+  top: calc(11.8% + 88.2% * var(--drill, 1));
+  display: none;
+  padding-left: 0.9rem;
+  font: 600 0.6875rem/1 var(--font-mono);
+  letter-spacing: 0.12em;
+  color: var(--color-evidence);
+  text-shadow: 0 0 8px rgb(0 0 0 / 0.9);
+  white-space: nowrap;
+  transform: translateY(-50%);
+  transition: top 900ms var(--ease-drill), opacity var(--duration-slow) var(--ease-strata);
+}
+
+.world-drill-meter::before {
+  content: '';
+  position: absolute;
+  left: -3px;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-evidence) 60%, white);
+  box-shadow: 0 0 10px 3px var(--color-evidence);
+  transform: translateY(-50%);
+}
+
+html:is([data-stage='armed'], [data-stage='loading']) .world-drill-meter {
+  display: block;
+}
+
+@media (max-aspect-ratio: 115/100) {
+  .world-drill,
+  .world-drill-meter {
+    left: 50%;
   }
 }
 
 /* The poster is the surface: below the hero it gives way to the plain ground (static tier),
    and once the wall is live the canvas takes over. */
-html[data-layer]:not([data-layer='surface']) .world-poster,
-html[data-world='live'] .world-poster {
+html[data-layer]:not([data-layer='surface']) :is(.world-poster, .world-drill),
+html[data-world='live'] :is(.world-poster, .world-drill, .world-drill-meter) {
   opacity: 0;
 }
 
@@ -1219,19 +1258,15 @@ html[data-world='live'] .world-poster {
   }
 }
 
-/* Hero: the first view is the picture. Text keeps to the calm left side on wide screens. */
-.layer-surface {
-  min-height: 100svh;
+/* Hero: the first view is the picture. The hero text fills the first screen in every mode, so the
+   act headline that follows is never in the first view (no flash when the cinema layout takes over). */
+.hero-content {
+  min-height: calc(100svh - var(--pad-t));
 }
 
 @media (min-aspect-ratio: 115/100) and (min-width: 900px) {
-  .layer-surface > * {
-    max-width: min(36rem, 37vw);
-    margin-inline: 0;
-  }
-
   .layer-surface {
-    padding-left: clamp(1.5rem, 5vw, 5rem);
+    --pad-l: clamp(1.5rem, 5vw, 5rem);
   }
 
   .dig {
@@ -1273,11 +1308,6 @@ html[data-world='live'] .world-poster {
 .layer-index,
 .site-footer {
   background: transparent;
-}
-
-/* Layers 0 and 1 have no side scene: the wall is their scene. */
-.layer[data-layer='current'] .layer-stage {
-  visibility: hidden;
 }
 
 /* ── Boring core: one slender banded core (docs/concept/core-lab.png) ───────────────────────────── */
@@ -1468,4 +1498,381 @@ html[data-stage='live'] .core-ring {
 
 .availability {
   background: color-mix(in srgb, var(--color-ground) 82%, transparent);
+}
+
+/* ── Acts of the cinematic home (docs/STORYBOARD.md) ─────────────────────────────
+   Default (no JS, reduced motion, static tier): the story is stacked — hero; the act headline over a
+   still of the core; a still of the exploded core with the layer index; the summary and legend.
+   `html[data-cinema]` (set by boot.ts when the 3D will run): the acts are tall sections whose
+   frame is pinned, and the director (src/three/director) drives the CSS variables used here from
+   the scroll: --hero-fade, --reveal (headline), and --x / --y / --on (band labels). */
+.hero-content {
+  max-width: var(--measure);
+  margin-inline: auto;
+}
+
+/* Wide screens: the hero text keeps to the calm left side of the wall. */
+@media (min-aspect-ratio: 115/100) and (min-width: 900px) {
+  .hero-content {
+    max-width: min(36rem, 37vw);
+    margin-inline: 0;
+  }
+}
+
+.layer-surface > .act-frame {
+  max-width: none;
+}
+
+.act .act-headline {
+  max-width: 19em;
+  margin: clamp(3.5rem, 12vw, 7rem) auto 0;
+  font-size: clamp(1.75rem, 5vw, 3.25rem);
+  font-weight: 600;
+  line-height: 1.45;
+  letter-spacing: 0.03em;
+  text-align: center;
+  text-wrap: balance;
+  text-shadow: 0 2px 20px rgb(0 0 0 / 0.85);
+}
+
+:lang(ja) :is(.act-headline, .band-labels) {
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+/* A number inside a Mincho headline: same size, a lighter weight so it sits in the line. */
+.act-headline .metric-value {
+  font-weight: 400;
+}
+
+.act-headline .metric-symbol {
+  font-size: 0.4em;
+  vertical-align: super;
+}
+
+.act-still {
+  max-width: 64rem;
+  margin: 2rem auto 0;
+}
+
+.act-still img,
+.act-still-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--color-seam);
+}
+
+/* With JavaScript: the box from hydration on (data-stage is set), the picture only once the page has
+   settled on the stacked version (src/components/acts/ActStill.tsx). Without: the <noscript> image. */
+.act-still-image {
+  display: none;
+  aspect-ratio: 16 / 9;
+  background: var(--color-ground) center / cover no-repeat;
+}
+
+html[data-stage] .act-still-image {
+  display: block;
+}
+
+html[data-stage='off'] .act-still-core .act-still-image {
+  background-image: url('/media/act-core-wide.webp');
+}
+
+html[data-stage='off'] .act-still-explode .act-still-image {
+  background-image: url('/media/act-explode-wide.webp');
+}
+
+@media (max-aspect-ratio: 115/100) {
+  .act-still-image {
+    aspect-ratio: 1 / 2;
+  }
+
+  .act-still {
+    max-width: min(64rem, 60svh);
+  }
+
+  html[data-stage='off'] .act-still-core .act-still-image {
+    background-image: url('/media/act-core-tall.webp');
+  }
+
+  html[data-stage='off'] .act-still-explode .act-still-image {
+    background-image: url('/media/act-explode-tall.webp');
+  }
+}
+
+.act-explode {
+  display: flex;
+  flex-direction: column;
+}
+
+.act-explode > .act-still {
+  order: -1;
+  width: 100%;
+  margin-bottom: 1rem;
+  padding-inline: var(--gutter);
+}
+
+.act-join {
+  padding: clamp(2.5rem, 7vw, 4.5rem) var(--gutter);
+}
+
+.act-join > * {
+  max-width: var(--measure);
+  margin-inline: auto;
+}
+
+.act-join > * + * {
+  margin-top: 1.5rem;
+}
+
+/* ── Cinema: pinned frames ── */
+html[data-cinema] .act-still {
+  display: none;
+}
+
+html[data-cinema] .act > .act-frame {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  overflow: clip;
+  pointer-events: none;
+}
+
+/* Act 1 (surface): 200 viewport heights of scroll. The hero text scrolls in the normal flow (it is
+   never pinned: on phones it can be taller than the screen) and fades; the frame behind it is pinned
+   and holds the act headline. */
+html[data-cinema] .act-surface {
+  min-height: 300svh;
+  padding-bottom: 0;
+}
+
+html[data-cinema] .act-surface .hero-content {
+  opacity: calc(1 - var(--hero-fade, 0));
+}
+
+/* Faded hero text takes no clicks; keyboard focus inside it brings it back. */
+html[data-cinema] .act-surface .hero-content[data-gone] {
+  pointer-events: none;
+}
+
+html[data-cinema] .act-surface .hero-content:focus-within {
+  opacity: 1;
+}
+
+html[data-cinema] .act-surface > .act-frame {
+  margin: -100svh calc(var(--pad-r) * -1) 0 calc(var(--pad-l) * -1);
+}
+
+html[data-cinema] .act .act-headline {
+  position: absolute;
+  left: 50%;
+  bottom: 10svh;
+  width: min(19em, calc(100vw - 2 * var(--gutter)));
+  margin: 0;
+  transform: translateX(-50%);
+}
+
+html[data-cinema] .act .act-headline[data-on] {
+  pointer-events: auto;
+}
+
+/* Phrase by phrase, dim to bright: each phrase takes two "steps" of --reveal to light up. */
+html[data-cinema] .act-headline .reveal-unit {
+  opacity: clamp(0, calc((var(--reveal, 0) * (var(--n) + 2) - var(--i)) / 2), 1);
+}
+
+html[data-cinema] .act-headline:focus-within .reveal-unit {
+  opacity: 1;
+}
+
+@media (max-aspect-ratio: 115/100) {
+  html[data-cinema] .act .act-headline {
+    bottom: 5svh;
+    font-size: clamp(1.5rem, 6.4vw, 2.25rem);
+  }
+}
+
+/* Act 2 (explode): 150 viewport heights, starting where act 1 ends (no dead scroll between). */
+html[data-cinema] .act-explode {
+  display: block;
+  height: 250svh;
+  margin-top: -100svh;
+}
+
+html[data-cinema] .band-labels {
+  position: absolute;
+  inset: 0;
+  padding: 0;
+  border: 0;
+}
+
+html[data-cinema] .band-labels > * {
+  max-width: none;
+}
+
+html[data-cinema] .band-labels h2 {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+html[data-cinema] .band-labels ol {
+  display: block;
+  margin: 0;
+}
+
+/* Each label sits over its band (the director projects the band to --x / --y); a thin line runs
+   from the label to the band. Landscape: even bands above the core, odd bands below; portrait: all
+   to the right. */
+html[data-cinema] .band-labels li {
+  --line: clamp(1.25rem, 4.5svh, 2.75rem);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: max-content;
+  max-width: min(12.5rem, 16.5vw);
+  opacity: var(--on, 0);
+  transform: translate3d(var(--x, -100vw), var(--y, 0), 0) translate(-50%, calc(-100% - var(--line)));
+}
+
+/* Hidden labels stay focusable (opacity, not visibility): Tab reaches the index at any time. */
+html[data-cinema] .band-labels li[data-on] {
+  pointer-events: auto;
+}
+
+html[data-cinema] .band-labels li::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  width: 1px;
+  height: var(--line);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--color-evidence) 80%, transparent), color-mix(in srgb, var(--color-evidence) 10%, transparent));
+}
+
+html[data-cinema] .band-labels a {
+  display: block;
+  padding: 0.25rem 0.1rem;
+  line-height: 1.35;
+  text-align: center;
+  text-shadow: 0 1px 8px rgb(0 0 0 / 0.95);
+}
+
+html[data-cinema] .band-labels .layer-index-depth {
+  position: relative;
+  display: block;
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+  color: var(--color-evidence);
+}
+
+.layer-index-scramble {
+  display: none;
+}
+
+html[data-cinema] .band-labels li[data-scrambling] .layer-index-depth-text {
+  visibility: hidden;
+}
+
+html[data-cinema] .band-labels li[data-scrambling] .layer-index-scramble {
+  position: absolute;
+  inset: 0;
+  display: block;
+  white-space: nowrap;
+}
+
+html[data-cinema] .band-labels .layer-index-title {
+  display: -webkit-box;
+  text-wrap: balance;
+  overflow: hidden;
+  font-size: 0.8125rem;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+@media (min-aspect-ratio: 115/100) {
+  html[data-cinema] .band-labels li:nth-child(even) {
+    transform: translate3d(var(--x, -100vw), var(--y, 0), 0) translate(-50%, var(--line));
+  }
+
+  html[data-cinema] .band-labels li:nth-child(even)::after {
+    top: auto;
+    bottom: 100%;
+    background: linear-gradient(0deg, color-mix(in srgb, var(--color-evidence) 80%, transparent), color-mix(in srgb, var(--color-evidence) 10%, transparent));
+  }
+}
+
+@media (max-aspect-ratio: 115/100) {
+  html[data-cinema] .band-labels li {
+    --line: 1.5rem;
+    max-width: min(13rem, calc(100vw - var(--x, 0px) - var(--line) - 1.75rem));
+    transform: translate3d(var(--x, -100vw), var(--y, 0), 0) translate(var(--line), -50%);
+  }
+
+  html[data-cinema] .band-labels li::after {
+    left: auto;
+    right: 100%;
+    top: 50%;
+    width: var(--line);
+    height: 1px;
+    background: linear-gradient(270deg, color-mix(in srgb, var(--color-evidence) 80%, transparent), color-mix(in srgb, var(--color-evidence) 10%, transparent));
+  }
+
+  html[data-cinema] .band-labels a {
+    text-align: left;
+  }
+}
+
+/* Keyboard: entering the index shows it as a plain list, whatever the scroll position. */
+html[data-cinema] .band-labels:focus-within {
+  inset: auto;
+  left: 50%;
+  top: 50%;
+  width: min(24rem, calc(100vw - 2 * var(--gutter)));
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--color-seam);
+  background: color-mix(in srgb, var(--color-ground) 92%, transparent);
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+}
+
+html[data-cinema] .band-labels:focus-within li {
+  position: static;
+  max-width: none;
+  opacity: 1;
+  transform: none;
+}
+
+html[data-cinema] .band-labels:focus-within li::after {
+  display: none;
+}
+
+html[data-cinema] .band-labels:focus-within a {
+  display: grid;
+  grid-template-columns: 7.5rem 1fr;
+  gap: 0.75rem;
+  text-align: left;
+}
+
+html[data-cinema] .band-labels:focus-within .layer-index-title {
+  display: block;
+}
+
+/* The join: the core flies to the navigator and the wall descends to the first layer while this
+   section scrolls in; its text arrives after the core has gone. */
+html[data-cinema] .act-join {
+  padding-top: 60svh;
+}
+
+/* While the hero core owns the screen the navigator steps back (the 3D one fades with it). */
+.core-nav {
+  transition: opacity 600ms var(--ease-strata);
+}
+
+html[data-act-on] .core-nav:not(:focus-within) {
+  opacity: 0;
 }

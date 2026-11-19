@@ -20,18 +20,41 @@ function afterNextPaint(fn: () => void): void {
   });
 }
 
+/** Next idle moment after `load` (Safari has no requestIdleCallback). */
+function whenIdle(fn: () => void): () => void {
+  const w = window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number };
+  if (typeof w.requestIdleCallback === 'function') {
+    const id = w.requestIdleCallback(fn, { timeout: 2500 });
+    return () => window.cancelIdleCallback(id);
+  }
+  const id = window.setTimeout(fn, 400);
+  return () => window.clearTimeout(id);
+}
+
+/** How far the act-0 borehole is drilled when each loading step completes (boot/Stage marks). */
+const DRILL_STEPS: Record<string, number> = { 'stage:start': 0.12, 'stage:effects': 0.3, 'stage:3d': 0.52, 'stage:scenes': 0.72, 'stage:live': 0.88 };
+
+function setDrill(value: number) {
+  const root = document.documentElement;
+  root.style.setProperty('--drill', value.toFixed(3));
+  const pct = document.querySelector<HTMLElement>('[data-drill-pct]');
+  if (pct) pct.textContent = `${Math.round(value * 100)}%`;
+}
+
 /**
  * Decides whether and when to load the 3D stage. Part of the initial bundle, so it stays tiny:
  * it imports nothing from three.js / R3F / drei.
  *
- * - Never loads under prefers-reduced-motion, Save-Data, or ?quality=static (CLAUDE.md §4).
- * - `<html data-stage>` says where it is: `off` (will not load), `armed` (listening for the first
- *   interaction), `loading`, then `live` (set by the stage). Tests interact only once it is `armed`:
- *   an interaction before hydration reaches no listener (seen on CI: the stage never started).
- * - Loads on the first interaction only (pointer, touch, wheel, key, scroll).
- *   Loading on idle after `load` was measured at TBT ≈ 1.1 s (Lighthouse, 3D forced on), 5× the
- *   200 ms budget, so per the Phase 3 plan (design point 2) the idle trigger was dropped.
- *   The cost of the 3D path itself is measured separately (docs/WORKLOG.md).
+ * - Never loads under prefers-reduced-motion, Save-Data, or ?quality=static (CLAUDE.md §4): the
+ *   page stays the stacked, poster-and-HTML version of the story (`data-stage="off"`).
+ * - Otherwise the 3D starts preparing right after `load`, at the next idle moment — it does not
+ *   wait for an interaction (STORYBOARD §3-2). An earlier interaction starts it sooner. The
+ *   cinematic layout (`<html data-cinema>`: pinned acts) is switched on by boot.ts only once the
+ *   quality decision says the 3D will run: a device that falls back to the static tier never
+ *   toggles it (switching it off again is reported by Chrome as a full-screen layout shift).
+ * - Act 0: the borehole on the poster is drilled as the loading steps complete (`--drill` 0–1, with
+ *   the real percentage); when the wall is drawn it takes over from there.
+ * - `<html data-stage>`: `off`, `armed` (waiting), `loading`, then `live` (set by the stage).
  */
 export function StageLoader() {
   useEffect(() => {
@@ -40,12 +63,31 @@ export function StageLoader() {
     const saveData = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData === true;
     if (forced === 'static' || (!forced && (window.matchMedia('(prefers-reduced-motion: reduce)').matches || saveData))) {
       root.dataset.stage = 'off';
+      setDrill(1);
       return;
     }
 
+    setDrill(0.04);
+    let drilled = 0.04;
+    let observer: PerformanceObserver | null = null;
+    try {
+      observer = new PerformanceObserver((list) => {
+        for (const entry of list.getEntries()) {
+          const step = DRILL_STEPS[entry.name];
+          if (step && step > drilled) setDrill((drilled = step));
+        }
+      });
+      observer.observe({ type: 'mark', buffered: true });
+    } catch {
+      // no PerformanceObserver: the borehole simply appears with the wall
+    }
+
     let started = false;
+    let cancelIdle = () => {};
     const cleanup = () => {
       for (const t of TRIGGERS) window.removeEventListener(t, start);
+      window.removeEventListener('load', onLoad);
+      cancelIdle();
     };
     function start() {
       if (started) return;
@@ -56,10 +98,16 @@ export function StageLoader() {
       performance.mark('stage:start');
       afterNextPaint(() => void import('./boot').then(({ boot }) => boot(forced)));
     }
+    function onLoad() {
+      cancelIdle = whenIdle(start);
+    }
     for (const t of TRIGGERS) window.addEventListener(t, start, { once: true, passive: true });
+    if (document.readyState === 'complete') onLoad();
+    else window.addEventListener('load', onLoad, { once: true });
     root.dataset.stage = 'armed';
     return () => {
       cleanup();
+      observer?.disconnect();
       if (root.dataset.stage === 'armed') delete root.dataset.stage;
     };
   }, []);

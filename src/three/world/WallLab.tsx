@@ -8,11 +8,12 @@
  *   ?beam=0.62,0.5  lantern position (uv); omit for no beam
  *   ?t=3            freeze time (seconds) for repeatable captures
  *   ?norock         procedural rock only (as before the textures load)
+ *   ?shaft=-1       borehole length below the surface (-1: none — the act-0 poster, drilled in CSS)
  * window.__wall.webp(quality) returns the frame as a WebP data URL (scripts/build-poster.ts).
  */
 import { useEffect, useRef } from 'react';
 import { Mesh, OrthographicCamera, PlaneGeometry, Scene, WebGLRenderer } from 'three';
-import { LAYER_IDS } from '@/content/schema';
+import { LAYER_IDS } from '@/content/layer-ids';
 import { createWallMaterial, frameWall, type WallQuality } from '../materials/wall';
 import { loadRock, type Rock } from './rock';
 
@@ -35,6 +36,7 @@ export function WallLab() {
     scene.add(quad);
     material.uniforms.uDepth.value = Number(q.get('depth') ?? 0);
     if (q.has('dim')) material.uniforms.uDim.value = Number(q.get('dim'));
+    if (q.has('shaft')) material.uniforms.uShaftLen.value = Number(q.get('shaft'));
     if (beam && beam.length === 2) {
       material.uniforms.uPointer.value.set(beam[0] as number, beam[1] as number);
       material.uniforms.uBeam.value = 1;

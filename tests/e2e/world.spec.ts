@@ -99,7 +99,8 @@ test.describe('world backdrop', () => {
     const read = () => page.evaluate(() => (window as unknown as { __world: { depth: number; beam: number } }).__world);
     await page.mouse.move(700, 400);
     await expect.poll(async () => (await read()).beam, { timeout: 30_000 }).toBeGreaterThan(0.5);
-    await page.evaluate(() => window.scrollTo(0, window.innerHeight * 3));
+    // Below the cinematic acts (which hold the wall at the surface while the camera moves).
+    await page.locator('section[data-layer="genten"]').evaluate((el) => el.scrollIntoView({ block: 'start' }));
     await expect.poll(async () => (await read()).depth, { timeout: 30_000 }).toBeGreaterThan(2.5);
     await expect.poll(async () => (await read()).beam, { timeout: 30_000 }).toBeLessThan(0.05);
   });

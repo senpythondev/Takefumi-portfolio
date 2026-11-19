@@ -46,6 +46,42 @@ export function startEffects(): Effects {
     });
   });
 
+  // Acts of the cinematic home: pinned sections (position: sticky in CSS), 0–1 over their scroll length.
+  for (const section of document.querySelectorAll<HTMLElement>('[data-act]')) {
+    const id = section.dataset.act as string;
+    triggers.push(
+      ScrollTrigger.create({
+        trigger: section,
+        start: 'top top',
+        end: 'bottom bottom',
+        onUpdate: (self) => {
+          scrollLive.acts[id] = self.progress;
+        },
+      }),
+    );
+  }
+  const join = document.querySelector<HTMLElement>('[data-act-join]');
+  if (join) {
+    triggers.push(
+      ScrollTrigger.create({
+        trigger: join,
+        start: 'top bottom',
+        end: 'top top',
+        onUpdate: (self) => {
+          scrollLive.acts.join = self.progress;
+        },
+      }),
+    );
+  }
+
+  // The acts change height when the cinema switches on or off: re-measure the triggers.
+  let refreshTimer = 0;
+  const resize = new ResizeObserver(() => {
+    window.clearTimeout(refreshTimer);
+    refreshTimer = window.setTimeout(() => ScrollTrigger.refresh(), 120);
+  });
+  resize.observe(document.body);
+
   return {
     lenis,
     addFrameListener(fn) {
@@ -54,6 +90,7 @@ export function startEffects(): Effects {
     },
     destroy() {
       gsap.ticker.remove(tick);
+      resize.disconnect();
       for (const t of triggers) t.kill();
       lenis.destroy();
     },

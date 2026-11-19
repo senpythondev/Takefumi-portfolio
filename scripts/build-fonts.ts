@@ -100,7 +100,7 @@ function headingText(): string {
   const parts: string[] = [];
   const walk = (value: unknown, key = '') => {
     if (typeof value === 'string') {
-      if (['title', 'heading', 'label', 'name', 'nameLatin', 'role'].includes(key)) parts.push(value);
+      if (['title', 'heading', 'label', 'name', 'nameLatin', 'role', 'coreHeadline'].includes(key)) parts.push(value);
     } else if (Array.isArray(value)) value.forEach((v) => walk(v));
     else if (value && typeof value === 'object') for (const [k, v] of Object.entries(value)) walk(v, k);
   };

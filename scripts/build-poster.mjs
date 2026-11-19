@@ -12,9 +12,12 @@ import { chromium } from '@playwright/test';
 
 const base = process.argv[2] ?? 'http://localhost:3000';
 // `dim` matches the hero light level in src/three/world/controller.ts (wide 1, narrow 0.28).
+// `shaft=-1`: no borehole — act 0 drills it down the poster in CSS while the 3D loads.
+// Sizes: the page scales the poster to the viewport height and anchors it at the borehole
+// (globals.css .world-poster), so the wide one is 2.4:1 and the tall one 3:4 to cover most screens.
 const POSTERS = [
-  { file: 'poster-wide.webp', width: 1280, height: 720, query: 'q=high&t=3', quality: 0.55 },
-  { file: 'poster-tall.webp', width: 640, height: 1280, query: 'q=high&t=3&dim=0.28', quality: 0.6 },
+  { file: 'poster-wide.webp', width: 1728, height: 720, query: 'q=high&t=3&shaft=-1', quality: 0.5 },
+  { file: 'poster-tall.webp', width: 768, height: 1024, query: 'q=high&t=3&dim=0.28&shaft=-1', quality: 0.6 },
 ];
 
 mkdirSync('public/media', { recursive: true });

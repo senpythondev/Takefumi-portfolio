@@ -1,7 +1,8 @@
 /**
  * Lazy entry point of the effects/3D layer, imported by StageLoader.
  * Loads in three separate steps (separate chunks, separate tasks) so no single long task is
- * created: quality decision → effects bundle (Lenis + GSAP) → 3D base (three + R3F + drei).
+ * created: quality decision (and the cinematic layout) → effects bundle (Lenis + GSAP) → 3D base
+ * (three + R3F + drei).
  * The performance marks let tests attribute every chunk to its budget.
  */
 import { scrollStore } from '@/lib/scroll/store';
@@ -19,10 +20,15 @@ export async function boot(forced: string | null): Promise<void> {
     (window as unknown as { __qualityDecision: unknown }).__qualityDecision = decision;
   }
   if (decision.quality === 'static') {
+    // No 3D here (no WebGL2, software renderer): back to the stacked poster-and-HTML story.
     scrollStore.set({ quality: 'static' });
-    document.documentElement.dataset.stage = 'off';
+    const root = document.documentElement;
+    root.dataset.stage = 'off';
+    root.style.setProperty('--drill', '1');
     return;
   }
+  // The 3D will run: the acts become pinned, before the scroll effects measure the page.
+  document.documentElement.dataset.cinema = '';
 
   await yieldToMain();
   performance.mark('stage:effects');

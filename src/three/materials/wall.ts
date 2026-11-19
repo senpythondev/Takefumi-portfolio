@@ -27,6 +27,8 @@ const STEPS: Record<WallQuality, { march: number; shadow: number }> = {
 };
 
 export const WALL_LAYER_COUNT = 11;
+/** The surface line, in viewport heights below the top of the page (the drill rig stands on it). */
+export const WALL_HORIZON = 0.118;
 
 const vertexShader = /* glsl */ `
 varying vec2 vUv;
@@ -49,6 +51,11 @@ uniform float uCalm;       // 1: the left side falls to calm dark rock (desktop)
 uniform float uDim;        // overall light level of the rock (text sits on top)
 uniform float uGeoScale;   // geode size (smaller on narrow screens)
 uniform float uGeoShift;   // geode x offset from the borehole, in units of its own width
+uniform float uZoom;       // camera: magnification of the wall (1 = page scale)
+uniform vec2 uPan;         // camera: world-uv offset (with uZoom: which part of the wall is on screen)
+uniform float uShaftLen;  // how far the borehole has been drilled below the surface (world units)
+uniform float uGeoPulse;  // geodes brighten and pulse (act 1)
+uniform float uRig;       // the drill rig at work (act 1)
 uniform vec3 uLayerColor[${WALL_LAYER_COUNT}];
 uniform float uLayerTop[${WALL_LAYER_COUNT}];
 uniform vec3 uEvidence;
@@ -61,7 +68,7 @@ uniform sampler2D uRock1;
 uniform sampler2D uRock2;
 uniform float uRockMix;   // 0 until the rock textures are loaded, then fades to 1
 
-const float HORIZON = 0.118;
+const float HORIZON = ${WALL_HORIZON.toFixed(3)};
 const float BEDS = 10.5;
 
 float hash(vec2 p) {
@@ -245,7 +252,9 @@ float wireCube(vec2 q) {
 
 void main() {
   float aspect = uRes.x / uRes.y;
-  vec2 p = vec2((vUv.x - uShaftX) * aspect, uDepth + (1.0 - vUv.y));
+  // Camera: screen uv → wall uv. Screen-space effects (calm side, lantern) keep using vUv.
+  vec2 wuv = (vUv - 0.5) / uZoom + 0.5 + uPan;
+  vec2 p = vec2((wuv.x - uShaftX) * aspect, uDepth + (1.0 - wuv.y));
   // The wall is seen from the middle of the screen: points off-centre are seen at an angle.
   vec2 lean = (vUv - 0.5) * vec2(aspect, -1.0) * 0.075;
 
@@ -256,13 +265,14 @@ void main() {
     // ── Sky: only at the very top of the page ──
     float up = (horizon - p.y) / HORIZON;
     col = mix(vec3(0.020, 0.030, 0.052), vec3(0.006, 0.009, 0.018), smoothstep(0.0, 1.0, up));
-    vec2 sg = vec2(p.x, p.y) * 340.0;
+    // Stars are far away: they scroll with the page but do not grow when the camera closes in.
+    vec2 sg = vec2((vUv.x - uShaftX) * aspect, uDepth + 1.0 - vUv.y) * 340.0;
     float star = step(0.9978, hash(floor(sg))) * smoothstep(0.45, 0.1, length(fract(sg) - 0.5));
     col += vec3(0.75, 0.8, 0.95) * star * (0.35 + 0.65 * hash(floor(sg) + 3.0)) * smoothstep(0.05, 0.5, up);
     float ridge = horizon - 0.006 - noise(vec2(p.x * 3.2 + 4.0, 1.0)) * 0.022;
     if (p.y > ridge) col = vec3(0.010, 0.014, 0.022);
     // Drill rig over the borehole: a small lattice tower, a shed, one warm light.
-    vec2 r = vec2(p.x, horizon - p.y) / 1.45;
+    vec2 r = vec2(p.x + uRig * 0.0004 * sin(uTime * 37.0), horizon - p.y) / 1.45;   // the rig shudders while it works
     float tower = min(segment(r, vec2(-0.008, 0.0), vec2(0.0, 0.058)), segment(r, vec2(0.008, 0.0), vec2(0.0, 0.058)));
     for (int k = 1; k < 5; k++) {
       float h0 = float(k) * 0.011;
@@ -272,7 +282,8 @@ void main() {
     col = mix(col, vec3(0.05, 0.055, 0.06), smoothstep(0.0016, 0.0006, tower));
     if (r.x > 0.014 && r.x < 0.034 && r.y < 0.009) col = vec3(0.04, 0.042, 0.046);
     vec2 lamp = r - vec2(0.012, 0.012);
-    col += vec3(1.0, 0.72, 0.4) * (smoothstep(0.0022, 0.0008, length(lamp)) * 1.4 + 0.012 / (dot(lamp, lamp) * 900.0 + 0.06));
+    float lampLevel = 1.0 + uRig * (0.9 + 0.6 * sin(uTime * 11.0));
+    col += vec3(1.0, 0.72, 0.4) * lampLevel * (smoothstep(0.0022, 0.0008, length(lamp)) * 1.4 + 0.012 / (dot(lamp, lamp) * 900.0 + 0.06));
   } else {
     // ── Rock ──
     vec2 q = p;
@@ -359,9 +370,10 @@ void main() {
     float level = mix(0.035, 1.0, calm * calm) * uDim;
 
     vec3 light = vec3(0.03, 0.033, 0.04) + vec3(0.62, 0.6, 0.56) * diff * shadow;
-    // The borehole lights the rock beside it.
+    // The borehole lights the rock beside it — only as far down as it has been drilled.
     float side = clamp(0.5 + 0.5 * n.x * sign(-q.x) * 3.0, 0.0, 1.0);
-    light += uEvidence * (1.5 * exp(-dx * 14.0) + 0.16 * exp(-dx * 3.5)) * (0.35 + 1.0 * side);
+    float drilled = smoothstep(horizon + uShaftLen + 0.08, horizon + uShaftLen - 0.02, q.y);
+    light += uEvidence * (1.5 * exp(-dx * 14.0) + 0.16 * exp(-dx * 3.5)) * (0.35 + 1.0 * side) * drilled;
     col = albedo * light * level;
 
     // ── Geodes ──
@@ -383,6 +395,7 @@ void main() {
         float edge = smoothstep(-0.5, 0.0, d);
         float roof = smoothstep(0.1, -0.9, gq.y);                // the overhang shades the top of the cavity
         inside *= (1.0 - 0.9 * edge * edge) * (1.0 - roof * 0.75);
+        inside *= 1.0 + uGeoPulse * (0.7 + 0.5 * sin(uTime * 2.4 + float(gi) * 1.7));
         col = mix(inside * mix(0.4, 1.0, calm) * min(1.0, uDim * 1.5), col * 0.25, smoothstep(-0.05, 0.0, d));
         rockFace = min(rockFace, smoothstep(-0.05, 0.0, d));
       } else {
@@ -409,7 +422,10 @@ void main() {
     }
 
     // ── Borehole ──
-    float below = smoothstep(horizon - 0.002, horizon + 0.004, p.y);
+    float below = smoothstep(horizon - 0.002, horizon + 0.004, p.y) * smoothstep(horizon + uShaftLen + 0.004, horizon + uShaftLen - 0.004, p.y);
+    // The drill bit: a bright point at the bottom of the shaft while it is still being drilled.
+    vec2 bit = vec2(p.x, p.y - horizon - uShaftLen);
+    col += uEvidence * 1.8 * exp(-dot(bit, bit) / 0.00003) * step(uShaftLen, 5.0) * step(0.0, uShaftLen);
     float px = abs(p.x);
     float joint = smoothstep(0.012, 0.0, abs(fract(p.y * 2.6 + 0.3) - 0.5) - 0.006);
     float core = exp(-px * px / (0.0032 * 0.0032));
@@ -438,6 +454,11 @@ export type WallMaterial = ShaderMaterial & {
     uDim: { value: number };
     uGeoScale: { value: number };
     uGeoShift: { value: number };
+    uZoom: { value: number };
+    uPan: { value: Vector2 };
+    uShaftLen: { value: number };
+    uGeoPulse: { value: number };
+    uRig: { value: number };
     uLayerTop: { value: number[] };
     uRock0: { value: Texture | null };
     uRock1: { value: Texture | null };
@@ -462,6 +483,11 @@ export function createWallUniforms(ids: readonly string[]): WallUniforms {
     uDim: { value: 1 },
     uGeoScale: { value: 1 },
     uGeoShift: { value: 1 },
+    uZoom: { value: 1 },
+    uPan: { value: new Vector2(0, 0) },
+    uShaftLen: { value: 1000 },
+    uGeoPulse: { value: 0 },
+    uRig: { value: 0 },
     uLayerColor: { value: colors },
     uLayerTop: { value: Array.from({ length: WALL_LAYER_COUNT }, (_, i) => i * 2) },
     uEvidence: { value: new Color(signal.evidence) },
