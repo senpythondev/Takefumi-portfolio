@@ -19,6 +19,40 @@
 
 ---
 
+## 2026-11-19 — STORYBOARD v1.1：参考サイトの取得と CLAUDE.md への反映
+
+**モデル：** Claude Fable 5.2
+
+### 参考サイトの取得（`docs/concept/references/`、git の対象外）
+Playwright のブラウザ（1440×900）で開き、スクロールしながら連続で撮った。
+
+| 参考 | 結果 |
+|---|---|
+| Active Theory（Work） | **開けなかった。** サイトが「Your browser is not supported」のページに転送する（この環境の WebGL はソフトウェア描画のため）。オーナーのスクリーンショットが必要 |
+| Dribbble：Sixfold | ページは開けた。作品の動画（41秒）を、時間を進めながら30枚のフレームにした |
+| Dribbble：Blendr | 同上（18秒、15枚） |
+| Apple | トップと製品ページ3つ（iPhone 18 Pro・AirPods Pro・Apple Vision Pro）を各26枚。スクロール位置を飛び飛びに撮ったため、固定されたシーンの途中の動きは一部しか写っていない。動画は読み込まれていた。MacBook Pro のページは短い概要ページしか出なかった |
+
+- オーナーの画像は、置かれたら優先の基準にする（この時点ではフォルダにない）。
+
+### CLAUDE.md の更新（STORYBOARD §3、PM 承認済み。§6-5 の運用ルールに基づく）
+- §0：`docs/STORYBOARD.md`（ホームの唯一の設計図）と `docs/concept/ART_DIRECTION.md` を「最初に読むもの」に追加。
+- §3：
+  - ホームはシネマティック・スクロールにし、長い説明文は `/[locale]/work/[id]` に移す。
+  - 3D は読み込みが終わったらすぐ準備を始める（medium・high。最初の操作を待つ方式を置き換え）。
+  - ポストプロセスは high で使い、medium は軽量版。
+  - static 版と reduced-motion 版は、ポスター画像と HTML で同じ物語を見せる。
+  - 確度の記号を大きな数字にも添える。
+- §4：
+  - ホームの TBT は計測して報告するだけにする（ケーススタディ・根拠ページ・static 版は 200ms 以内を維持）。
+  - 3D関連の合計は圧縮後 1.5MB 以内を目安にする。
+  - INP は「実際の操作への反応」と明記。
+- **PM への確認事項**：
+  - §4 の「3D基盤 250KB」「各シーン 250KB」「初期JS 180KB」「Lighthouse Performance 90以上」は、STORYBOARD §3 に記載がないので残した。
+  - ホームの Performance のスコアは TBT に強く左右されるため、ホームでも合否に使うかどうかの判断が必要。
+
+---
+
 ## 2026-11-19 — 縦の一貫作業への PM の判断（6項目）と Vercel の確認（ブランチ `feat/layer-0`）
 
 **モデル：** Claude Fable 5.2
