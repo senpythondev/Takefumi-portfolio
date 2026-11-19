@@ -23,28 +23,28 @@
               "error",
               {
                 "minScore": 1,
-                "aggregationMethod": "median-run"
+                "aggregationMethod": "median"
               }
             ],
             "largest-contentful-paint": [
               "error",
               {
                 "maxNumericValue": 2500,
-                "aggregationMethod": "median-run"
+                "aggregationMethod": "median"
               }
             ],
             "cumulative-layout-shift": [
               "error",
               {
                 "maxNumericValue": 0.05,
-                "aggregationMethod": "median-run"
+                "aggregationMethod": "median"
               }
             ],
             "resource-summary:script:size": [
               "error",
               {
                 "maxNumericValue": 180000,
-                "aggregationMethod": "median-run"
+                "aggregationMethod": "median"
               }
             ]
           }
@@ -56,21 +56,21 @@
               "warn",
               {
                 "minScore": 0.9,
-                "aggregationMethod": "median-run"
+                "aggregationMethod": "median"
               }
             ],
             "total-blocking-time": [
               "warn",
               {
                 "maxNumericValue": 200,
-                "aggregationMethod": "median-run"
+                "aggregationMethod": "median"
               }
             ],
             "largest-contentful-paint": [
               "warn",
               {
                 "maxNumericValue": 2000,
-                "aggregationMethod": "median-run"
+                "aggregationMethod": "median"
               }
             ]
           }
@@ -82,14 +82,14 @@
               "error",
               {
                 "minScore": 0.9,
-                "aggregationMethod": "median-run"
+                "aggregationMethod": "median"
               }
             ],
             "total-blocking-time": [
               "error",
               {
                 "maxNumericValue": 200,
-                "aggregationMethod": "median-run"
+                "aggregationMethod": "median"
               }
             ]
           }
