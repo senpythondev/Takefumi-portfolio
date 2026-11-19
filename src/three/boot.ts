@@ -24,7 +24,7 @@ export async function boot(forced: string | null): Promise<void> {
     scrollStore.set({ quality: 'static' });
     const root = document.documentElement;
     root.dataset.stage = 'off';
-    root.style.setProperty('--drill', '1');
+    document.querySelector<HTMLElement>('.world')?.style.setProperty('--drill', '1');
     return;
   }
   // The 3D will run: the acts become pinned, before the scroll effects measure the page.

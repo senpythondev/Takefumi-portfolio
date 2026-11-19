@@ -1190,7 +1190,8 @@ dialog.evidence::backdrop {
 }
 
 /* Act 0: the borehole is drilled down the poster as the 3D loads (StageLoader sets --drill 0–1 at
-   each real loading step; the percentage is the real one). The live wall continues from there.
+   each real loading step, on .world — never on <html>, which would restyle the whole page; the
+   percentage is the real one). The live wall continues from there.
    The ground line is WALL_HORIZON (src/three/materials/wall.ts) below the top. */
 .world-drill {
   position: absolute;
@@ -1234,7 +1235,9 @@ dialog.evidence::backdrop {
   transform: translateY(-50%);
 }
 
-html:is([data-stage='armed'], [data-stage='loading']) .world-drill-meter {
+/* Plain selectors (no :is() on <html>): a change of data-stage then only restyles the meter. */
+html[data-stage='armed'] .world-drill-meter,
+html[data-stage='loading'] .world-drill-meter {
   display: block;
 }
 
@@ -1564,7 +1567,8 @@ html[data-stage='live'] .core-ring {
 }
 
 /* With JavaScript: the box from hydration on (data-stage is set), the picture only once the page has
-   settled on the stacked version (src/components/acts/ActStill.tsx). Without: the <noscript> image. */
+   settled on the stacked version and the still comes near the viewport (`data-near`, StageLoader).
+   Without: the <noscript> image (src/components/acts/ActStill.tsx). */
 .act-still-image {
   display: none;
   aspect-ratio: 16 / 9;
@@ -1575,11 +1579,11 @@ html[data-stage] .act-still-image {
   display: block;
 }
 
-html[data-stage='off'] .act-still-core .act-still-image {
+html[data-stage='off'] .act-still-core[data-near] .act-still-image {
   background-image: url('/media/act-core-wide.webp');
 }
 
-html[data-stage='off'] .act-still-explode .act-still-image {
+html[data-stage='off'] .act-still-explode[data-near] .act-still-image {
   background-image: url('/media/act-explode-wide.webp');
 }
 
@@ -1592,11 +1596,11 @@ html[data-stage='off'] .act-still-explode .act-still-image {
     max-width: min(64rem, 60svh);
   }
 
-  html[data-stage='off'] .act-still-core .act-still-image {
+  html[data-stage='off'] .act-still-core[data-near] .act-still-image {
     background-image: url('/media/act-core-tall.webp');
   }
 
-  html[data-stage='off'] .act-still-explode .act-still-image {
+  html[data-stage='off'] .act-still-explode[data-near] .act-still-image {
     background-image: url('/media/act-explode-tall.webp');
   }
 }

@@ -39,7 +39,11 @@ test.describe('3D stage', () => {
   });
 
   test('scrolling top → bottom → top three times does not grow GPU resources', async ({ page }) => {
-    test.setTimeout(150_000); // six full passes over 11 layers with software-rendered WebGL
+    // Six full passes over 11 layers with software-rendered WebGL, through the cinematic acts (the
+    // director's frames compete with each scroll step for the main thread): ~1 min locally, more
+    // than 150 s on a slow CI runner with parallel workers (CI run 44502457619). Only the time limit
+    // changed; the GPU resource assertions are the same.
+    test.setTimeout(300_000);
     await page.goto('/ja?quality=low&dpr=0.4&debug=1');
     await startStage(page); // the stage loads on the first interaction, once the page listens
     // three.js counts resources once uploaded; offscreen neighbours upload on first view.
@@ -83,6 +87,7 @@ test.describe('3D stage', () => {
     await expect(page.locator('html')).not.toHaveAttribute('data-stage', 'live');
     // Without 3D the acts fall back to the stacked story: stills and the headline in the flow.
     await expect(page.locator('html')).not.toHaveAttribute('data-cinema');
+    await page.locator('.act-still-core').scrollIntoViewIfNeeded(); // stills load as they come near
     await expect(page.locator('.act-still-core .act-still-image')).toHaveCSS('background-image', /act-core-/);
     await expect(page.locator('#act-core-title')).toBeVisible();
     await expect(page.locator('section[data-layer="genten"] h2')).toBeVisible();

@@ -177,7 +177,7 @@ export async function mountStage({ quality, adaptive, addFrameListener }: { qual
       delete document.documentElement.dataset.world;
       // Without 3D the acts are the stacked poster-and-HTML version (runtime step-down to static).
       delete document.documentElement.dataset.cinema;
-      document.documentElement.style.setProperty('--drill', '1');
+      document.querySelector<HTMLElement>('.world')?.style.setProperty('--drill', '1');
     },
   };
   return handle;

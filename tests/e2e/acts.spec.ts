@@ -49,6 +49,8 @@ test.describe('cinematic acts', () => {
 
   test('act progress follows the scroll and plays back in reverse', async ({ page }) => {
     test.setTimeout(150_000);
+    const stills: string[] = [];
+    page.on('request', (r) => /\/media\/act-/.test(r.url()) && stills.push(r.url()));
     await page.goto('/ja?quality=low&dpr=0.4&debug=1');
     await expect(page.locator('html')).toHaveAttribute('data-world', 'live', { timeout: 60_000 });
     const headline = page.locator('#act-core-title');
@@ -75,6 +77,8 @@ test.describe('cinematic acts', () => {
     await expect(headline).not.toHaveAttribute('data-on');
     await expect(page.locator('.band-labels li[data-on]')).toHaveCount(0);
     await expect(page.locator('section[data-act="surface"] [data-hero-content]')).not.toHaveAttribute('data-gone');
+    // The stills of the stacked version are never downloaded on the 3D path.
+    expect(stills).toEqual([]);
   });
 
   test('the acts hand over to the layer panels on the same wall, with the navigator back', async ({ page }) => {
@@ -117,11 +121,16 @@ test.describe('cinematic acts', () => {
 });
 
 test('reduced motion / static: the same story, stacked, with stills and no pinning', async ({ page }, testInfo) => {
-  await page.goto(testInfo.project.name === 'reduced-motion' ? '/ja' : '/ja?quality=static');
+  const stills: string[] = [];
+  page.on('request', (r) => /\/media\/act-/.test(r.url()) && stills.push(r.url()));
+  await page.goto(testInfo.project.name === 'reduced-motion' ? '/ja' : '/ja?quality=static', { waitUntil: 'networkidle' });
   await expectStageOff(page);
+  // Not during the page load (they come in as they near the viewport).
+  expect(stills).toEqual([]);
   await expect(page.locator('html')).not.toHaveAttribute('data-cinema');
   for (const still of ['core', 'explode']) {
     const image = page.locator(`.act-still-${still} .act-still-image`);
+    await image.scrollIntoViewIfNeeded(); // stills load as they come near the viewport
     await expect(image).toBeVisible();
     await expect(image).toHaveCSS('background-image', new RegExp(`act-${still}-`));
   }

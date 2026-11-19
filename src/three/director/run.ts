@@ -65,7 +65,8 @@ export function createDirectorRun({
   window.addEventListener('resize', measure);
   const heroFade = new Spring(0, 6.5);
   // The CSS borehole (act 0) shows how far loading got: continue from there.
-  const drill = Number(getComputedStyle(root).getPropertyValue('--drill')) || 0;
+  const backdrop = document.querySelector<HTMLElement>('.world');
+  const drill = backdrop ? Number(getComputedStyle(backdrop).getPropertyValue('--drill')) || 0 : 0;
   shaft.snap(drill * (1 - WALL_HORIZON));
   shaftTarget = 1.15;
 

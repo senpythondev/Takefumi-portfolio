@@ -35,10 +35,37 @@ function whenIdle(fn: () => void): () => void {
 const DRILL_STEPS: Record<string, number> = { 'stage:start': 0.12, 'stage:effects': 0.3, 'stage:3d': 0.52, 'stage:scenes': 0.72, 'stage:live': 0.88 };
 
 function setDrill(value: number) {
-  const root = document.documentElement;
-  root.style.setProperty('--drill', value.toFixed(3));
+  // On the small fixed backdrop, never on <html>: a custom property changed on the root makes the
+  // browser recompute the style of every element of this long page (measured on CI: +80 ms of
+  // style and layout at 4× on the static page).
+  document.querySelector<HTMLElement>('.world')?.style.setProperty('--drill', value.toFixed(3));
   const pct = document.querySelector<HTMLElement>('[data-drill-pct]');
   if (pct) pct.textContent = `${Math.round(value * 100)}%`;
+}
+
+/**
+ * The stills of the stacked version (src/components/acts/ActStill.tsx) load only as they come near
+ * the viewport (`data-near`). Never during the page load: a request started by script before the
+ * LCP made Lighthouse's simulation count all the JS before it as part of the LCP (4.4 s instead of
+ * 0.9 s). On the 3D path the stills are not displayed, so they are never near and never load.
+ */
+function watchStills(): () => void {
+  if (!('IntersectionObserver' in window)) {
+    for (const el of document.querySelectorAll<HTMLElement>('.act-still')) el.dataset.near = '';
+    return () => {};
+  }
+  const io = new IntersectionObserver(
+    (entries) => {
+      for (const e of entries) {
+        if (!e.isIntersecting) continue;
+        (e.target as HTMLElement).dataset.near = '';
+        io.unobserve(e.target);
+      }
+    },
+    { rootMargin: '0px 0px 15% 0px' },
+  );
+  for (const el of document.querySelectorAll('.act-still')) io.observe(el);
+  return () => io.disconnect();
 }
 
 /**
@@ -57,6 +84,7 @@ function setDrill(value: number) {
  * - `<html data-stage>`: `off`, `armed` (waiting), `loading`, then `live` (set by the stage).
  */
 export function StageLoader() {
+  useEffect(() => watchStills(), []);
   useEffect(() => {
     const root = document.documentElement;
     const forced = new URLSearchParams(window.location.search).get('quality');
