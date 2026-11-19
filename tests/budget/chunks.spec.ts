@@ -8,7 +8,8 @@ import { collectScripts, kb, sum, type ScriptSize } from './measure';
  *   stage:start   → boot (quality decision)
  *   stage:effects → effects bundle (Lenis + GSAP/ScrollTrigger)
  *   stage:3d      → 3D base (three.js + R3F + drei), counted once — budget 250 KB gzip (PM_REVIEW_01 D8)
- *   stage:scenes  → scene chunks loaded as scenes mount — budget 250 KB gzip each (CLAUDE.md §4)
+ *   stage:scenes  → lazy scene chunks (the director, post-processing) — budget 250 KB gzip each (CLAUDE.md §4)
+ * Measured at the medium tier so the post-processing chunk (medium/high only) is counted too.
  * None of these are part of initial JS.
  */
 const BASE_3D_BUDGET = 250_000;
@@ -25,7 +26,7 @@ const between = (scripts: ScriptSize[], from: number | null, to: number | null) 
 
 test('deferred chunks: 3D base and scene chunks stay within budget', async ({ page }) => {
   test.setTimeout(120_000);
-  await page.goto('/ja?quality=low&dpr=0.4', { waitUntil: 'networkidle' });
+  await page.goto('/ja?quality=medium&dpr=0.3', { waitUntil: 'networkidle' });
   await startStage(page); // the stage loads on the first interaction, once the page listens
   // Visit every layer so every scene chunk is requested.
   for (const id of await page.locator('section.layer[data-layer]').evaluateAll((els) => els.map((e) => e.getAttribute('data-layer') as string))) {

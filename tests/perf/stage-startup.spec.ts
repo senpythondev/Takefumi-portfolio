@@ -2,8 +2,10 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { devices, expect, test } from '@playwright/test';
 
 /**
- * Substitute measurement (PM_REVIEW_03 §8, PM_REVIEW_05 §3.2): long tasks right after the first
- * interaction, attributed to the boot steps by the performance marks in src/three/boot.ts.
+ * Substitute measurement (PM_REVIEW_03 §8, PM_REVIEW_05 §3.2): long tasks while the 3D loads,
+ * attributed to the boot steps by the performance marks in src/three/boot.ts. The 3D starts by
+ * itself at the first idle moment after load (STORYBOARD §3-2), so there is no interaction here:
+ * the long tasks are recorded from navigation on, with the CPU throttled from the start.
  * Target: every long task ≤ 100 ms at 4× CPU throttling. Software WebGL here, so GPU time is not
  * representative; JS parse/evaluate and React/R3F setup are.
  */
@@ -19,20 +21,18 @@ for (const c of cases) {
     test.setTimeout(120_000);
     const context = await browser.newContext({ ...c.device });
     const page = await context.newPage();
-    await page.goto(`/ja?quality=${c.quality}`, { waitUntil: 'networkidle' });
-    await page.evaluate(() => {
+    await page.addInitScript(() => {
       const w = window as unknown as { __lt: Array<{ start: number; duration: number }> };
       w.__lt = [];
       new PerformanceObserver((list) => {
         for (const e of list.getEntries()) w.__lt.push({ start: e.startTime, duration: e.duration });
-      }).observe({ type: 'longtask', buffered: false });
+      }).observe({ type: 'longtask', buffered: true });
     });
     const cdp = await context.newCDPSession(page);
     await cdp.send('Emulation.setCPUThrottlingRate', { rate: c.rate });
-    await expect(page.locator('html')).toHaveAttribute('data-stage', 'armed', { timeout: 30_000 });
-    await page.mouse.move(30, 30);
-    if (c.device === devices['Pixel 7']) await page.touchscreen.tap(30, 300).catch(() => undefined);
-    await expect(page.locator('html')).toHaveAttribute('data-stage', 'live', { timeout: 60_000 });
+    await page.goto(`/ja?quality=${c.quality}`);
+    // No interaction: the stage must start and go live on its own.
+    await expect(page.locator('html')).toHaveAttribute('data-stage', 'live', { timeout: 90_000 });
     await page.waitForTimeout(8000);
     const result = await page.evaluate((names) => {
       const marks = Object.fromEntries(names.map((n) => [n, performance.getEntriesByName(n)[0]?.startTime ?? null]));

@@ -42,14 +42,15 @@ jobs:
       - name: Build (prebuild repeats validation + confidentiality)
         run: npm run build
 
-      - name: Fonts matching the local screenshot baselines
-        # Until Phase 4 self-hosts subset fonts, CJK text falls back to the system font.
+      - name: CJK fallback font
+        # The site self-hosts subset fonts with font-display: optional: a page view whose font arrives
+        # late renders with the system fallback, so the runner needs a CJK font for that path.
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends fonts-droid-fallback
 
       - run: npx playwright install --with-deps chromium
 
       - name: E2E (desktop / mobile / reduced-motion)
-        # Visual baselines are machine-specific until Phase 4 self-hosts fonts: checked locally only.
+        # Visual baselines are machine-specific (font rasterisation, WebGL): checked locally only.
         run: npm run test:e2e -- --grep-invert @visual
         env:
           PW_REPORT: e2e
@@ -70,6 +71,13 @@ jobs:
       - name: Lighthouse CI (mobile, budgets from CLAUDE.md §4)
         if: ${{ !cancelled() }}
         run: npm run lhci
+
+      - name: INP (mobile, CPU 4×, real interactions on the home — CLAUDE.md §4)
+        # Lighthouse measures page loads only; INP is a pass/fail condition, so it is measured here.
+        if: ${{ !cancelled() }}
+        run: npx playwright test --project=perf tests/perf/inp.spec.ts
+        env:
+          PW_REPORT: inp
 
       - name: Japanese layout probe (informational, PM_REVIEW_07 §2-3)
         if: ${{ !cancelled() }}
