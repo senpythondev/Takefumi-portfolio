@@ -125,6 +125,17 @@ test.describe('cinematic acts', () => {
     await expect.poll(() => page.evaluate(() => document.activeElement?.id), { timeout: 30_000 }).toBe('layer-auction-title');
   });
 
+  test("a band's label clicked with the mouse flies into its world (nothing covers the index)", async ({ page }) => {
+    test.setTimeout(150_000);
+    await page.goto(LOW);
+    await expect(page.locator('html')).toHaveAttribute('data-world', 'live', { timeout: 60_000 });
+    await scrollToAct(page, 'explode', 0.7);
+    await expect.poll(async () => (await world(page)).hub, { timeout: 30_000 }).toBe(true);
+    // A real click (hit-tested): the next act's section overlaps this one and must not take it.
+    await page.locator('.band-labels a[data-band-link="patent"]').click();
+    await expect.poll(async () => (await world(page)).act, { timeout: 30_000 }).toBe('patent');
+  });
+
   test('a band clicked in 3D flies into its world', async ({ page }) => {
     test.setTimeout(150_000);
     await page.goto(LOW);

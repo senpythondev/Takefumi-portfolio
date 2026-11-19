@@ -2184,13 +2184,20 @@ html[data-cinema] .act-surface > .act-frame {
   margin: -100svh calc(var(--pad-r) * -1) 0 calc(var(--pad-l) * -1);
 }
 
-/* Every later act: pinned for --len viewport heights, starting where the previous one ends. */
+/* Every later act: pinned for --len viewport heights, starting where the previous one ends. The
+   sections overlap by one screen, so a section takes no pointer events itself (it would cover the
+   previous act's labels and links); only its visible controls do. */
 html[data-cinema] :is(.act-explode, .act-world) {
   display: block;
   height: calc(var(--len) * 1svh + 100svh);
   margin-top: -100svh;
   padding: 0;
   border: 0;
+  pointer-events: none;
+}
+
+html[data-cinema] .finale-drawer {
+  pointer-events: auto;
 }
 
 html[data-cinema] .act-explode {

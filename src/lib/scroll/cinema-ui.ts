@@ -18,6 +18,14 @@ import { LAYER_IDS } from '@/content/layer-ids';
 import { scrollLive } from './store';
 import type { FrameListener } from './effects';
 
+/**
+ * After the browser has painted its response to the current interaction (the ripple): the flight
+ * (layout, Lenis, ScrollTrigger) then never delays that paint, which is what INP measures.
+ */
+function afterNextPaint(fn: () => void): void {
+  requestAnimationFrame(() => setTimeout(fn, 0));
+}
+
 const easeInOutCubic = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 const easeOutQuint = (t: number) => 1 - Math.pow(1 - t, 5);
 
@@ -69,7 +77,7 @@ export function startCinemaUi({ lenis, addFrameListener }: { lenis: Lenis; addFr
         // Stopped here so Lenis's own anchor scrolling does not take the flight over.
         e.preventDefault();
         e.stopPropagation();
-        flyTo(layer);
+        afterNextPaint(() => flyTo(layer));
         // The navigator's list on phones closes as its own click handler would have done.
         const toggle = document.querySelector<HTMLButtonElement>('.core-toggle[aria-expanded="true"]');
         if (link.closest('.core-nav')) toggle?.click();
@@ -78,14 +86,14 @@ export function startCinemaUi({ lenis, addFrameListener }: { lenis: Lenis; addFr
       if (link && (hash === '#summary' || hash === '#finale-drawer')) {
         e.preventDefault();
         e.stopPropagation();
-        flyTo('next', document.querySelector(hash));
+        afterNextPaint(() => flyTo('next', document.querySelector(hash)));
         return;
       }
       // A band chosen in 3D (the director's raycast over the split core).
       if (!link && scrollLive.hub && scrollLive.pointerBand >= 0 && !(e.target as Element | null)?.closest?.('a, button, input, label, summary')) {
         const layer = LAYER_IDS[scrollLive.pointerBand];
-        if (layer === 'next' && document.querySelector('[data-act="next"][data-on]')) flyTo('next', document.querySelector('#finale-drawer'));
-        else if (layer) flyTo(layer);
+        if (layer === 'next' && document.querySelector('[data-act="next"][data-on]')) afterNextPaint(() => flyTo('next', document.querySelector('#finale-drawer')));
+        else if (layer) afterNextPaint(() => flyTo(layer));
       }
     },
     { capture: true },
