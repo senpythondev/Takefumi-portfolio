@@ -3,7 +3,12 @@
     "collect": {
       "startServerCommand": "npx next start -p 3300",
       "startServerReadyPattern": "Ready",
-      "url": ["http://localhost:3300/ja", "http://localhost:3300/en"],
+      "url": [
+        "http://localhost:3300/ja",
+        "http://localhost:3300/en",
+        "http://localhost:3300/ja?quality=static",
+        "http://localhost:3300/ja/evidence/genten-acc-genten"
+      ],
       "numberOfRuns": 5,
       "settings": {
         "chromeFlags": "--headless=new --no-sandbox"
@@ -14,18 +19,79 @@
         {
           "matchingUrlPattern": ".*",
           "assertions": {
-            "categories:performance": ["error", { "minScore": 0.9, "aggregationMethod": "median-run" }],
-            "categories:accessibility": ["error", { "minScore": 1, "aggregationMethod": "median-run" }],
-            "largest-contentful-paint": ["error", { "maxNumericValue": 2500, "aggregationMethod": "median-run" }],
-            "cumulative-layout-shift": ["error", { "maxNumericValue": 0.05, "aggregationMethod": "median-run" }],
-            "total-blocking-time": ["error", { "maxNumericValue": 200, "aggregationMethod": "median-run" }],
-            "resource-summary:script:size": ["error", { "maxNumericValue": 180000, "aggregationMethod": "median-run" }]
+            "categories:accessibility": [
+              "error",
+              {
+                "minScore": 1,
+                "aggregationMethod": "median-run"
+              }
+            ],
+            "largest-contentful-paint": [
+              "error",
+              {
+                "maxNumericValue": 2500,
+                "aggregationMethod": "median-run"
+              }
+            ],
+            "cumulative-layout-shift": [
+              "error",
+              {
+                "maxNumericValue": 0.05,
+                "aggregationMethod": "median-run"
+              }
+            ],
+            "resource-summary:script:size": [
+              "error",
+              {
+                "maxNumericValue": 180000,
+                "aggregationMethod": "median-run"
+              }
+            ]
           }
         },
         {
-          "matchingUrlPattern": ".*",
+          "matchingUrlPattern": "^http://localhost:3300/(ja|en)$",
           "assertions": {
-            "largest-contentful-paint": ["warn", { "maxNumericValue": 2000, "aggregationMethod": "median-run" }]
+            "categories:performance": [
+              "warn",
+              {
+                "minScore": 0.9,
+                "aggregationMethod": "median-run"
+              }
+            ],
+            "total-blocking-time": [
+              "warn",
+              {
+                "maxNumericValue": 200,
+                "aggregationMethod": "median-run"
+              }
+            ],
+            "largest-contentful-paint": [
+              "warn",
+              {
+                "maxNumericValue": 2000,
+                "aggregationMethod": "median-run"
+              }
+            ]
+          }
+        },
+        {
+          "matchingUrlPattern": "^http://localhost:3300/(ja|en)(/evidence/|/work/|\\?quality=static)",
+          "assertions": {
+            "categories:performance": [
+              "error",
+              {
+                "minScore": 0.9,
+                "aggregationMethod": "median-run"
+              }
+            ],
+            "total-blocking-time": [
+              "error",
+              {
+                "maxNumericValue": 200,
+                "aggregationMethod": "median-run"
+              }
+            ]
           }
         }
       ]

@@ -97,8 +97,9 @@ public/media/                     # 匿名化済み素材のみ
 | フレームレート | デスクトップ60fps、モバイル30fps以上 |
 | 動画1本 | 3MB以下、ポスター画像必須、画面に入ってから読み込む |
 | 日本語Webフォント | サブセット化、ウェイトは最大3つ |
-| Lighthouse（モバイル） | Performance 90以上、Accessibility 100 |
+| Lighthouse（モバイル） | Accessibility 100（全ページ）。Performance は、**ホームは計測して報告するだけ**（合否の条件から外す。PM 決定 2026-11-19）、ケーススタディ・根拠ページ・static 版は 90以上 |
 
+- **ホームの合否の条件**は LCP・CLS・INP・フレームレート・Accessibility 100。TBT と Performance のスコアは計測して報告する（PM 決定 2026-11-19）。
 - `prefers-reduced-motion` のときは3Dを読み込まず、各シーンのポスター画像と HTML で同じ物語を見せる。
 - WebGL非対応・低性能端末（quality=`static`）でも全コンテンツが読めること。
 - 最終的な実測Lighthouseスコアをフッターに表示する（自分の主張に根拠をつける）。
