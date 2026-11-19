@@ -357,7 +357,7 @@ html.lenis body {
   margin-top: 2rem;
 }
 
-:is(.work-body, .finale-drawer) h3 {
+:where(.work-body, .finale-drawer) :is(h2, h3) {
   margin: 0 0 0.75rem;
   font-size: 1rem;
   font-weight: 700;
@@ -727,12 +727,12 @@ html.lenis body {
   background: var(--color-ground);
 }
 
-.project h4 {
+.project-title {
   margin: 0 0 0.5rem;
   font-size: 1.0625rem;
 }
 
-.project h5 {
+.project-sub {
   margin: 1rem 0 0.4rem;
   font-size: 0.875rem;
   color: var(--color-ink-muted);

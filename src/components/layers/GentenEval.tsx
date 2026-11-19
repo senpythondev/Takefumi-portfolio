@@ -11,13 +11,14 @@ type GentenBlock = Extract<Block, { kind: 'genten-eval' }>;
  * Per-question data comes straight from docs/facts/genten-eval.json — nothing is invented.
  * Phase 5 animates this; the table stays as the accessible fallback.
  */
-export async function GentenEval({ block, ctx, headingId }: { block: GentenBlock; ctx: RichContext; headingId: string }) {
+export async function GentenEval({ block, ctx, headingId, level = 3 }: { block: GentenBlock; ctx: RichContext; headingId: string; level?: number }) {
+  const Heading = level <= 2 ? 'h2' : 'h3';
   const t = await getTranslations('genten');
   const grid = gentenGrid(gentenEval);
 
   return (
     <div className="genten-eval">
-      <h3 id={headingId}>{block.heading}</h3>
+      <Heading id={headingId}>{block.heading}</Heading>
       <p>
         <RichText text={block.intro} ctx={ctx} />
       </p>

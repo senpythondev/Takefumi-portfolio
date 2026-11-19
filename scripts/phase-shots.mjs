@@ -44,6 +44,8 @@ for (const size of sizes.length ? sizes : ['1440x900', '390x844']) {
   page.on('pageerror', (e) => errors.push(e.message));
   await page.goto(base + path);
   await page.waitForFunction(() => document.documentElement.dataset.world === 'live', null, { timeout: 180000 }).catch(() => errors.push('world not live'));
+  // The debug HUD (needed for the state log) is hidden in the pictures.
+  await page.addStyleTag({ content: '.debug-hud { display: none !important; } nextjs-portal { display: none !important; }' });
   await page.waitForTimeout(2000);
   await page.screenshot({ path: `${out}/00-hero-${size}.png` });
   let n = 1;

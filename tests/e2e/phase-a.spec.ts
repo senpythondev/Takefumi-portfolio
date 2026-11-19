@@ -1,3 +1,4 @@
+import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import { contentEn } from '../../src/content/layers.en.ts';
 import { contentJa } from '../../src/content/layers.ja.ts';
@@ -51,6 +52,18 @@ for (const locale of ['ja', 'en'] as const) {
     await context.close();
   });
 }
+
+test('case studies: no accessibility violations (WCAG 2.2 AA, heading order included)', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name === 'reduced-motion', 'static HTML: desktop and mobile are enough');
+  test.setTimeout(120_000);
+  for (const locale of ['ja', 'en']) {
+    for (const id of WORK) {
+      await page.goto(`/${locale}/work/${id}`);
+      const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa', 'best-practice']).analyze();
+      expect(results.violations.map((v) => `${v.id}: ${v.nodes.length}`), `/${locale}/work/${id}`).toEqual([]);
+    }
+  }
+});
 
 test('the home keeps only the acts: no long panels, small DOM', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'desktop', 'HTML only: once is enough');

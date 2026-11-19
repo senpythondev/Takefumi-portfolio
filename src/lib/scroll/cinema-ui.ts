@@ -224,6 +224,7 @@ export function startCinemaUi({ lenis, addFrameListener }: { lenis: Lenis; addFr
   });
   document.documentElement.addEventListener('pointerleave', () => (hidden = true));
   const bedrock = document.querySelector<HTMLElement>('[data-act="bedrock"]');
+  let pointerShown = false;
 
   const removeFrame = addFrameListener(() => {
     // Count-up: 1.2 s, eased out long (§8.1), ending on the real text.
@@ -251,10 +252,13 @@ export function startCinemaUi({ lenis, addFrameListener }: { lenis: Lenis; addFr
       (cursor.querySelector('.cursor-label') as HTMLElement).textContent = label;
     }
     const lantern = window.scrollY < window.innerHeight * 0.8 || (bedrock?.hasAttribute('data-main') ?? false);
-    cursor.toggleAttribute('data-hidden', hidden);
-    cursor.toggleAttribute('data-lantern', lantern);
-    cursor.toggleAttribute('data-label', !!label);
-    document.body.style.cursor = band ? 'pointer' : '';
+    if (cursor.hasAttribute('data-hidden') !== hidden) cursor.toggleAttribute('data-hidden', hidden);
+    if (cursor.hasAttribute('data-lantern') !== lantern) cursor.toggleAttribute('data-lantern', lantern);
+    if (cursor.hasAttribute('data-label') !== !!label) cursor.toggleAttribute('data-label', !!label);
+    if (band !== pointerShown) {
+      pointerShown = band;
+      document.body.style.cursor = band ? 'pointer' : '';
+    }
     cursor.style.transform = `translate3d(${pos.x.toFixed(1)}px, ${pos.y.toFixed(1)}px, 0)`;
     cursor.style.setProperty('--s', pos.s.toFixed(3));
   });

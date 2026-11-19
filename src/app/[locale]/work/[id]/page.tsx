@@ -118,7 +118,7 @@ export default async function WorkPage({ params }: PageProps<'/[locale]/work/[id
           </header>
           <div className="work-body">
             {layer.blocks.map((block, i) => (
-              <BlockView key={i} block={block} ctx={ctx} id={`work-b${i}`} />
+              <BlockView key={i} block={block} ctx={ctx} id={`work-b${i}`} level={2} />
             ))}
           </div>
         </article>

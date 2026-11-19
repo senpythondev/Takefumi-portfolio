@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { getTranslations } from 'next-intl/server';
 import type { Block } from '@/content';
 import { LINKS } from '@/content/links';
@@ -5,7 +6,19 @@ import { EmailReveal } from '@/components/contact/EmailReveal';
 import { GentenEval } from './GentenEval';
 import { RichText, type RichContext } from './RichText';
 
-export async function BlockView({ block, ctx, id }: { block: Block; ctx: RichContext; id: string }) {
+type Level = 2 | 3 | 4 | 5 | 6;
+
+/** A heading at a level relative to where the blocks sit (a case study's blocks start at h2, the finale's at h3). */
+function H({ level, children, id, className }: { level: number; children: ReactNode; id?: string; className?: string }) {
+  const Tag = `h${Math.min(6, Math.max(2, level)) as Level}` as const;
+  return (
+    <Tag id={id} className={className}>
+      {children}
+    </Tag>
+  );
+}
+
+export async function BlockView({ block, ctx, id, level = 3 }: { block: Block; ctx: RichContext; id: string; level?: number }) {
   switch (block.kind) {
     case 'paragraph':
       return (
@@ -17,7 +30,7 @@ export async function BlockView({ block, ctx, id }: { block: Block; ctx: RichCon
     case 'list':
       return (
         <div className="block-list">
-          {block.heading ? <h3>{block.heading}</h3> : null}
+          {block.heading ? <H level={level}>{block.heading}</H> : null}
           <ul>
             {block.items.map((item, i) => (
               <li key={i}>
@@ -31,7 +44,7 @@ export async function BlockView({ block, ctx, id }: { block: Block; ctx: RichCon
     case 'tech':
       return (
         <div className="block-tech">
-          <h3>{block.heading}</h3>
+          <H level={level}>{block.heading}</H>
           <ul className="tech-list">
             {block.items.map((item) => (
               <li key={item}>{item}</li>
@@ -85,7 +98,7 @@ export async function BlockView({ block, ctx, id }: { block: Block; ctx: RichCon
     case 'timeline':
       return (
         <div className="block-timeline">
-          <h3>{block.heading}</h3>
+          <H level={level}>{block.heading}</H>
           <ol>
             {block.items.map((item, i) => (
               <li key={i}>
@@ -101,12 +114,14 @@ export async function BlockView({ block, ctx, id }: { block: Block; ctx: RichCon
       const t = await getTranslations('projects');
       return (
         <div className="block-projects">
-          <h3>{block.heading}</h3>
+          <H level={level}>{block.heading}</H>
           <ol className="projects">
             {block.projects.map((p) => (
               <li key={p.id} className="project" data-project={p.id}>
                 <article aria-labelledby={`project-${p.id}`}>
-                  <h4 id={`project-${p.id}`}>{p.title}</h4>
+                  <H level={level + 1} id={`project-${p.id}`} className="project-title">
+                    {p.title}
+                  </H>
                   <dl className="project-facts">
                     <div>
                       <dt>{t('period')}</dt>
@@ -130,7 +145,9 @@ export async function BlockView({ block, ctx, id }: { block: Block; ctx: RichCon
                   <p>{p.summary}</p>
                   {p.results.length > 0 ? (
                     <>
-                      <h5>{t('results')}</h5>
+                      <H level={level + 2} className="project-sub">
+                        {t('results')}
+                      </H>
                       <ul className="project-results">
                         {p.results.map((r, i) => (
                           <li key={i}>
@@ -140,7 +157,9 @@ export async function BlockView({ block, ctx, id }: { block: Block; ctx: RichCon
                       </ul>
                     </>
                   ) : null}
-                  <h5>{t('tech')}</h5>
+                  <H level={level + 2} className="project-sub">
+                    {t('tech')}
+                  </H>
                   <ul className="tech-list">
                     {p.tech.map((x) => (
                       <li key={x}>{x}</li>
@@ -157,7 +176,7 @@ export async function BlockView({ block, ctx, id }: { block: Block; ctx: RichCon
     case 'skills':
       return (
         <div className="block-skills">
-          <h3>{block.heading}</h3>
+          <H level={level}>{block.heading}</H>
           <dl className="skills">
             {block.levels.map((level) => (
               <div key={level.grade} data-grade={level.grade}>
@@ -177,7 +196,7 @@ export async function BlockView({ block, ctx, id }: { block: Block; ctx: RichCon
       );
 
     case 'genten-eval':
-      return <GentenEval block={block} ctx={ctx} headingId={`${id}-heading`} />;
+      return <GentenEval block={block} ctx={ctx} headingId={`${id}-heading`} level={level} />;
 
     case 'citation': {
       const t = await getTranslations('links');
@@ -216,7 +235,7 @@ export async function BlockView({ block, ctx, id }: { block: Block; ctx: RichCon
       const t = await getTranslations('contact');
       return (
         <div className="block-contact">
-          <h3>{block.heading}</h3>
+          <H level={level}>{block.heading}</H>
           <EmailReveal labels={{ copy: t('copy'), copied: t('copied'), noscript: t('noscript') }} />
         </div>
       );
@@ -226,7 +245,7 @@ export async function BlockView({ block, ctx, id }: { block: Block; ctx: RichCon
       const t = await getTranslations('links');
       return (
         <div className="block-links">
-          <h3>{block.heading}</h3>
+          <H level={level}>{block.heading}</H>
           <ul className="links">
             {block.links.map((l) => (
               <li key={l.key}>

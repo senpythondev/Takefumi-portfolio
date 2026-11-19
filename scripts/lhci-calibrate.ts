@@ -16,7 +16,16 @@ const REFERENCE = 1750;
 const PORT = 3301;
 const URL = `http://localhost:${PORT}/ja/evidence/genten-acc-genten`;
 
-const server = spawn('npx', ['next', 'start', '-p', String(PORT)], { stdio: ['ignore', 'pipe', 'pipe'] });
+// Its own process group, so the whole server (npx → next → the server process) can be stopped:
+// a surviving grandchild kept the pipe open and this script never exited (CI run 44561483841).
+const server = spawn('npx', ['next', 'start', '-p', String(PORT)], { stdio: ['ignore', 'pipe', 'pipe'], detached: true });
+const stop = () => {
+  try {
+    if (server.pid) process.kill(-server.pid, 'SIGTERM');
+  } catch {
+    // already gone
+  }
+};
 await new Promise<void>((resolve, reject) => {
   const timer = setTimeout(() => reject(new Error('server did not start')), 60_000);
   server.stdout.on('data', (d: Buffer) => {
@@ -39,7 +48,9 @@ try {
     if (index) samples.push(index);
   }
 } finally {
-  server.kill();
+  stop();
+  server.stdout.destroy();
+  server.stderr.destroy();
 }
 
 if (samples.length === 0) throw new Error('no benchmarkIndex measured');
@@ -49,3 +60,4 @@ const multiplier = Math.round(Math.min(10, Math.max(2, (4 * benchmarkIndex) / RE
 mkdirSync('.lighthouseci', { recursive: true });
 writeFileSync('.lighthouseci/cpu.json', JSON.stringify({ benchmarkIndex, samples, multiplier, reference: REFERENCE, measuredAt: new Date().toISOString() }, null, 2));
 console.log(`benchmarkIndex ${benchmarkIndex} (samples ${samples.join(', ')}) → cpuSlowdownMultiplier ${multiplier}`);
+process.exit(0);
