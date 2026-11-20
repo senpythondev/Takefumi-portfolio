@@ -2,12 +2,13 @@
 import localFont from 'next/font/local';
 
 // next/font names each family after its constant: distinctive names, so no installed font can match.
-// Only the hero headline's small subset is preloaded (PM decision 2026-11-20); the other faces load
-// when the CSS asks for them and swap in over a size-adjusted fallback (CLS stays within the budget).
+// Only the hero's two small subsets (headline, lead paragraph) are preloaded (PM decision 2026-11-20,
+// and the CLS found on CI the same day); the other faces load when the CSS asks for them and swap in.
 export const gtHero = localFont({ src: [{ path: './a/hero-600.woff2', weight: '600', style: 'normal' }], variable: '--font-face-hero', display: 'optional', preload: true, adjustFontFallback: 'Times New Roman' });
+export const gtLead = localFont({ src: [{ path: './a/lead-400.woff2', weight: '400', style: 'normal' }], variable: '--font-face-lead', display: 'optional', preload: true, adjustFontFallback: 'Arial' });
 export const gtSans = localFont({ src: [{ path: './a/sans-400.woff2', weight: '400', style: 'normal' }, { path: './a/sans-600.woff2', weight: '600', style: 'normal' }], variable: '--font-face-sans', display: 'swap', preload: false, adjustFontFallback: 'Arial' });
 export const gtHeading = localFont({ src: [{ path: './a/heading-600.woff2', weight: '600', style: 'normal' }], variable: '--font-face-heading', display: 'swap', preload: false, adjustFontFallback: 'Times New Roman' });
 export const gtMono = localFont({ src: [{ path: './a/mono-400.woff2', weight: '400', style: 'normal' }, { path: './a/mono-600.woff2', weight: '600', style: 'normal' }], variable: '--font-face-mono', display: 'swap', preload: false, adjustFontFallback: 'Arial' });
 
 /** CSS variables for <html>: --font-face-hero / -sans / -heading / -mono (used by the stacks in tokens.ts). */
-export const fontVariables = [gtHero, gtSans, gtHeading, gtMono].flatMap((f) => (f ? [f.variable] : [])).join(' ');
+export const fontVariables = [gtHero, gtLead, gtSans, gtHeading, gtMono].flatMap((f) => (f ? [f.variable] : [])).join(' ');

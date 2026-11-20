@@ -30,6 +30,23 @@
           "missing": ""
         },
         {
+          "file": "lead-400",
+          "role": "lead",
+          "weight": 400,
+          "source": "ibmplexsansjp/IBMPlexSansJP-Regular.ttf",
+          "licence": "ibmplexsansjp",
+          "rename": {
+            "family": "GroundTruth Sans JP",
+            "style": "Regular",
+            "postscript": "GroundTruthSansJP-Regular"
+          },
+          "sourceSha256": "372f8bba95f386856ae435dc0e69f08db1cac29bed513d99171a0ae2d307ba2a",
+          "bytes": 17448,
+          "glyphs": 271,
+          "covered": " ,.FIabcdefghikmnopqrstuv—、。あかしすつてでのまらるをイエクットドバフラロン・一件原因定実当手打担拠根気測特用義要貫通運",
+          "missing": ""
+        },
+        {
           "file": "sans-400",
           "role": "sans",
           "weight": 400,

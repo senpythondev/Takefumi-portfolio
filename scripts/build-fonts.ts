@@ -28,7 +28,7 @@ const VENV = join(ROOT, '.cache/fonts-venv');
 const OUT = join(ROOT, 'src/fonts');
 const MANIFEST = join(OUT, 'manifest.json');
 
-type Role = 'sans' | 'heading' | 'mono' | 'hero';
+type Role = 'sans' | 'heading' | 'mono' | 'hero' | 'lead';
 type Face = { file: string; role: Role; weight: number; source: string; licence: string; rename?: { family: string; style: string; postscript: string } };
 type FontSet = { label: string; faces: Face[] };
 
@@ -59,6 +59,10 @@ export const SETS: Record<string, FontSet> = {
       // The hero headline alone, as its own small file: the only face that is preloaded (PM decision
       // 2026-11-20 — the preloads of every face made Lighthouse's simulated LCP wait for the fonts).
       { file: 'hero-600', role: 'hero', weight: 600, source: 'shipporiminchob1/ShipporiMinchoB1-SemiBold.ttf', licence: 'shipporiminchob1' },
+      // The hero's lead paragraph (the LCP element), as its own small file, preloaded like the headline.
+      // Without it the paragraph re-wrapped when the full body face swapped in: CLS 0.054 on CI
+      // (run 44703764469), over the 0.05 budget. With `optional` it never changes after the first paint.
+      { ...plexSans(400, 'Regular', 'IBMPlexSansJP-Regular.ttf'), file: 'lead-400', role: 'lead' },
       plexSans(400, 'Regular', 'IBMPlexSansJP-Regular.ttf'),
       plexSans(600, 'SemiBold', 'IBMPlexSansJP-SemiBold.ttf'),
       plexMono(400, 'Regular', 'IBMPlexMono-Regular.ttf'),
@@ -118,6 +122,12 @@ function headingText(): string {
 function heroText(): string {
   const title = (c: { layers: readonly { id: string; title: string }[] }) => c.layers.find((l) => l.id === 'surface')?.title ?? '';
   return unique(title(contentJa) + title(contentEn));
+}
+
+/** The hero's lead paragraph (the surface layer's lead, both languages): the other small preloaded face. */
+function leadText(): string {
+  const lead = (c: { layers: readonly { id: string; lead: string }[] }) => c.layers.find((l) => l.id === 'surface')?.lead ?? '';
+  return unique(lead(contentJa) + lead(contentEn));
 }
 
 /** Monospace is for numbers and data: Latin and symbols only. Japanese falls through to the sans face. */
@@ -206,15 +216,16 @@ function writeActive(id: string, display: 'swap' | 'optional'): void {
 import localFont from 'next/font/local';
 
 // next/font names each family after its constant: distinctive names, so no installed font can match.
-// Only the hero headline's small subset is preloaded (PM decision 2026-11-20); the other faces load
-// when the CSS asks for them and swap in over a size-adjusted fallback (CLS stays within the budget).
+// Only the hero's two small subsets (headline, lead paragraph) are preloaded (PM decision 2026-11-20,
+// and the CLS found on CI the same day); the other faces load when the CSS asks for them and swap in.
 ${decl('gtHero', 'hero', true, 'Times New Roman')}
+${decl('gtLead', 'lead', true, 'Arial')}
 ${decl('gtSans', 'sans', false, 'Arial')}
 ${decl('gtHeading', 'heading', false, 'Times New Roman')}
 ${decl('gtMono', 'mono', false, 'Arial')}
 
 /** CSS variables for <html>: --font-face-hero / -sans / -heading / -mono (used by the stacks in tokens.ts). */
-export const fontVariables = [gtHero, gtSans, gtHeading, gtMono].flatMap((f) => (f ? [f.variable] : [])).join(' ');
+export const fontVariables = [gtHero, gtLead, gtSans, gtHeading, gtMono].flatMap((f) => (f ? [f.variable] : [])).join(' ');
 `;
   writeFileSync(join(OUT, 'active.ts'), generated);
 }
@@ -239,7 +250,7 @@ function check(texts: Record<Role, string>): void {
 
 const args = process.argv.slice(2);
 const body = bodyText();
-const texts: Record<Role, string> = { sans: body, heading: headingText(), mono: monoText(body), hero: heroText() };
+const texts: Record<Role, string> = { sans: body, heading: headingText(), mono: monoText(body), hero: heroText(), lead: leadText() };
 
 if (args.includes('--check')) {
   check(texts);

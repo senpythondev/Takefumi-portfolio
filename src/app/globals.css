@@ -510,6 +510,9 @@ html.lenis body {
 
 .hero-lead {
   margin: 0 0 2rem;
+  /* Its own small preloaded face first (src/fonts/active.ts): the paragraph is the LCP element and
+     must not re-wrap when the full body face arrives later (CLS). */
+  font-family: var(--font-face-lead, var(--font-face-sans, system-ui)), var(--font-sans);
   font-size: 1.0625rem;
   color: var(--color-ink);
 }
