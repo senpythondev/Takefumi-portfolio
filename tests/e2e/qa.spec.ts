@@ -188,3 +188,20 @@ test('link previews and crawlers: OGP and X cards with a real image, Person data
   await expect(page.locator('section[lang="ja"] h1')).toBeVisible();
   await expect(page.locator('section[lang="en"] a')).toHaveAttribute('href', '/en');
 });
+
+test('the three counts written in interface labels match what they count', async ({ page }) => {
+  // Numbers in the content are checked against the fact sheet by `npm run validate`; these three sit
+  // in labels (messages/*.json) and are checked here against the lists they name.
+  for (const locale of LOCALES) {
+    await page.goto(`/${locale}?quality=static`);
+    const counted = async (list: string, items: string) => {
+      const label = (await page.locator(list).getAttribute('aria-label')) ?? '';
+      const words: Record<string, number> = { four: 4, eight: 8 };
+      const n = /\d+/.exec(label)?.[0] ?? Object.entries(words).find(([w]) => label.toLowerCase().includes(w))?.[1];
+      expect(Number(n), `${locale} ${list}: "${label}"`).toBe(await page.locator(`${list} ${items}`).count());
+    };
+    await counted('section[data-act="genten"] ol.gates', '> li');
+    await counted('section[data-act="patent"] ol.stations', '> li');
+    await counted('section[data-act="deep"] ol.deep-cards', '> li');
+  }
+});

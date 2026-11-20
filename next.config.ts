@@ -28,6 +28,8 @@ const launched = process.env.SITE_LAUNCHED === 'true';
  * - `img-src` adds data: and blob: (generated textures, the watermark PDF's page image);
  *   `worker-src` adds blob: (pdf-lib and three.js helpers).
  * - Vercel's preview toolbar is not allowed for: it is not part of the site.
+ * - No `upgrade-insecure-requests`: every URL is same-origin and HSTS already forces HTTPS, and with
+ *   it WebKit refused the site's own scripts on plain-http localhost (CI run 44757326618).
  */
 const csp = [
   "default-src 'self'",
@@ -42,7 +44,6 @@ const csp = [
   "base-uri 'self'",
   "form-action 'self'",
   "frame-ancestors 'none'",
-  'upgrade-insecure-requests',
 ].join('; ');
 
 const securityHeaders = [

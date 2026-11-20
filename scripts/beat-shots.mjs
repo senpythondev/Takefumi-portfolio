@@ -2,7 +2,8 @@
 // §12–§13) — for every section its title card, each of the four beats and the held result — with
 // the 3D live at a chosen tier. One page load per viewport.
 //   node scripts/beat-shots.mjs <baseUrl> <outDir> [WxH ...]
-//   env: SHOT_PATH (default /ja?quality=high&debug=1), SHOT_ACTS (comma list of act ids)
+//   env: SHOT_PATH (default /ja?quality=high&debug=1), SHOT_ACTS (comma list of act ids),
+//        SHOT_TAG (added to every file name, e.g. the language)
 // The output folder is for review only (docs/screenshots/ is not committed).
 import { mkdirSync } from 'node:fs';
 import { chromium } from '@playwright/test';
@@ -10,6 +11,7 @@ import { chromium } from '@playwright/test';
 const [base = 'http://localhost:3000', out = 'docs/screenshots/phase-a3', ...sizes] = process.argv.slice(2);
 const path = process.env.SHOT_PATH ?? '/ja?quality=high&debug=1';
 const only = process.env.SHOT_ACTS ? process.env.SHOT_ACTS.split(',') : null;
+const tag = process.env.SHOT_TAG ? `-${process.env.SHOT_TAG}` : '';
 mkdirSync(out, { recursive: true });
 
 // Act lengths, pauses and where beats ②–④ begin (src/content/acts.ts).
@@ -38,15 +40,16 @@ for (const size of sizes.length ? sizes : ['1440x900', '390x844']) {
   await page.goto(base + path);
   await page.waitForFunction(() => document.documentElement.dataset.world === 'live', null, { timeout: 180000 }).catch(() => errors.push('world not live'));
   await page.addStyleTag({ content: '.debug-hud { display: none !important; } nextjs-portal { display: none !important; }' });
+  await page.evaluate(() => document.fonts.ready);
   await page.waitForTimeout(4000);
   const shot = async (name) => {
-    await page.screenshot({ path: `${out}/${name}-${size}.png`, timeout: 180000 });
+    await page.screenshot({ path: `${out}/${name}${tag}-${size}.png`, timeout: 180000 });
     const state = await page.evaluate(() => {
       const w = window.__world ?? {};
       const s = document.querySelector(`[data-act="${w.act}"]`);
       return JSON.stringify({ act: w.act, p: Math.round((w.p ?? 0) * 1000) / 1000, beat: s?.dataset.beat, card: s?.hasAttribute('data-card'), result: s?.hasAttribute('data-result') });
     });
-    console.log(`${name}-${size}`, state);
+    console.log(`${name}${tag}-${size}`, state);
   };
   // The picture has come to rest: the story position has not changed for a while.
   const settle = async (min = 1500) => {
@@ -75,7 +78,17 @@ for (const size of sizes.length ? sizes : ['1440x900', '390x844']) {
       await page.mouse.move(width * 0.62, height * 0.42, { steps: 12 });
       await page.waitForTimeout(1800);
     }
-    await shot('00-hero-stardust');
+    await shot('00-hero');
+    // Act 1: the core pulled out of the borehole, then on its side with the headline; act 2: the index.
+    await goto('surface', 0.55, 200);
+    await settle(1500);
+    await shot('00-surface-1-extraction');
+    await goto('surface', 0.97, 200);
+    await settle(1500);
+    await shot('00-surface-2-core');
+    await goto('explode', 0.65, 150);
+    await settle(1500);
+    await shot('00-index');
   }
   let n = 1;
   for (const [id, [len, , cuts]] of Object.entries(ACTS)) {
