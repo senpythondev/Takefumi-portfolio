@@ -10,6 +10,7 @@ import { applyLength, loadTune, tune, TUNE_DEFAULTS, TUNE_KEY, TUNE_RANGES, type
 const LABELS: Record<keyof Tune, [label: string, unit: string, hint: string]> = {
   length: ['全体の長さ', '倍', '各幕のスクロール量（元の長さに対する倍率）'],
   wheel: ['1回のホイールで進む距離', '倍', 'ブラウザの標準に対する倍率。小さいほど少しずつ進む（慣性なし）'],
+  glide: ['ホイールのやわらかさ', '', '小さいほど、ページがゆっくり追いつく（1＝遅れなし）'],
   smooth: ['追従のなめらかさ', '秒', '絵がスクロールに追いつくまでの時間（0＝なし）'],
   stars: ['星屑の量', '倍', '粒の数（1＝既定）'],
   starLight: ['星屑の明るさ', '倍', '粒の明るさ（1＝既定）'],

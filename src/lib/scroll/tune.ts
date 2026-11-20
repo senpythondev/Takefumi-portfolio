@@ -13,6 +13,12 @@ export type Tune = {
   length: number;
   /** Distance of one wheel step on desktop, as a multiple of the browser's own (no inertia: the page stops with the wheel). */
   wheel: number;
+  /**
+   * How softly the page itself follows the wheel on desktop (Lenis's lerp at 60 fps): 1 = each step is
+   * applied at once (stiff), smaller = the page glides into place. 0.2 comes to rest in about a quarter
+   * of a second — a slight delay, not an inertia that carries on (owner, 2026-11-20: "too stiff").
+   */
+  glide: number;
   /** Seconds the picture is smoothed behind the scroll (63 % of a step; 0 = none). Only to take out judder. */
   smooth: number;
   /** Stardust (§11.1): how many grains (1 = the default amount), how bright, how far the pointer draws them (fraction of the width). */
@@ -21,10 +27,11 @@ export type Tune = {
   starPull: number;
 };
 
-export const TUNE_DEFAULTS: Readonly<Tune> = { length: 1.5, wheel: 0.5, smooth: 0.12, stars: 1, starLight: 1, starPull: 0.025 };
+export const TUNE_DEFAULTS: Readonly<Tune> = { length: 1.5, wheel: 0.5, glide: 0.2, smooth: 0.16, stars: 1, starLight: 1, starPull: 0.025 };
 export const TUNE_RANGES: Readonly<Record<keyof Tune, readonly [min: number, max: number, step: number]>> = {
   length: [1, 2.5, 0.05],
   wheel: [0.2, 1, 0.05],
+  glide: [0.08, 1, 0.02],
   smooth: [0, 0.3, 0.01],
   stars: [0, 2, 0.05],
   starLight: [0, 2, 0.05],

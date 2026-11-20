@@ -317,7 +317,7 @@ test.describe('with the 3D', () => {
     await startStage(page);
     const panel = page.locator('.scroll-panel');
     await expect(panel).toBeVisible();
-    await expect(panel.locator('input[type="range"]')).toHaveCount(6);
+    await expect(panel.locator('input[type="range"]')).toHaveCount(7);
     const height = () => page.locator('section[data-act="genten"]').evaluate((el) => (el as HTMLElement).offsetHeight / window.innerHeight);
     const before = await height();
     await panel.locator('input[data-tune="length"]').fill('2');
