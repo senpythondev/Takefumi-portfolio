@@ -85,7 +85,8 @@ test.describe('cinematic acts', () => {
   });
 
   test('every section has its world: the camera and the 3D keep going to the end', async ({ page }) => {
-    test.setTimeout(420_000);
+    // v2.4: the picture tells each act's beats at its own tempo, so it reaches the next act later than the scroll.
+    test.setTimeout(900_000);
     await page.goto(LOW);
     await expect(page.locator('html')).toHaveAttribute('data-world', 'live', { timeout: 60_000 });
     for (const id of WORLD_ACTS) {
@@ -94,7 +95,7 @@ test.describe('cinematic acts', () => {
         .poll(async () => {
           const w = await world(page);
           return w.act === id && (id === 'next' ? !!w.worlds?.includes('next') : !!w.inWorld);
-        }, { timeout: 60_000, message: `${id}: its world is on screen` })
+        }, { timeout: 150_000, message: `${id}: its world is on screen` })
         .toBe(true);
       const section = page.locator(`section[data-act="${id}"]`);
       await expect(section).toHaveAttribute('data-on', '');

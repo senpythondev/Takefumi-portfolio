@@ -70,7 +70,8 @@
   "footer": {
     "builtWith": "このサイトはHTMLだけでも全文が読めるように作っています。",
     "rights": "© 2026 Takefumi Ono",
-    "kanjiCredit": "漢字の書き順データ：KanjiVG（© Ulrich Apel、CC BY-SA 3.0）"
+    "kanjiCredit": "漢字の書き順データ：",
+    "kanjiCreditRest": "（© Ulrich Apel、CC BY-SA 3.0）"
   },
   "cinema": {
     "drilling": "掘削中",
@@ -132,6 +133,27 @@
     "samplePageAlt": "架空の見本文書の{n}ページ目",
     "todayLayer": "今日の層 — あなたが訪れた今日も、地層になる",
     "sound": "音",
-    "soundLabel": "音を鳴らす（既定はオフ）"
+    "soundLabel": "音を鳴らす（既定はオフ）",
+    "beats": "この案件の流れ",
+    "beatNames": [
+      "問題",
+      "調査",
+      "対処",
+      "結果"
+    ],
+    "compareGroups": [
+      "正答率",
+      "正答し、出典も示せた割合"
+    ],
+    "before": "改修前",
+    "after": "改修後",
+    "beforeErrors": "エラー発生",
+    "plan": "改善計画",
+    "planOrder": "緊急度の高い順",
+    "planStage": "第{n}段階",
+    "ledger": "掘り出した成果",
+    "recorded": "記録",
+    "hintScroll": "スクロールで掘り進む",
+    "hintBand": "帯を選んで飛ぶ"
   }
 }

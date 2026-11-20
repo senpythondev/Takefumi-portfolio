@@ -14,6 +14,8 @@ export const LINKS = {
   devProfile: 'https://dev.to/kaze001',
   /** Shown only when NEXT_PUBLIC_ENABLE_PEGASUS_LINK === 'true' (client's consent pending). */
   pegasus: 'https://pegasus-job.com',
+  /** Source of the kanji stroke-order data (CC BY-SA 3.0): the credit in the footer links here (PM, STORYBOARD v2.4). */
+  kanjivg: 'https://kanjivg.tagaini.net/',
 } as const;
 
 export type LinkKeyName = keyof typeof LINKS;

@@ -230,13 +230,13 @@ export default function Director({ ids, quality }: Props) {
   const run = useRef<ReturnType<typeof createDirectorRun> | null>(null);
 
   useEffect(() => {
-    const r = createDirectorRun({ wall, wallMaterial, wallMesh, ids, bands, dust, sparks, camera, outer, inner, bandMeshes, dissolve, worlds, scene, tunnel, thread });
+    const r = createDirectorRun({ wall, wallMaterial, wallMesh, ids, bands, dust, sparks, camera, outer, inner, bandMeshes, dissolve, worlds, scene, tunnel, thread, tier: quality });
     run.current = r;
     return () => {
       r.dispose();
       run.current = null;
     };
-  }, [wall, wallMaterial, ids, bands, dust, sparks, camera, dissolve, worlds, scene, tunnel, thread]);
+  }, [wall, wallMaterial, ids, bands, dust, sparks, camera, dissolve, worlds, scene, tunnel, thread, quality]);
 
   useEffect(() => {
     // After the first frames: textures (medium/high), then the lower tiers' shaders.

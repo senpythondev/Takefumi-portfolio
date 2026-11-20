@@ -1,4 +1,6 @@
+import type { CSSProperties } from 'react';
 import { getTranslations } from 'next-intl/server';
+import { percentOf } from '@/content/results';
 import type { Block, Layer, Metric, SiteContent } from '@/content';
 import { gentenGrid } from '@/content/facts';
 import { LINKS } from '@/content/links';
@@ -206,6 +208,12 @@ export async function DeepExtras({ layer, ctx }: { layer: Layer; ctx: RichContex
             {metric ? (
               <span className="deep-card-figure">
                 <MetricLink metric={metric} labels={ctx.labels} locale={ctx.locale} compact />
+                {/* §13.1: the improvement as a small meter (a range is hatched), from the metric's own value. */}
+                {percentOf(metric.display) ? (
+                  <span className="deep-meter" aria-hidden="true" style={{ '--from': percentOf(metric.display)?.[0], '--to': percentOf(metric.display)?.[1] } as CSSProperties}>
+                    <i />
+                  </span>
+                ) : null}
                 <span className="act-metric-caption">{metric.label}</span>
               </span>
             ) : null}

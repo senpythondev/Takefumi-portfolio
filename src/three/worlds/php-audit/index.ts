@@ -282,6 +282,24 @@ export default function createPhpAudit(ctx: WorldContext): World {
       const q = storyOf(input.p, ctx.result);
       for (const part of parts) part.update(q, input);
     },
+    labels(input, put) {
+      const q = storyOf(input.p, ctx.result);
+      const on = (from: number, to: number) => (q >= from && q <= to ? 1 : 0);
+      const pitch = S / 15;
+      const R = pitch * 0.75;
+      // The same places as in build(): the waveform on the horizon, its deviation, the infected district.
+      const W = S * 1.3;
+      const Z = -S * 0.62;
+      const Y = S * 0.05;
+      const H = S * 0.06;
+      put('files', -S * 0.16, S * 0.012, S * 0.12, on(0, 0.2));
+      put('wave', -W * 0.16, Y + 0.3 * H, Z, on(0.06, 0.4));
+      put('spike', -W / 2 + 0.68 * W, Y + 0.57 * H, Z, on(0.22, 0.42));
+      put('tainted', centre.x, R * 0.25, centre.z, on(0.36, 0.6));
+      put('path', centre.x + pitch * 0.55, 0.1, centre.z + pitch * 0.35, on(0.48, 0.68));
+      put('dome', centre.x - R * 0.7, R * 0.72, centre.z, on(0.66, 0.84));
+      put('hash', centre.x + pitch * 0.5, R * 1.25, centre.z, on(0.88, 1));
+    },
     dispose() {
       disposed = true;
       if (city) {

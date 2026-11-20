@@ -44,6 +44,11 @@ export interface World {
   /** The camera for act progress `p` (called for the whole act; the entry and return use p = 0.15 / 0.85). */
   pose(p: number, wide: boolean, out: Pose): void;
   update(input: WorldInput): void;
+  /**
+   * The labels on the world's objects (STORYBOARD v2.4 §12.2): called after `update`; `put` takes a
+   * label's key (the act's `[data-label]` elements), its anchor in world space and 0–1 for whether it shows.
+   */
+  labels?(input: WorldInput, put: (key: string, x: number, y: number, z: number, on: number) => void): void;
   /** Heavy set-up (idle slices) resolves here; the world is shown only after it. */
   ready?: Promise<void>;
   dispose(): void;

@@ -21,11 +21,15 @@ import { Spring } from './motion';
  * back when the scroll, coming from after it, is that far in from the other end. Between the two
  * points nothing changes its mind, so a hand resting on the wheel never makes it flip.
  */
-export type Cue = { g0: number; g1: number; dur: number };
+/** `hold`: seconds the playhead rests at the end of the moment before it goes further (reading time). */
+/** `maxBoost`: the most a fast scroll may hurry this moment (a beat's sentence must stay readable). */
+export type Cue = { g0: number; g1: number; dur: number; hold?: number; maxBoost?: number };
 const START = 0.25;
 
 /** Further than this from the scroll (in acts), the playhead cuts instead of playing every act between. */
-const CUT = 2.5;
+const CUT = 1.5;
+/** Further than this from the scroll, the rests after key moments are skipped: nobody is reading there. */
+const HURRY = 0.9;
 /** Heading past a cue's edge, the spring aims this far beyond it, so it arrives still moving a little
     (aiming at the edge itself would crawl up to it) and the key moment starts without a wait. */
 const LEAD = 0.03;
@@ -45,6 +49,8 @@ export class Playhead {
   private readonly cues: Cue[];
   private readonly on: boolean[];
   private last = 0;
+  /** Seconds left of the rest after a key moment (only going forward). */
+  private rest = 0;
 
   constructor(cues: Cue[]) {
     this.cues = [...cues].sort((a, b) => a.g0 - b.g0);
@@ -56,6 +62,7 @@ export class Playhead {
     this.target = g;
     this.spring.snap(g);
     this.last = g;
+    this.rest = 0;
     for (let i = 0; i < this.cues.length; i += 1) {
       const c = this.cues[i] as Cue;
       this.on[i] = g > (c.g0 + c.g1) / 2;
@@ -97,6 +104,14 @@ export class Playhead {
     // A key moment keeps its tempo in wall-clock time even on a slow frame (the spring caps its own step).
     let t = Math.min(dt, 0.5);
     this.timed = false;
+    // The rest after a key moment: time passes whether or not the scroll asks for more; going on waits for it.
+    if (dist > HURRY) this.rest = 0;
+    if (this.rest > 0) {
+      const wait = Math.min(this.rest, t);
+      this.rest -= wait;
+      if (target > this.x) t -= wait;
+      else if (target < this.x) this.rest = 0;
+    }
     for (let pass = 0; pass < 4 && t > 1e-5; pass += 1) {
       const x = this.x;
       const dir = Math.sign(target - x);
@@ -104,12 +119,17 @@ export class Playhead {
       const c = this.cues.find((q) => (x > q.g0 && x < q.g1) || (x === q.g0 && dir > 0) || (x === q.g1 && dir < 0));
       if (c) {
         this.timed = true;
-        const rate = ((c.g1 - c.g0) / c.dur) * tempo * boost;
+        const rate = ((c.g1 - c.g0) / c.dur) * tempo * Math.min(boost, c.maxBoost ?? Infinity);
         const edge = dir > 0 ? c.g1 : c.g0;
         const need = Math.abs(edge - x) / rate;
         if (need <= t) {
           this.x = edge;
           t -= need;
+          if (dir > 0 && c.hold && dist <= HURRY) {
+            this.rest = c.hold;
+            this.spring.snap(this.x);
+            break;
+          }
         } else {
           this.x = x + dir * rate * t;
           t = 0;

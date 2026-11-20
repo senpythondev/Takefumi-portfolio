@@ -3217,3 +3217,1079 @@ html[data-cinema] .act-bedrock .creeds {
     height: 100%;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════════════════════════
+   STORYBOARD v2.4 §12 (the explaining layer) and §13 (how results are shown)
+   ═══════════════════════════════════════════════════════════════════════════════════════════════ */
+
+/* ── §12.1 The title card: layer, mark, project, period, one line ── */
+.act-card {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0 0 1.5rem;
+  padding: 0.25rem 0 0.25rem 1rem;
+  border-left: 3px solid var(--tint, var(--color-seam));
+}
+
+.act-card-top {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  color: var(--color-evidence);
+}
+
+.act-card-kanji {
+  display: none;
+}
+
+.act-card-title {
+  font-family: var(--font-heading);
+  font-size: clamp(1.25rem, 3.4vw, 1.75rem);
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.act-card-lead {
+  font-size: 0.9375rem;
+  line-height: 1.7;
+  color: var(--color-ink-muted);
+}
+
+/* Stacked: the card already says the depth and the period. */
+html:not([data-cinema]) .act-world:not(.act-next) .act-eyebrow {
+  display: none;
+}
+
+/* ── §12.2 The four beats ── */
+.act-beats {
+  display: grid;
+  gap: 0.6rem;
+  margin: 1.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.act-beat {
+  display: grid;
+  grid-template-columns: 5.5em minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: baseline;
+}
+
+.act-beat-name {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  color: var(--color-evidence);
+  white-space: nowrap;
+}
+
+.act-beat-no {
+  margin-right: 0.35em;
+}
+
+.act-beat-text {
+  font-size: 0.9375rem;
+  line-height: 1.7;
+}
+
+.act-beat-text .metric-value,
+.act-card-lead .metric-value {
+  font-size: 1em;
+}
+
+/* ── §13.1 The result as a comparison ── */
+.compare {
+  --bar: var(--color-ink-muted);
+  display: grid;
+  gap: 0.9rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  text-align: left;
+}
+
+.compare-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.15rem 1rem;
+  align-items: center;
+}
+
+.compare-row[data-win],
+.compare-side[data-win] {
+  --bar: var(--color-evidence);
+}
+
+.compare-label {
+  grid-column: 1 / -1;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--color-ink-muted);
+}
+
+.compare-bar {
+  position: relative;
+  display: block;
+  height: 0.9rem;
+}
+
+.compare-bar i {
+  display: block;
+  width: max(4px, calc(var(--to) * 100%));
+  height: 100%;
+  border-radius: 2px;
+  /* Solid up to the lower bound; hatched over a range ("2–4 hours"). */
+  background:
+    linear-gradient(90deg, var(--bar) calc(var(--from) / var(--to) * 100%), transparent 0),
+    repeating-linear-gradient(135deg, var(--bar) 0 3px, transparent 3px 7px);
+  transform-origin: left center;
+}
+
+/* "… or more": the bar runs on. */
+.compare-bar[data-open] i {
+  mask-image: linear-gradient(90deg, #000 78%, transparent);
+}
+
+.compare .metric {
+  margin: 0;
+  padding: 0;
+  border-bottom: 0;
+}
+
+/* §13.2: the numbers of a result are larger and heavier than the Mincho headline. */
+.compare-value .metric-value,
+.compare-side[data-win] .metric-value {
+  font-family: var(--font-mono);
+  font-size: clamp(1.75rem, 4.4vw, 3.5rem);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  word-break: keep-all;
+  border-bottom: 1px dashed color-mix(in srgb, var(--color-evidence) 60%, transparent);
+}
+
+.compare-row:not([data-win]) .compare-value .metric-value {
+  font-size: clamp(1.35rem, 2.8vw, 2.1rem);
+  color: var(--color-ink-muted);
+}
+
+.compare .metric-symbol {
+  font-size: 0.85rem;
+  vertical-align: super;
+}
+
+.compare-groups {
+  grid-template-columns: repeat(auto-fit, minmax(min(17rem, 100%), 1fr));
+  gap: 1.25rem 2.5rem;
+}
+
+.compare-group {
+  display: grid;
+  gap: 0.45rem;
+  align-content: start;
+}
+
+.compare-title {
+  margin: 0 0 0.15rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.compare-groups .compare-row {
+  grid-template-columns: 7.5em minmax(0, 1fr) minmax(5.6em, auto);
+}
+
+:lang(en) .compare-groups .compare-row {
+  grid-template-columns: 8.5em minmax(0, 1fr) minmax(5.6em, auto);
+}
+
+.compare-groups .metric {
+  white-space: nowrap;
+}
+
+/* Narrow screens: before and after stack; a long number may break at its spaces. */
+@media (max-width: 699px) {
+  .compare-change {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.5rem;
+  }
+
+  .compare-arrow {
+    justify-self: start;
+    transform: rotate(90deg);
+  }
+
+  .compare-value .metric-value,
+  .compare-side[data-win] .metric-value {
+    font-size: clamp(1.6rem, 8vw, 2.4rem);
+    overflow-wrap: anywhere;
+  }
+}
+
+/* A link inside the footer's text is told apart by more than its colour. */
+.site-footer p a {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.compare-groups .compare-label {
+  grid-column: auto;
+}
+
+.compare-groups .compare-value {
+  text-align: right;
+}
+
+.compare-groups .compare-value .metric-value {
+  font-size: clamp(1.5rem, 3vw, 2.4rem);
+}
+
+.compare-groups .compare-row:not([data-win]) .compare-value .metric-value {
+  font-size: clamp(1.1rem, 2vw, 1.5rem);
+}
+
+.compare-change {
+  grid-template-columns: minmax(0, auto) auto minmax(0, 1fr);
+  gap: 1rem 1.5rem;
+  align-items: center;
+}
+
+.compare-side {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+}
+
+.compare-tag {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  color: var(--color-ink-muted);
+}
+
+.compare-side[data-side='before'] .compare-state {
+  font-size: clamp(1.1rem, 2.2vw, 1.5rem);
+  font-weight: 600;
+  color: var(--color-crisis);
+}
+
+.compare-side[data-win] .compare-state {
+  font-size: clamp(1rem, 1.8vw, 1.35rem);
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.compare-arrow {
+  font-size: 1.5rem;
+  color: var(--color-evidence);
+}
+
+.compare-risks {
+  grid-template-columns: repeat(auto-fit, minmax(min(15rem, 100%), 1fr));
+  gap: 1.25rem 2.5rem;
+}
+
+.compare-list,
+.compare-stairs {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.compare-list li {
+  padding-left: 0.9rem;
+  border-left: 2px solid var(--color-crisis);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+.compare-list li + li,
+.compare-stairs li + li {
+  margin-top: 0;
+}
+
+/* The staged plan as steps going down: the most urgent first. */
+.compare-stairs li {
+  width: fit-content;
+  margin-left: calc(var(--i) * 1.6rem);
+  padding: 0.2rem 0.8rem;
+  border-left: 2px solid var(--color-evidence);
+  background: color-mix(in srgb, var(--color-evidence) calc(22% - var(--i) * 4%), transparent);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+}
+
+.compare-note {
+  margin: 0.2rem 0 0;
+  font-size: 0.75rem;
+  color: var(--color-ink-muted);
+}
+
+.compare-risks .compare-title .metric-value {
+  font-size: clamp(1.5rem, 3vw, 2.25rem);
+}
+
+.compare-gates {
+  grid-auto-flow: column;
+  justify-content: start;
+  gap: 1rem 2rem;
+  font-size: clamp(1.1rem, 2.4vw, 1.6rem);
+  font-weight: 600;
+}
+
+.compare-gates li > span {
+  color: var(--color-ok);
+}
+
+.compare-gates li + li {
+  margin-top: 0;
+}
+
+.act-result[data-compare] .act-metrics-minor {
+  margin-top: 1.25rem;
+  gap: 0.75rem 2rem;
+}
+
+.act-metrics-minor .act-metric .metric-value {
+  font-size: clamp(1.15rem, 2.2vw, 1.6rem);
+}
+
+/* Small meters on the eight cards of the deep layers (§13.1). */
+.deep-meter {
+  --bar: var(--color-evidence);
+  display: block;
+  width: min(14rem, 100%);
+  height: 0.4rem;
+  margin: 0.4rem 0 0.2rem;
+  background: color-mix(in srgb, var(--color-seam) 80%, transparent);
+  border-radius: 2px;
+}
+
+.deep-meter i {
+  display: block;
+  width: calc(var(--to) * 100%);
+  height: 100%;
+  border-radius: 2px;
+  background:
+    linear-gradient(90deg, var(--bar) calc(var(--from) / var(--to) * 100%), transparent 0),
+    repeating-linear-gradient(135deg, var(--bar) 0 2px, transparent 2px 5px);
+}
+
+/* ── §13.3 The results ledger ── */
+.ledger {
+  margin: 0 0 1.5rem;
+}
+
+.ledger-title {
+  margin: 0 0 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  color: var(--color-evidence);
+}
+
+.ledger-list {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--color-seam);
+}
+
+.ledger-row {
+  display: grid;
+  grid-template-columns: minmax(0, 11rem) minmax(0, 1fr);
+  gap: 0.25rem 1rem;
+  align-items: baseline;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--color-seam);
+}
+
+.ledger-row + .ledger-row {
+  margin-top: 0;
+}
+
+.ledger-project {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--color-ink-muted);
+  text-decoration: none;
+}
+
+.ledger-project:hover {
+  color: var(--color-evidence);
+}
+
+.ledger-kanji {
+  margin-right: 0.5em;
+  font-family: var(--font-heading);
+  color: var(--color-ink);
+}
+
+.ledger-values {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1.5rem;
+}
+
+.ledger-value {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.1rem 0.6rem;
+  align-items: baseline;
+}
+
+.ledger .metric {
+  margin: 0;
+  padding: 0;
+  border-bottom: 0;
+}
+
+.ledger .metric-value {
+  font-family: var(--font-mono);
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.2;
+  border-bottom: 1px dashed color-mix(in srgb, var(--color-evidence) 60%, transparent);
+}
+
+.ledger-label,
+.ledger-sentence {
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--color-ink-muted);
+}
+
+.ledger-sentence {
+  font-size: 0.8125rem;
+  color: var(--color-ink);
+}
+
+@media (max-width: 599px) {
+  .ledger-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* A band of the navigator shows its layer, and the result recorded on it, on hover and focus. */
+.core-result {
+  display: block;
+  margin-top: 0.3rem;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--color-ink);
+}
+
+.core-result-tag {
+  margin-right: 0.6em;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.1em;
+  color: var(--color-evidence);
+}
+
+/* With the cinema on, a result shows only once its act has been seen (the ledger fills as you dig). */
+html[data-cinema] .core-nav li:not([data-recorded]) .core-result {
+  display: none;
+}
+
+@media (min-width: 700px) {
+  .core-nav li {
+    position: relative;
+  }
+
+  .core-ring:is(:hover, :focus-visible) .core-label {
+    right: calc(100% + 0.75rem);
+    top: 50%;
+    z-index: 3;
+    width: max-content;
+    max-width: 19rem;
+    height: auto;
+    padding: 0.45rem 0.7rem;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+    border: 1px solid var(--color-seam);
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--color-ground) 92%, transparent);
+    color: var(--color-ink);
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    transform: translateY(-50%);
+    pointer-events: none;
+  }
+
+  .core-nav ol:has(.core-ring:is(:hover, :focus-visible)) {
+    overflow: visible;
+  }
+}
+
+/* The recorded mark: a small light on the band's edge (not gold: §8.4). */
+.core-nav li[data-recorded] .core-ring::after {
+  content: '';
+  position: absolute;
+  left: -7px;
+  top: 50%;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--color-evidence);
+  box-shadow: 0 0 6px var(--color-evidence);
+  transform: translateY(-50%);
+}
+
+.core-nav li[data-recorded] .core-ring {
+  position: relative;
+}
+
+.ledger-spark {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 9;
+  width: 10px;
+  height: 10px;
+  margin: -5px 0 0 -5px;
+  border-radius: 50%;
+  background: #eafcff;
+  box-shadow:
+    0 0 10px 3px rgb(143 203 208 / 0.9),
+    0 0 28px 10px rgb(143 203 208 / 0.35);
+  pointer-events: none;
+}
+
+/* ── §12.3 The first hint ── */
+.nav-hint {
+  position: fixed;
+  left: 50%;
+  bottom: 4.5svh;
+  z-index: 4;
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  margin: 0;
+  padding: 0.5rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--color-evidence) 45%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-ground) 78%, transparent);
+  color: var(--color-ink);
+  font-size: 0.8125rem;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translate(-50%, 0.5rem);
+  pointer-events: none;
+  animation: nav-hint-in 900ms var(--ease-strata) 1.4s forwards;
+}
+
+.nav-hint-item {
+  display: inline-flex;
+  gap: 0.5em;
+  align-items: center;
+}
+
+.nav-hint svg {
+  color: var(--color-evidence);
+}
+
+.nav-hint-sep {
+  color: var(--color-ink-muted);
+}
+
+.nav-hint-wheel {
+  animation: nav-hint-wheel 1.8s var(--ease-strata) infinite;
+}
+
+.nav-hint[data-gone] {
+  animation: none;
+  opacity: 0;
+  transition: opacity 500ms ease-out;
+}
+
+@keyframes nav-hint-in {
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+@keyframes nav-hint-wheel {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  70%,
+  100% {
+    transform: translateY(6px);
+    opacity: 0;
+  }
+}
+
+@media (max-width: 420px) {
+  .nav-hint {
+    font-size: 0.6875rem;
+    gap: 0.4rem;
+    padding: 0.45rem 0.7rem;
+  }
+}
+
+/* ───────────────────────────── with the cinema on ───────────────────────────── */
+
+/* The title card: the centre of the screen, once the entry is over; it leaves as the first beat starts. */
+html[data-cinema] .act-world > .act-frame > .act-card {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  justify-items: center;
+  gap: 0.5rem;
+  width: min(44rem, calc(100vw - 2 * var(--gutter) - 3rem));
+  margin: 0;
+  padding: 2.5rem 2rem 2.75rem;
+  border: 0;
+  border-radius: 12px;
+  background: radial-gradient(ellipse at center, rgb(12 11 10 / 0.92) 0%, rgb(12 11 10 / 0.8) 45%, rgb(12 11 10 / 0.4) 75%, transparent 100%);
+  text-align: center;
+  opacity: 0;
+  transform: translate(-50%, calc(-50% + 0.75rem));
+  transition:
+    opacity 500ms ease-out,
+    transform 700ms var(--ease-strata);
+}
+
+html[data-cinema] .act-world[data-card] > .act-frame > .act-card {
+  opacity: 1;
+  transform: translate(-50%, -50%);
+  transition:
+    opacity 900ms var(--ease-strata),
+    transform 1200ms var(--ease-strata);
+}
+
+html[data-cinema] .act-card-top {
+  justify-content: center;
+  font-size: 0.8125rem;
+}
+
+html[data-cinema] .act-card-kanji {
+  display: block;
+  font-family: var(--font-heading);
+  font-size: clamp(3rem, 7vw, 4.75rem);
+  font-weight: 600;
+  line-height: 1.1;
+  color: color-mix(in srgb, var(--tint) 55%, var(--color-ink));
+  text-shadow: 0 0 1.2em color-mix(in srgb, var(--tint) 70%, transparent);
+}
+
+html[data-cinema] .act-card-title {
+  font-size: clamp(1.4rem, 2.6vw, 2rem);
+  text-wrap: balance;
+  text-shadow: 0 2px 18px rgb(0 0 0 / 0.9);
+}
+
+html[data-cinema] .act-card-lead {
+  max-width: 30rem;
+  color: var(--color-ink);
+  text-wrap: balance;
+  text-shadow: 0 1px 12px rgb(0 0 0 / 0.9);
+}
+
+/* The beats: a scale of four at the bottom, the current one lit; one sentence above it. */
+html[data-cinema] .act-world > .act-frame > .act-beats {
+  position: absolute;
+  left: 50%;
+  bottom: 4.5svh;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-rows: auto auto;
+  gap: 0.9rem 0.5rem;
+  width: min(44rem, calc(100vw - 2 * var(--gutter) - 4rem));
+  margin: 0;
+  opacity: 0;
+  transform: translateX(-50%);
+  transition: opacity 700ms var(--ease-strata);
+}
+
+html[data-cinema] .act-world:is([data-beat='1'], [data-beat='2'], [data-beat='3'], [data-beat='4']) > .act-frame > .act-beats,
+html[data-cinema] .act-world > .act-frame > .act-beats:focus-within {
+  opacity: 1;
+}
+
+html[data-cinema] .act-beat {
+  display: contents;
+}
+
+html[data-cinema] .act-beat-name {
+  grid-row: 2;
+  padding-top: 0.45rem;
+  border-top: 2px solid color-mix(in srgb, var(--color-ink-muted) 35%, transparent);
+  font-size: 0.6875rem;
+  color: color-mix(in srgb, var(--color-ink-muted) 75%, transparent);
+  text-shadow: 0 1px 8px rgb(0 0 0 / 0.9);
+  transition:
+    color 600ms var(--ease-strata),
+    border-color 600ms var(--ease-strata);
+}
+
+html[data-cinema] .act-beat:nth-child(1) .act-beat-name {
+  grid-column: 1;
+}
+
+html[data-cinema] .act-beat:nth-child(2) .act-beat-name {
+  grid-column: 2;
+}
+
+html[data-cinema] .act-beat:nth-child(3) .act-beat-name {
+  grid-column: 3;
+}
+
+html[data-cinema] .act-beat:nth-child(4) .act-beat-name {
+  grid-column: 4;
+}
+
+html[data-cinema] .act-beat-text {
+  grid-area: 1 / 1 / 2 / -1;
+  align-self: end;
+  justify-self: center;
+  max-width: 100%;
+  padding: 0.55rem 1.1rem;
+  border-radius: 6px;
+  background: rgb(12 11 10 / 0.72);
+  font-size: clamp(1rem, 1.45vw, 1.2rem);
+  font-weight: 600;
+  line-height: 1.6;
+  text-align: center;
+  text-wrap: balance;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(0.4rem);
+  transition:
+    opacity 450ms ease-out,
+    transform 450ms ease-out,
+    visibility 0s 450ms;
+}
+
+/* Beats already told stay marked; the current one is lit. */
+html[data-cinema] .act[data-beat='2'] .act-beat:nth-child(-n + 1) .act-beat-name,
+html[data-cinema] .act[data-beat='3'] .act-beat:nth-child(-n + 2) .act-beat-name,
+html[data-cinema] .act[data-beat='4'] .act-beat:nth-child(-n + 3) .act-beat-name {
+  border-color: color-mix(in srgb, var(--color-evidence) 45%, transparent);
+  color: var(--color-ink-muted);
+}
+
+html[data-cinema] .act[data-beat='1'] .act-beat:nth-child(1) .act-beat-name,
+html[data-cinema] .act[data-beat='2'] .act-beat:nth-child(2) .act-beat-name,
+html[data-cinema] .act[data-beat='3'] .act-beat:nth-child(3) .act-beat-name,
+html[data-cinema] .act[data-beat='4'] .act-beat:nth-child(4) .act-beat-name {
+  border-color: var(--color-evidence);
+  color: var(--color-ink);
+  box-shadow: 0 -6px 12px -8px var(--color-evidence);
+}
+
+html[data-cinema] .act[data-beat='1'] .act-beat:nth-child(1) .act-beat-text,
+html[data-cinema] .act[data-beat='2'] .act-beat:nth-child(2) .act-beat-text,
+html[data-cinema] .act[data-beat='3'] .act-beat:nth-child(3) .act-beat-text,
+html[data-cinema] .act[data-beat='4'] .act-beat:nth-child(4) .act-beat-text,
+html[data-cinema] .act-beat-text:focus-within {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  pointer-events: auto;
+  transition:
+    opacity 800ms var(--ease-strata) 250ms,
+    transform 800ms var(--ease-strata) 250ms,
+    visibility 0s;
+}
+
+/* The labels on the world's objects: a dot on the object, a thin leader line, a small mono label. */
+html[data-cinema] .act-labels {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  pointer-events: none;
+  transition: opacity 500ms ease-out;
+}
+
+html[data-cinema] .act[data-result] .act-labels {
+  opacity: 0;
+}
+
+html[data-cinema] .act-labels li {
+  position: absolute;
+  left: 0;
+  top: 0;
+  margin: 0;
+  opacity: 0;
+  transform: translate(var(--x, -100px), var(--y, -100px));
+  transition: opacity 500ms ease-out;
+}
+
+html[data-cinema] .act-labels li[data-on] {
+  opacity: 1;
+  transition: opacity 800ms var(--ease-strata) 200ms;
+}
+
+html[data-cinema] .act-labels li::before {
+  content: '';
+  position: absolute;
+  left: -3px;
+  top: -3px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-evidence);
+  box-shadow: 0 0 8px var(--color-evidence);
+}
+
+html[data-cinema] .act-labels li::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 2.9rem;
+  height: 1px;
+  background: linear-gradient(90deg, var(--color-evidence), color-mix(in srgb, var(--color-evidence) 55%, transparent));
+  transform-origin: left center;
+  transform: rotate(-40deg);
+}
+
+html[data-cinema] .act-labels li > span {
+  position: absolute;
+  left: 2.25rem;
+  bottom: 1.75rem;
+  padding: 0.15rem 0.5rem;
+  border-left: 1px solid var(--color-evidence);
+  background: rgb(12 11 10 / 0.82);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 1.5;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  color: var(--color-ink);
+}
+
+/* A label leans away from the middle of the screen (set by the director). */
+html[data-cinema] .act-labels li[data-left]::after {
+  transform: rotate(-140deg);
+}
+
+html[data-cinema] .act-labels li[data-left] > span {
+  left: auto;
+  right: 2.25rem;
+  border-left: 0;
+  border-right: 1px solid var(--color-evidence);
+}
+
+/* §13.2: a result with a comparison is held in the centre of the screen. */
+html[data-cinema] .act-world > .act-frame > .act-result[data-compare] {
+  top: 47%;
+  bottom: auto;
+  justify-items: stretch;
+  width: min(50rem, calc(100vw - 2 * var(--gutter) - 4rem));
+  padding: 1.75rem 2.25rem 1.5rem;
+  border: 1px solid color-mix(in srgb, var(--color-seam) 80%, transparent);
+  border-radius: 12px;
+  background: rgb(14 13 11 / 0.84);
+  box-shadow: 0 30px 80px rgb(0 0 0 / 0.55);
+  text-align: left;
+  transform: translate(-50%, calc(-50% + 1.25rem));
+}
+
+html[data-cinema] .act-world[data-result] > .act-frame > .act-result[data-compare],
+html[data-cinema] .act-world > .act-frame > .act-result[data-compare]:focus-within {
+  transform: translate(-50%, -50%);
+}
+
+html[data-cinema] .act-result[data-compare] .act-metrics {
+  grid-area: auto;
+  justify-content: flex-start;
+}
+
+html[data-cinema] .act-result[data-compare] .act-metric {
+  align-items: flex-start;
+}
+
+html[data-cinema] .act-result[data-compare] .act-case {
+  justify-self: start;
+}
+
+/* While the result is held, the headline and the controls step back. */
+html[data-cinema] .act-world[data-beat='4'][data-result] > .act-frame > .act-head {
+  opacity: 0.22;
+}
+
+html[data-cinema] .act-world[data-beat='4'][data-result] > .act-frame > .act-extras:not(:focus-within) {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* The bars grow when the result appears. */
+html[data-cinema] .compare-bar i {
+  transform: scaleX(0);
+  transition: transform 300ms ease-out;
+}
+
+html[data-cinema] .act[data-result] .compare-bar i,
+html[data-cinema] .act-result:focus-within .compare-bar i {
+  transform: scaleX(1);
+  transition: transform 1500ms var(--ease-strata) 350ms;
+}
+
+html[data-cinema] .act[data-result] .compare-row[data-win] .compare-bar i {
+  transition-delay: 900ms;
+}
+
+html[data-cinema] .compare-stairs li {
+  opacity: 0;
+  transform: translateY(-0.4rem);
+  transition:
+    opacity 300ms ease-out,
+    transform 300ms ease-out;
+}
+
+html[data-cinema] .act[data-result] .compare-stairs li,
+html[data-cinema] .act-result:focus-within .compare-stairs li {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 700ms var(--ease-strata) calc(500ms + var(--i) * 220ms),
+    transform 700ms var(--ease-strata) calc(500ms + var(--i) * 220ms);
+}
+
+/* The finale: the ledger beside the rebuilt core. */
+html[data-cinema] .act-next > .act-frame > .act-extras {
+  top: 50%;
+  width: min(31rem, 42vw);
+  max-width: none;
+  padding: 1rem 1.25rem;
+  border: 1px solid color-mix(in srgb, var(--color-seam) 80%, transparent);
+  border-radius: 10px;
+  background: rgb(14 13 11 / 0.8);
+  transform: translateY(-50%);
+}
+
+html[data-cinema] .act-next .ledger {
+  margin-bottom: 0.5rem;
+}
+
+html[data-cinema] .act-next > .act-frame > .act-extras {
+  max-height: calc(100svh - 7rem);
+  overflow: auto;
+}
+
+html[data-cinema] .act-next .ledger-row {
+  grid-template-columns: minmax(0, 8.5rem) minmax(0, 1fr);
+  padding: 0.4rem 0;
+}
+
+html[data-cinema] .act-next .ledger-values {
+  display: grid;
+  gap: 0.15rem;
+}
+
+html[data-cinema] .act-next .ledger .metric-value {
+  font-size: 1.05rem;
+}
+
+html[data-cinema] .act-next .ledger-label {
+  font-size: 0.6875rem;
+}
+
+html[data-cinema] .act-next .act-drawer-open {
+  margin-top: 0.75rem;
+}
+
+@media (max-aspect-ratio: 115/100), (max-width: 899px) {
+  html[data-cinema] .act-world > .act-frame > .act-card {
+    width: calc(100vw - 2 * var(--gutter));
+    padding: 1.5rem 1rem;
+  }
+
+  /* Above the depth meter and the sound switch, which sit in the bottom corners. */
+  html[data-cinema] .act-world > .act-frame > .act-beats {
+    bottom: calc(2.5svh + 3.25rem);
+    width: calc(100vw - 2 * var(--gutter) - 1rem);
+    gap: 0.6rem 0.35rem;
+  }
+
+  html[data-cinema] .act-beat-name {
+    font-size: 0.625rem;
+    letter-spacing: 0.02em;
+  }
+
+  html[data-cinema] .act-beat-text {
+    padding: 0.45rem 0.7rem;
+    font-size: 0.9375rem;
+  }
+
+  html[data-cinema] .act-world > .act-frame > .act-extras,
+  html[data-cinema] .act-world[data-side='R'] > .act-frame > .act-extras {
+    bottom: calc(2.5svh + 11.5rem);
+  }
+
+  html[data-cinema] .act-world > .act-frame > .act-result[data-compare] {
+    top: 46%;
+    width: calc(100vw - 1.5rem);
+    max-height: 72svh;
+    padding: 1rem 1rem 0.9rem;
+    overflow: auto;
+  }
+
+  html[data-cinema] .act-result[data-compare] .act-metrics-minor {
+    margin-top: 0.75rem;
+  }
+
+  html[data-cinema] .compare {
+    gap: 0.6rem;
+  }
+
+  html[data-cinema] .compare-change {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  html[data-cinema] .compare-arrow {
+    transform: rotate(90deg);
+    justify-self: start;
+  }
+
+  html[data-cinema] .act-labels li > span {
+    font-size: 0.625rem;
+  }
+
+  html[data-cinema] .act-next > .act-frame > .act-extras {
+    top: auto;
+    bottom: 3svh;
+    left: 0.75rem;
+    right: 0.75rem;
+    width: auto;
+    max-height: 62svh;
+    padding: 0.9rem 1rem;
+    overflow: auto;
+    transform: none;
+  }
+
+  html[data-cinema] .act-next .ledger-row {
+    padding: 0.35rem 0;
+  }
+}
+
+/* v2.4: the overlay of a section follows the story, not the scroll. The picture now plays its beats
+   at its own tempo and holds the title card and the result (§12, §13.2), so the scroll can be well
+   ahead of it; a frame pinned to its section would slide away under a result that is still held.
+   Every section's frame is therefore fixed to the screen, and the director's flags (data-on,
+   data-card, data-beat, data-result…) decide what shows. The section keeps its height for the scroll. */
+html[data-cinema] .act-world:not(.act-next) > .act-frame {
+  position: fixed;
+  inset: 0;
+  height: 100svh;
+}

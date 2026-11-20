@@ -229,6 +229,25 @@ export function startCinemaUi({ lenis, addFrameListener }: { lenis: Lenis; addFr
     sound?.stop();
   });
 
+  // ── Keyboard: a section's overlay is fixed to the screen and follows the story (v2.4), so focusing
+  //    one of its links no longer scrolls the page there by itself: fly to that section. ──
+  const onFocusIn = (e: FocusEvent) => {
+    const target = e.target as HTMLElement | null;
+    const section = target?.closest<HTMLElement>('.act-world:not(.act-next)');
+    if (!section || !target?.closest('.act-frame') || !target.matches('a, button, input, select, textarea')) return;
+    if (!target.matches(':focus-visible')) return;
+    const here = scrollLive.acts[section.dataset.act ?? ''] ?? 0;
+    if (here > 0 && here < 1) return;
+    // Straight there (no flight, and the focus stays where the keyboard put it).
+    const index = ACTS.findIndex((x) => x.id === section.dataset.act);
+    const act = ACTS[index];
+    if (!act) return;
+    scrollLive.jumpTo = index;
+    lenis.scrollTo(topOf(section) + 0.5 * (act.len / 100) * tune.length * window.innerHeight, { immediate: true, force: true });
+  };
+  document.addEventListener('focusin', onFocusIn);
+  cleanups.push(() => document.removeEventListener('focusin', onFocusIn));
+
   // ── Count-up when the result appears ──
   const NUMBER = /\d[\d,]*(?:\.\d+)?/g;
   const counting = new Map<HTMLElement, { from: number; to: number; start: number; format: (v: number) => string }>();
@@ -259,11 +278,13 @@ export function startCinemaUi({ lenis, addFrameListener }: { lenis: Lenis; addFr
     counting.set(value, { from, to, start: performance.now(), format });
   };
   const sections = [...document.querySelectorAll<HTMLElement>('section[data-act]')];
+  let recordHook: ((section: HTMLElement) => void) | null = null;
   const mo = new MutationObserver((records) => {
     for (const r of records) {
       const section = r.target as HTMLElement;
       const now = section.hasAttribute(r.attributeName ?? '');
       if (!now) continue;
+      if (r.attributeName === 'data-recorded') recordHook?.(section);
       if (r.attributeName === 'data-result') {
         for (const li of section.querySelectorAll<HTMLElement>('.act-metrics:not(.act-metrics-then) .act-metric')) {
           const v = li.querySelector<HTMLElement>('.metric-value');
@@ -272,8 +293,79 @@ export function startCinemaUi({ lenis, addFrameListener }: { lenis: Lenis; addFr
       }
     }
   });
-  for (const s of sections) mo.observe(s, { attributes: true, attributeFilter: ['data-result'] });
+  for (const s of sections) mo.observe(s, { attributes: true, attributeFilter: ['data-result', 'data-recorded'] });
   cleanups.push(() => mo.disconnect());
+
+  // ── §13.3 The results ledger: leaving an act, its result flies as a small light into the act's
+  //    band of the navigator and stays recorded there (the band then shows it on hover and focus). ──
+  const recordedActs = new Set<string>();
+  const record = (section: HTMLElement) => {
+    const id = section.dataset.layer ?? '';
+    const band = document.querySelector<HTMLElement>(`[data-nav-band="${id}"]`);
+    if (!band || recordedActs.has(id) || !band.querySelector('.core-result')) return;
+    recordedActs.add(id);
+    const from = (section.querySelector('.act-result [data-win] .metric-value') ?? section.querySelector('.act-result .metric-value') ?? section.querySelector('.act-result .compare'))?.getBoundingClientRect();
+    const to = band.getBoundingClientRect();
+    if (!from || from.width === 0 || to.width === 0) {
+      band.setAttribute('data-recorded', '');
+      return;
+    }
+    const spark = document.createElement('span');
+    spark.className = 'ledger-spark';
+    spark.setAttribute('aria-hidden', 'true');
+    document.body.append(spark);
+    const x0 = from.left + from.width / 2;
+    const y0 = from.top + from.height / 2;
+    const x1 = to.left + to.width / 2;
+    const y1 = to.top + to.height / 2;
+    // A soft arc: it lifts a little before it goes to the band.
+    const flight = spark.animate(
+      [
+        { transform: `translate(${x0}px, ${y0}px) scale(0.2)`, opacity: 0 },
+        { transform: `translate(${x0 + (x1 - x0) * 0.12}px, ${y0 - 36}px) scale(1.3)`, opacity: 1, offset: 0.22 },
+        { transform: `translate(${x1}px, ${y1}px) scale(0.45)`, opacity: 1 },
+      ],
+      { duration: 950, easing: 'cubic-bezier(0.5, 0, 0.2, 1)', fill: 'forwards' },
+    );
+    const done = () => {
+      spark.remove();
+      band.setAttribute('data-recorded', '');
+      band.querySelector('.core-ring')?.animate([{ filter: 'brightness(2.4)' }, { filter: 'brightness(1)' }], { duration: 900, easing: 'ease-out' });
+    };
+    flight.finished.then(done, done);
+  };
+  recordHook = record;
+  cleanups.push(() => {
+    for (const el of document.querySelectorAll('.ledger-spark')) el.remove();
+  });
+
+  // ── §12.3 The first hint: once, right after the hero has appeared; gone with the first scroll. ──
+  const hint = document.querySelector<HTMLElement>('[data-nav-hint]');
+  if (hint) {
+    const HINT_KEY = 'gt-hint';
+    let seen = false;
+    try {
+      seen = window.sessionStorage.getItem(HINT_KEY) === '1';
+    } catch {
+      // No storage: the hint simply shows.
+    }
+    if (seen || window.scrollY > 40) hint.remove();
+    else {
+      const onFirstScroll = () => {
+        if (window.scrollY < 40) return;
+        window.removeEventListener('scroll', onFirstScroll);
+        hint.setAttribute('data-gone', '');
+        window.setTimeout(() => hint.remove(), 600);
+        try {
+          window.sessionStorage.setItem(HINT_KEY, '1');
+        } catch {
+          // Nothing to remember it in: it shows again next time.
+        }
+      };
+      window.addEventListener('scroll', onFirstScroll, { passive: true });
+      cleanups.push(() => window.removeEventListener('scroll', onFirstScroll));
+    }
+  }
 
   // ── Ripples (§8.6): a soft ring of light from whatever was pressed. It starts when the press is
   //    let go, where the cursor's ring opens again (§11.2), so the two read as one motion. ──

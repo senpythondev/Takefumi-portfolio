@@ -189,7 +189,13 @@ export function* cinemaStrings(c: SiteContent): Generator<{ path: string; text: 
   yield { path: 'cinema.indexGuide', text: c.cinema.indexGuide, rich: false };
   yield { path: 'cinema.gentenClash.left', text: c.cinema.gentenClash.left, rich: false };
   yield { path: 'cinema.gentenClash.right', text: c.cinema.gentenClash.right, rich: false };
-  for (const [id, act] of Object.entries(c.cinema.acts)) yield { path: `cinema.acts.${id}.headline`, text: act.headline, rich: true };
+  yield { path: 'cinema.auctionAfter', text: c.cinema.auctionAfter, rich: true };
+  for (const [id, act] of Object.entries(c.cinema.acts)) {
+    yield { path: `cinema.acts.${id}.headline`, text: act.headline, rich: true };
+    // Genten's first beat quotes the amount of the article's claim, like the citation it comes from.
+    for (const [i, text] of (act.beats ?? []).entries()) yield { path: `cinema.acts.${id}.beats.${i}`, text, rich: true, citation: id === 'genten' && i === 0 };
+    for (const [key, text] of Object.entries(act.labels ?? {})) yield { path: `cinema.acts.${id}.labels.${key}`, text, rich: true };
+  }
 }
 
 /** The big numbers of each act (STORYBOARD §3: two or three; the catch-up act shows four, one at a time). */
@@ -278,6 +284,8 @@ export function parityProblems(ja: SiteContent, en: SiteContent): string[] {
   for (const id of Object.keys(ja.cinema.acts) as (keyof SiteContent['cinema']['acts'])[]) {
     const ids = (x: SiteContent) => [...x.cinema.acts[id].metrics, '|', ...(x.cinema.acts[id].then ?? [])].join(',');
     if (ids(ja) !== ids(en)) problems.push(`cinema.acts.${id}: big numbers differ between ja and en`);
+    const keys = (x: SiteContent) => `${x.cinema.acts[id].beats ? 'beats' : ''}|${Object.keys(x.cinema.acts[id].labels ?? {}).sort().join(',')}`;
+    if (keys(ja) !== keys(en)) problems.push(`cinema.acts.${id}: beats or labels differ between ja and en`);
   }
   for (const [i, l] of ja.layers.entries()) {
     const e = en.layers[i];

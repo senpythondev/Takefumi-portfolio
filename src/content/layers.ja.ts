@@ -540,18 +540,77 @@ export const contentJa = {
     indexGuide: '帯を選ぶか、そのまま掘り進む',
     // The amounts come from the Genten citation (single source); these are only who says them.
     gentenClash: { left: '英語の解説', right: '金融庁' },
+    auctionAfter: '{{auction-bids}}でエラー{{auction-errors}}',
     // STORYBOARD v2.1 §4. Headlines are copy, not facts: every number is a metric.
     acts: {
-      current: { headline: '初見のコードを、短時間で読み解く。', metrics: [] },
+      // The four beats (§12.2) are the PM's sentences (STORYBOARD v2.4), with every number as a metric.
+      current: {
+        headline: '初見のコードを、短時間で読み解く。',
+        metrics: [],
+        beats: [
+          '初見のリポジトリに、機能追加・修正・リファクタリングを行う',
+          '短時間で構造を読み解く',
+          'テストとドキュメントまで整えて納品する',
+          'AI検証と担当者レビューの二段階審査を、継続して通過',
+        ],
+        labels: { repo: '初見のリポジトリ', structure: 'ファイル構造', ai: 'AI検証', human: '担当者レビュー' },
+      },
       genten: {
         headline: '答えに、原典を添える。',
         metrics: ['genten-acc-closed', 'genten-acc-keyword', 'genten-acc-genten'],
         then: ['genten-cite-closed', 'genten-cite-keyword', 'genten-cite-genten'],
+        beats: [
+          '英語の解説にある「生涯上限600万円」は、存在したことがない',
+          '日付つきの検証済みルール{{genten-rules}}を、日本語の公式原典で裏付けて構造化した',
+          'モデル単体・キーワード検索・Gentenを、同じ{{genten-questions}}・LLMを使わない採点で比べた',
+          '正答率{{genten-acc-genten}}（キーワード検索{{genten-acc-keyword}}、モデル単体{{genten-acc-closed}}）',
+        ],
+        labels: { closed: 'モデル単体', keyword: 'キーワード検索', genten: 'Genten', gates: '設問 {{genten-questions}}', wrong: '誤答', rules: '検証済みルール {{genten-rules}}' },
       },
-      pegasus: { headline: 'URL資産を、ひとつも失わずに運ぶ。', metrics: ['pegasus-downtime', 'pegasus-posts', 'pegasus-plugins'] },
-      'php-audit': { headline: '攻撃の道筋を、該当するコード行まで。', metrics: ['php-files', 'php-duration', 'php-size'] },
-      auction: { headline: '推測で増やさず、実測で冷ます。', metrics: ['auction-hours', 'auction-bids', 'auction-errors'] },
-      patent: { headline: '書類に、受け手の名を透かす。', metrics: ['patent-typical', 'patent-duration', 'patent-capacity'] },
+      pegasus: {
+        headline: 'URL資産を、ひとつも失わずに運ぶ。',
+        metrics: ['pegasus-downtime', 'pegasus-posts', 'pegasus-plugins'],
+        beats: [
+          '投稿{{pegasus-posts}}・固定ページ{{pegasus-pages}}を、URLを変えずに新しいサイトへ移す必要があった',
+          '不規則なURLの{{pegasus-url-patterns}}を洗い出した',
+          '正規表現の301転送で一括処理し、広告の計測{{pegasus-conversions}}も途切れさせなかった',
+          '停止時間{{pegasus-downtime}}で公開（当初見積{{pegasus-estimate}}）',
+        ],
+        labels: { old: '旧サイト', new: '新サイト', posts: '投稿 {{pegasus-posts}}', tangle: '不規則なURL {{pegasus-url-patterns}}', redirect: '301転送', ads: '広告の計測 {{pegasus-conversions}}', plugins: 'プラグイン {{pegasus-plugins}}' },
+      },
+      'php-audit': {
+        headline: '攻撃の道筋を、該当するコード行まで。',
+        metrics: ['php-files', 'php-duration', 'php-size'],
+        beats: [
+          '{{php-years}}動く予約システムに、不正なファイルが仕込まれていた',
+          '{{php-files}}のファイルを解析し、応答サイズのわずかな差から攻撃手法を特定した',
+          '既存のファイルは変えずに無害化し、SHA-256で証拠を保全した',
+          '主なリスクを特定し、緊急度順の{{php-plan}}の改善計画を示した',
+        ],
+        labels: { files: 'PHPファイル {{php-files}}', wave: '応答サイズ', spike: 'わずかな差', tainted: '汚染ファイル', path: '攻撃の道筋', dome: '無害化', hash: 'SHA-256 証拠保全' },
+      },
+      auction: {
+        headline: '推測で増やさず、実測で冷ます。',
+        metrics: ['auction-hours', 'auction-bids', 'auction-errors'],
+        beats: [
+          '入札が集中すると、本番でネットワークエラーが起きていた',
+          '推測で増強せず、{{auction-monitor-interval}}の監視で原因を特定した（瞬間的なCPUの飽和）',
+          '{{auction-cores}}のインスタンスへ移し、同時処理数を調整した',
+          '{{auction-hours}}・{{auction-bids}}の本番オークションで、エラー{{auction-errors}}',
+        ],
+        labels: { cpu: 'CPU {{auction-cores}}', bids: '入札', errors: 'エラー', monitor: '{{auction-monitor-interval}}の監視', cause: 'CPUの飽和' },
+      },
+      patent: {
+        headline: '書類に、受け手の名を透かす。',
+        metrics: ['patent-typical', 'patent-duration', 'patent-capacity'],
+        beats: [
+          'NDA・本人確認・企業確認を、手作業なしで完結させる必要があった',
+          '電子署名・SMS・法人番号の外部APIの組み合わせを設計した',
+          '閲覧者の名前と日時が入る透かしPDFで、流出しても追跡できるようにした',
+          '{{patent-typical}}の規模を、一人で{{patent-duration}}に完遂',
+        ],
+        labels: { doc: '開示書類', sign: 'NDAの電子署名', sms: 'SMSの本人確認', corp: '法人番号の照合', pdf: '透かし入りPDF', users: '登録者 {{patent-capacity}}' },
+      },
       deep: { headline: '業界を渡り、経験を積む。', metrics: ['deep-count'] },
       catchup: { headline: '初めての地層でも、速く掘る。', metrics: ['genten-days', 'php-duration', 'auction-duration', 'patent-duration'] },
       bedrock: { headline: '掘る前に、信条がある。', metrics: [] },

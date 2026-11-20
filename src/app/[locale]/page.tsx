@@ -4,6 +4,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import type { ReactNode } from 'react';
 import { getContent, metricLayers, metricMap, type Layer } from '@/content';
 import { ACTS, isWorkId, kanjiOf, type Act as ActDef } from '@/content/acts';
+import { COMPARE } from '@/content/results';
 import { routing } from '@/i18n/routing';
 import { EvidenceController } from '@/components/evidence/EvidenceController';
 import { EvidenceDialog } from '@/components/evidence/EvidenceDialog';
@@ -12,7 +13,9 @@ import { Hero } from '@/components/layers/Hero';
 import type { RichContext } from '@/components/layers/RichText';
 import { SiteFooter, SiteHeader } from '@/components/layout/SiteChrome';
 import { Act } from '@/components/acts/Act';
+import { ActCompare } from '@/components/acts/ActCompare';
 import { ActIndex } from '@/components/acts/ActIndex';
+import { Ledger, ledgerRows } from '@/components/acts/Ledger';
 import { AuctionExtras, BedrockExtras, CatchupExtras, CurrentExtras, DeepExtras, GentenExtras, PatentExtras, PhpExtras } from '@/components/acts/ActExtras';
 import { FinaleDrawer } from '@/components/acts/FinaleDrawer';
 import { StageLoader } from '@/three/StageLoader';
@@ -60,6 +63,10 @@ export default async function Page({ params }: PageProps<'/[locale]'>) {
     }),
   );
 
+  // §13.3: the results ledger — the finale's list, and what each band of the navigator records.
+  const ledger = ledgerRows(content, ctx);
+  const recorded = new Map(ledger.map((row) => [row.layer.id as string, row.text]));
+
   const extras = (act: ActDef, layer: Layer): ReactNode => {
     switch (act.id) {
       case 'current':
@@ -80,9 +87,12 @@ export default async function Page({ params }: PageProps<'/[locale]'>) {
         return <BedrockExtras layer={layer} />;
       case 'next':
         return (
-          <a className="act-drawer-open" href="#finale-drawer">
-            {tcin('openDrawer')} <span aria-hidden="true">↓</span>
-          </a>
+          <>
+            <Ledger rows={ledger} ctx={ctx} />
+            <a className="act-drawer-open" href="#finale-drawer">
+              {tcin('openDrawer')} <span aria-hidden="true">↓</span>
+            </a>
+          </>
         );
       default:
         return null;
@@ -114,6 +124,24 @@ export default async function Page({ params }: PageProps<'/[locale]'>) {
         </span>
         {tcin('sound')}
       </button>
+      {/* §12.3: shown once, right after the hero has appeared; gone with the first scroll. */}
+      <p className="nav-hint needs-cinema" data-nav-hint="" aria-hidden="true">
+        <span className="nav-hint-item">
+          <svg viewBox="0 0 16 24" width="12" height="18" aria-hidden="true">
+            <rect x="1.5" y="1.5" width="13" height="21" rx="6.5" fill="none" stroke="currentColor" strokeWidth="1.4" />
+            <path className="nav-hint-wheel" d="M8 6v4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+          </svg>
+          {tcin('hintScroll')}
+        </span>
+        <span className="nav-hint-sep">／</span>
+        <span className="nav-hint-item">
+          <svg viewBox="0 0 18 24" width="13" height="18" aria-hidden="true">
+            <path d="M3 3h12M3 9h12M3 15h12M3 21h12" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" opacity="0.45" />
+            <path d="M3 9h12" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />
+          </svg>
+          {tcin('hintBand')}
+        </span>
+      </p>
       <main id="main" tabIndex={-1} data-cursor-enter={tcin('enter')} data-cursor-read={tcin('read')}>
         <Hero layer={surface} person={content.person} ctx={ctx} nextAnchor="index" coreHeadline={content.cinema.coreHeadline} />
         <ActIndex layers={content.layers} guide={content.cinema.indexGuide} locale={locale} />
@@ -130,6 +158,7 @@ export default async function Page({ params }: PageProps<'/[locale]'>) {
               ctx={ctx}
               captions={act.id === 'catchup' ? projectCaptions : undefined}
               work={isWorkId(act.id)}
+              compare={act.id in COMPARE ? <ActCompare id={act.id} layer={layer} cinema={content.cinema} ctx={ctx} /> : undefined}
               after={act.id === 'next' ? <FinaleDrawer next={layer} surface={surface} ctx={ctx} /> : undefined}
             >
               {extras(act, layer)}
@@ -140,7 +169,8 @@ export default async function Page({ params }: PageProps<'/[locale]'>) {
       <SiteFooter />
       <CoreNav
         label={tn('core')}
-        layers={content.layers.map((l, index) => ({ id: l.id, depth: td('label', { index }), title: l.title, color: layerColor[l.id as LayerColorId], kanji: kanjiOf(l.id) }))}
+        layers={content.layers.map((l, index) => ({ id: l.id, depth: td('label', { index }), title: l.title, color: layerColor[l.id as LayerColorId], kanji: kanjiOf(l.id), result: recorded.get(l.id) }))}
+        recordedLabel={tcin('recorded')}
       />
       <span id={METRIC_HINT_ID} hidden>
         {te('open')}

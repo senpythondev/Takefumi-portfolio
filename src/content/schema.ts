@@ -189,6 +189,13 @@ export const ActCopySchema = z.object({
   metrics: z.array(IdSchema).max(4),
   /** The numbers the result switches to afterwards (Genten: accuracy → answered with an official source). */
   then: z.array(IdSchema).max(3).optional(),
+  /**
+   * The act told in four beats (STORYBOARD v2.4 §12.2): ① problem, ② investigation, ③ action,
+   * ④ result. One plain sentence each; numbers are {{metric}} tokens.
+   */
+  beats: z.tuple([RichTextSchema, RichTextSchema, RichTextSchema, RichTextSchema]).optional(),
+  /** Small labels on the objects of the act's world, by key (§12.2): what each metaphor stands for. */
+  labels: z.record(IdSchema, RichTextSchema).optional(),
 });
 export type ActCopy = z.infer<typeof ActCopySchema>;
 
@@ -210,6 +217,8 @@ export const SiteContentSchema = z.object({
     acts: z.object(Object.fromEntries(LAYER_IDS.filter((id) => id !== 'surface').map((id) => [id, ActCopySchema])) as Record<Exclude<LayerId, 'surface'>, typeof ActCopySchema>),
     /** Act 3-2: who says which amount in the quoted clash (the amounts themselves come from the citation). */
     gentenClash: z.object({ left: z.string().min(1), right: z.string().min(1) }),
+    /** 3-5 result (§13.1): what the fix changed, as "after" against a "before" that has no number. */
+    auctionAfter: RichTextSchema,
   }),
   metrics: z.array(MetricSchema).min(1),
 });

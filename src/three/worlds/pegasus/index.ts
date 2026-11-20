@@ -244,6 +244,19 @@ export default function createPegasus(ctx: WorldContext): World {
       }
       plugins.material.uniforms.uFade!.value = input.fade * seg(q, 0.05, 0.15) * (1 - 0.3 * clamp01(q - 0.9));
     },
+    labels(input, put) {
+      const q = storyOf(input.p, ctx.result);
+      const on = (from: number, to: number) => (q >= from && q <= to ? 1 : 0);
+      const merge = seg(q, 0.15, 0.6);
+      put('old', -6.4, 2.3, 0, on(0, 0.5));
+      put('posts', flowPos[0] as number, flowPos[1] as number, flowPos[2] as number, on(0.03, 0.5));
+      put('tangle', -4.3, 0.7, 0.8, on(0.2, 0.5));
+      riverAt(0.45, 0, tmp, 0);
+      put('redirect', tmp[0] as number, tmp[1] as number, tmp[2] as number, on(0.5, 0.97));
+      put('new', 2.5, 1.0, 0, on(0.5, 1));
+      put('ads', -2.4, 3.2, -1.2, on(0.56, 1));
+      put('plugins', mix(-5.5, 2.4, merge), mix(2.9, 3.85, merge), -0.8, on(0.62, 1));
+    },
     dispose() {
       disposeGroup(group);
     },

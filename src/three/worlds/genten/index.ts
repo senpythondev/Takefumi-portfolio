@@ -149,6 +149,8 @@ export default function createGenten(ctx: WorldContext): World {
       ruleSeed[k] = r();
       ruleIdx[k] = i;
     }
+  /** Offset that puts the band of rules just beyond the start of the lanes. */
+  const RULES_START = -(endZ - 1.2) - 1.2;
   const rules = glowPoints(geometry({ position: { array: rulePos, size: 3 }, seed: { array: ruleSeed, size: 1 }, aRule: { array: ruleIdx, size: 1 } }), {
     size: 2.2,
     uniforms: { uShow: { value: 0 } },
@@ -203,7 +205,8 @@ export default function createGenten(ctx: WorldContext): World {
   const air = motes(ctx.count(600), [12, 6, 70], [0, 2, -30], COLORS.evidence.clone(), 1.1, 13);
   group.add(air.points);
 
-  const raceT = (q: number) => seg(q, 0.24, 0.82, (x) => x) * (GATES + 1);
+  // v2.4: the race is beat ③ (it starts once the rules of beat ② have been laid out).
+  const raceT = (q: number) => seg(q, 0.36, 0.85, (x) => x) * (GATES + 1);
   const pose = (p: number, wide: boolean, out: Pose) => {
     const q = storyOf(p, ctx.result);
     const lead = Math.min(...lanePos(raceT(q), wrong));
@@ -212,7 +215,7 @@ export default function createGenten(ctx: WorldContext): World {
     const start: [number, number, number] = [0, 2.2, 6.5 + back];
     const race: [number, number, number] = [0, 2.6 + back * 0.3, zRace];
     const k = seg(q, 0.16, 0.3);
-    const end = seg(q, 0.82, 1.0);
+    const end = seg(q, 0.87, 1.0);
     const pos: [number, number, number] = [0, mix(mix(start[1], race[1], k), 5.5, end), mix(mix(start[2], race[2], k), endZ + 9 + back, end)];
     const look: [number, number, number] = [0, mix(mix(1.8, 0.8, k), 0.3, end), mix(mix(0, zRace - 9, k), endZ - 1, end)];
     setPose(out, pos, look, wide ? 42 : 52);
@@ -301,7 +304,10 @@ export default function createGenten(ctx: WorldContext): World {
       lanes.material.uniforms.uHover!.value = hoverGate > 0 ? hoverGate : near;
 
       // 3. The 35 rules, and the switch of the result to "answered with an official source".
-      rules.material.uniforms.uShow!.value = seg(q, 0.82, 0.98, (x) => x);
+      // (v2.4: the rules are structured before the race — beat ② — in front of the start; as the race
+      //  begins they run ahead and become the finish line.)
+      rules.material.uniforms.uShow!.value = seg(q, 0.18, 0.32, (x) => x);
+      rules.points.position.set(0, mix(0.9, 0, seg(q, 0.36, 0.52)), mix(RULES_START, 0, seg(q, 0.36, 0.52)));
       input.flag('data-then', input.p > ctx.result - 0.03 && input.p < 0.9);
 
       for (const m of [lanes.material, runners.material, rules.material, crumble.material, air.material]) {
@@ -311,6 +317,22 @@ export default function createGenten(ctx: WorldContext): World {
       lanes.material.uniforms.uFade!.value = input.fade;
       rules.material.uniforms.uFade!.value = input.fade;
       air.material.uniforms.uFade!.value = input.fade * 0.8;
+    },
+    labels(input, put) {
+      const q = storyOf(input.p, ctx.result);
+      const on = (from: number, to: number) => (q >= from && q <= to ? 1 : 0);
+      const racing = on(0.36, 0.84);
+      const names = ['closed', 'keyword', 'genten'] as const;
+      let stalledAt = -1;
+      const t = raceT(q);
+      for (let l = 0; l < 3; l += 1) {
+        put(names[l] as string, motePos[l * 3] as number, 1.0, motePos[l * 3 + 2] as number, racing);
+        if (stalledAt < 0 && (wrong[l] as number[]).some((g) => t >= g && t <= g + STALL)) stalledAt = l;
+      }
+      const lead = Math.min(...lanePos(t, wrong));
+      put('gates', 2.7, 1.5, -(Math.floor(lead) + 2) * PITCH, on(0.36, 0.8));
+      if (stalledAt >= 0) put('wrong', motePos[stalledAt * 3] as number, 0.3, motePos[stalledAt * 3 + 2] as number, racing);
+      put('rules', 2.4, 0.25 + rules.points.position.y, endZ - 1.2 + rules.points.position.z, Math.max(on(0.22, 0.36), on(0.88, 1)));
     },
     dispose() {
       for (const b of buttons) {

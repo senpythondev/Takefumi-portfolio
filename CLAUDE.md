@@ -27,6 +27,7 @@
    - `https://dev.to/kaze001`（DEVプロフィール）
    - `https://dev.to/kaze001/english-guides-say-y6-million-the-fsa-says-y18-million-genten-checks-japans-money-rules-against-4jfe`（Genten記事）
    - `mailto:sen.python.dev@gmail.com`（HTMLに平文で書かず、クライアント側で組み立てる）
+   - `https://kanjivg.tagaini.net/`（漢字の書き順データ KanjiVG の出典。フッターのクレジットからリンクする。PM 承認、STORYBOARD v2.4）
    - `https://pegasus-job.com`（先方の了承後に有効化。`NEXT_PUBLIC_ENABLE_PEGASUS_LINK` フラグで制御）
    - 技術経歴書に記載された内容は公開してよい。サイトに載せる個人情報は、名前・メール・GitHub・DEVだけにする。
 3. AIトレーニングプラットフォームの名称・タスク内容・リポジトリ名は書かない。

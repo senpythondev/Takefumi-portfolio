@@ -227,6 +227,14 @@ export default function createCurrent(ctx: WorldContext): World {
       mote.material.uniforms.uFade!.value = input.fade * (through > 0.001 && through < 0.999 ? 1 : 0);
       input.attr('data-step', through > 0.7 ? '2' : through > 0.3 ? '1' : '0');
     },
+    labels(input, put) {
+      const q = storyOf(input.p, ctx.result);
+      const on = (from: number, to: number) => (q >= from && q <= to ? 1 : 0);
+      put('repo', -4.2, 0.5, -5.5, on(0, 0.5));
+      put('structure', light.x, 0.4, light.z, on(0.1, 0.6));
+      put('ai', -2.4, 2.5, -1, on(0.58, 1));
+      put('human', 2.4, 2.5, -1, on(0.58, 1));
+    },
     dispose() {
       disposeGroup(group);
     },

@@ -70,7 +70,8 @@
   "footer": {
     "builtWith": "Everything on this site can be read as plain HTML.",
     "rights": "© 2026 Takefumi Ono",
-    "kanjiCredit": "Kanji stroke-order data: KanjiVG (© Ulrich Apel, CC BY-SA 3.0)"
+    "kanjiCredit": "Kanji stroke-order data: ",
+    "kanjiCreditRest": " (© Ulrich Apel, CC BY-SA 3.0)"
   },
   "cinema": {
     "drilling": "Drilling",
@@ -132,6 +133,27 @@
     "samplePageAlt": "Page {n} of the fictional sample document",
     "todayLayer": "today’s layer — the day you visited becomes a stratum too",
     "sound": "Sound",
-    "soundLabel": "Play sound (off by default)"
+    "soundLabel": "Play sound (off by default)",
+    "beats": "How this project went",
+    "beatNames": [
+      "Problem",
+      "Investigation",
+      "Action",
+      "Result"
+    ],
+    "compareGroups": [
+      "Accuracy",
+      "Correct, with an official source"
+    ],
+    "before": "Before",
+    "after": "After",
+    "beforeErrors": "Errors occurred",
+    "plan": "Remediation plan",
+    "planOrder": "Most urgent first",
+    "planStage": "Stage {n}",
+    "ledger": "What was dug up",
+    "recorded": "Recorded",
+    "hintScroll": "Scroll to dig",
+    "hintBand": "Pick a band to jump"
   }
 }

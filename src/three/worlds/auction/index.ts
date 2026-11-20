@@ -267,6 +267,15 @@ export default function createAuction(ctx: WorldContext): World {
       cause.material.uniforms.uFade!.value = input.fade * seg(q, 0.56, 0.62) * (1 - seg(q, 0.8, 0.9));
       monitor.material.uniforms.uFade!.value = input.fade * (1 - seg(q, 0.85, 0.95));
     },
+    labels(input, put) {
+      const q = storyOf(input.p, ctx.result);
+      const on = (from: number, to: number) => (q >= from && q <= to ? 1 : 0);
+      put('cpu', XS[4] as number, TOP * 0.93, 0, on(0, 0.99));
+      put('bids', -2.5, 1.3, 0.2, on(0.08, 0.36));
+      put('errors', XS[5] as number, 2.5, 0, on(0.2, 0.36) * (Math.max(...heat) > 0.5 ? 1 : 0));
+      put('monitor', gx(34), gy(34), 0.6, on(0.44, 0.7));
+      put('cause', causeAt.x, causeAt.y, causeAt.z, on(0.62, 0.86));
+    },
     dispose() {
       disposeGroup(group);
     },

@@ -55,11 +55,51 @@ export function beatsOf(act: Act) {
 }
 
 /**
+ * The four beats of an act (STORYBOARD v2.4 §12.2): ① problem, ② investigation, ③ action, ④ result.
+ * Where ②, ③ and ④ begin, as fractions of the story (0 = the end of the entry, 1 = the result),
+ * placed where each world's own picture changes (src/three/worlds/<id>).
+ */
+const BEAT_CUTS: Partial<Record<ActId, readonly [number, number, number]>> = {
+  current: [0.1, 0.5, 0.66],
+  genten: [0.17, 0.34, 0.86],
+  pegasus: [0.2, 0.5, 0.92],
+  'php-audit': [0.2, 0.6, 0.98],
+  auction: [0.36, 0.7, 0.92],
+  patent: [0.12, 0.6, 0.8],
+};
+
+export const hasBeats = (id: string): boolean => id in BEAT_CUTS;
+
+/** Where the four beats begin and where the last one ends, as fractions of the act's progress; null without beats. */
+export function beatEdges(act: Act): readonly [number, number, number, number, number] | null {
+  const cuts = BEAT_CUTS[act.id];
+  if (!cuts) return null;
+  const { entry, result } = beatsOf(act);
+  const at = (q: number) => entry + q * (result - entry);
+  return [entry, at(cuts[0]), at(cuts[1]), at(cuts[2]), result];
+}
+
+/** The beat at progress `p`: 0 before the story starts (the title card), then 1–4. */
+export function beatAt(act: Act, p: number): number {
+  const edges = beatEdges(act);
+  if (!edges || p <= edges[0] + 1e-4 || p > 0.85) return 0;
+  for (let b = 3; b >= 1; b -= 1) if (p > (edges[b] as number) + 1e-4) return b + 1;
+  return 1;
+}
+
+/**
  * The key moments of an act (STORYBOARD v2.3 §9-2): ranges of its progress that are not scrubbed by
  * the scroll but played at a fixed tempo once the scroll crosses into them (and played back the
  * same way). `dur` is in seconds at tempo 1. Everything between them follows the scroll softly.
+ * `hold`: seconds the picture rests at the end of the moment before it may go on (v2.4: the title
+ * card after the entry, §12.1; the result, §13.2). `maxBoost`: a fast scroll hurries a beat by at most
+ * this much, so its sentence stays up for 1.5 s or more (§12.2).
  */
-export type ActCue = { from: number; to: number; dur: number };
+export type ActCue = { from: number; to: number; dur: number; hold?: number; maxBoost?: number };
+
+/** How long the title card and the result stay before the story may go on (seconds). */
+export const CARD_HOLD = 1.8;
+export const RESULT_HOLD = 2.6;
 
 export function cuesOf(act: Act): ActCue[] {
   // Act 1: the core is pulled out of the borehole, then turned onto its side.
@@ -69,8 +109,16 @@ export function cuesOf(act: Act): ActCue[] {
   // The finale: the bands close and their seams turn gold.
   if (act.id === 'next') return [{ from: 0.02, to: 0.5, dur: 3.8 }];
   const { entry, result, ret } = beatsOf(act);
-  const cues: ActCue[] = [{ from: 0, to: entry, dur: 2.4 }, { from: ret, to: 1, dur: 2.2 }];
-  // 3-4: the dome, the cracks sealed in gold, the hash crystallising.
-  if (act.id === 'php-audit') cues.push({ from: entry + 0.62 * (result - entry), to: entry + 0.98 * (result - entry), dur: 4.2 });
+  const cues: ActCue[] = [{ from: 0, to: entry, dur: 2.4, hold: CARD_HOLD }, { from: ret, to: 1, dur: 2.2 }];
+  // The four beats: each plays at its own tempo once the scroll reaches it, then waits for the scroll.
+  const edges = beatEdges(act);
+  if (edges) {
+    for (let b = 0; b < 4; b += 1) {
+      const from = edges[b] as number;
+      const to = edges[b + 1] as number;
+      const span = (to - from) / (result - entry);
+      cues.push({ from, to, dur: Math.min(5.5, Math.max(b === 3 ? 1.6 : 2.4, span * 12)), hold: b === 3 ? RESULT_HOLD : 0.6, maxBoost: 1.6 });
+    }
+  }
   return cues;
 }

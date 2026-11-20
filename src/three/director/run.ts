@@ -10,12 +10,13 @@
  * itself moves only to close on a cut face and inside the worlds (each world's `pose`).
  */
 import { Color, Matrix4, Raycaster, Vector2, Vector3, type Group, type Mesh, type PerspectiveCamera, type Scene } from 'three';
-import { ACTS, beatsOf, cuesOf } from '@/content/acts';
+import { ACTS, beatAt, beatEdges, beatsOf, cuesOf } from '@/content/acts';
 import { scrollLive } from '@/lib/scroll/store';
 import { omegaFor, tune } from '@/lib/scroll/tune';
 import { base, layer as layerColor, type LayerColorId } from '@/styles/tokens';
 import type { BandMaterial } from '../materials/band';
 import { WALL_HORIZON, type WallMaterial } from '../materials/wall';
+import { createStardust } from './stardust';
 import { createWallController } from '../world/controller';
 import type { createWall } from '../world/wall';
 import { ATTRACT, blendPose, fluct, setPose, type Pose, type WorldInput } from '../worlds/kit';
@@ -53,6 +54,7 @@ export function createDirectorRun({
   scene,
   tunnel,
   thread,
+  tier,
 }: {
   wall: ReturnType<typeof createWall>;
   wallMaterial: WallMaterial;
@@ -70,12 +72,13 @@ export function createDirectorRun({
   scene: Scene;
   tunnel: Tunnel;
   thread: Thread;
+  tier: 'high' | 'medium' | 'low';
 }) {
   const controller = createWallController(wall.get('low'));
   // The story position: follows the scroll softly, plays the key moments at a fixed tempo (§9).
   const story = new Playhead(
     ACTS.flatMap((act, index) =>
-      cuesOf(act).map((c) => ({ g0: index + c.from, g1: index + c.to, dur: c.dur })),
+      cuesOf(act).map((c) => ({ g0: index + c.from, g1: index + c.to, dur: c.dur, hold: c.hold, maxBoost: c.maxBoost })),
     ),
   );
   const nav = new Spring(1, 5);
@@ -158,7 +161,7 @@ export function createDirectorRun({
   };
 
   // ── Pointer (the worlds' lights, the index) ──
-  const pointer = { x: 0, y: 0, on: false, moved: false, last: -1e9, mouse: false };
+  const pointer = { x: 0, y: 0, on: false, moved: false, last: -1e9, mouse: false, touching: false };
   const onPointer = (e: PointerEvent) => {
     pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
     pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
@@ -178,6 +181,8 @@ export function createDirectorRun({
     pointer.mouse = false;
   };
   root.addEventListener('pointerleave', onLeave);
+  // The stardust's pointer: followed a little late (viewport fractions), present while a mouse is over the page or a finger is down.
+  const star = { x: new Spring(0.5, 9), y: new Spring(0.5, 9), on: new Spring(0, 8) };
   const attract = { fx: new Spring(0, 3.0), fy: new Spring(0, 3.0), sx: new Spring(0, 1.3), sy: new Spring(0, 1.3), k: new Spring(0, 1.5), dx: new Spring(0, 2.4), dy: new Spring(0, 2.4) };
   const drag = { x: 0, y: 0, lastX: 0, lastY: 0, on: false };
   const onTouchStart = (e: TouchEvent) => {
@@ -186,6 +191,14 @@ export function createDirectorRun({
     drag.lastX = t.clientX;
     drag.lastY = t.clientY;
     drag.on = true;
+    pointer.touching = true;
+    pointer.x = (t.clientX / window.innerWidth) * 2 - 1;
+    pointer.y = -(t.clientY / window.innerHeight) * 2 + 1;
+    star.x.snap(t.clientX / window.innerWidth);
+    star.y.snap(t.clientY / window.innerHeight);
+  };
+  const onTouchEnd = () => {
+    pointer.touching = false;
   };
   const onTouchMove = (e: TouchEvent) => {
     const t = e.touches[0];
@@ -194,9 +207,18 @@ export function createDirectorRun({
     drag.y = Math.max(-0.3, Math.min(0.3, drag.y - ((t.clientY - drag.lastY) / window.innerHeight) * 0.9));
     drag.lastX = t.clientX;
     drag.lastY = t.clientY;
+    // The browser scrolls with the finger (no pointer events then): the stardust still follows it.
+    pointer.x = (t.clientX / window.innerWidth) * 2 - 1;
+    pointer.y = -(t.clientY / window.innerHeight) * 2 + 1;
   };
   window.addEventListener('touchstart', onTouchStart, { passive: true });
   window.addEventListener('touchmove', onTouchMove, { passive: true });
+  window.addEventListener('touchend', onTouchEnd, { passive: true });
+  window.addEventListener('touchcancel', onTouchEnd, { passive: true });
+
+  // ── §11.1 (v2.4): the stardust over the whole viewport, drawn to the pointer ──
+  const stardust = createStardust(coarse ? (tier === 'high' ? 260 : tier === 'medium' ? 200 : 150) : tier === 'high' ? 640 : tier === 'medium' ? 460 : 320);
+  scene.add(stardust.points);
 
   // ── Controls in the acts' HTML ──
   const controls = new Map<string, HTMLInputElement | null>();
@@ -242,6 +264,8 @@ export function createDirectorRun({
   let lastHover = -1;
   const shown = new Set<HTMLElement>();
   const worldMarks = new Map<HTMLElement, Set<string>>();
+  const labelEls = new Map<HTMLElement, Map<string, HTMLElement>>();
+  const labelSeen = new Set<string>();
   const mark = (section: HTMLElement | null, name: string) => {
     if (!section) return;
     let set = worldMarks.get(section);
@@ -329,7 +353,14 @@ export function createDirectorRun({
       ATTRACT.uAttract.value.set(attract.fx.step(pointer.x, delta), attract.fy.step(pointer.y, delta), attract.sx.step(pointer.x, delta), attract.sy.step(pointer.y, delta));
       ATTRACT.uAttractK.value = attract.k.step(there, delta);
       ATTRACT.uDrag.value.set(attract.dx.step(drag.x, delta), attract.dy.step(drag.y, delta));
+      const starThere = pointer.mouse || pointer.touching ? 1 : 0;
+      const starOn = clamp01(star.on.step(starThere, delta));
+      const starX = star.x.step(pointer.x * 0.5 + 0.5, delta);
+      const starY = star.y.step(0.5 - pointer.y * 0.5, delta);
+      stardust.frame(elapsed, delta, aspect, starX, starY, starOn, star.x.v, star.y.v / aspect, G, 1, dpr, height);
       const attracting =
+        stardust.moving() ||
+        star.on.moving(starThere) ||
         attract.k.moving(there) || attract.sx.moving(pointer.x) || attract.sy.moving(pointer.y) || attract.fx.moving(pointer.x) || attract.fy.moving(pointer.y) || attract.dx.moving(drag.x) || attract.dy.moving(drag.y);
 
       // ── 3. Wall (acts 0–1) ──
@@ -634,6 +665,35 @@ export function createDirectorRun({
           drawer: drawerP,
         };
         w.update(input);
+        // §12.2: the small labels on the world's objects, projected from the world to the screen.
+        if (w.labels && section) {
+          let els = labelEls.get(section);
+          if (!els) {
+            els = new Map([...section.querySelectorAll<HTMLElement>('[data-label]')].map((el) => [el.dataset.label as string, el]));
+            labelEls.set(section, els);
+          }
+          labelSeen.clear();
+          const fadeNow = worldFade;
+          w.labels(input, (key, x, y, z, on) => {
+            const el = els.get(key);
+            if (!el) return;
+            labelSeen.add(key);
+            v3.set(x, y, z).project(camera);
+            // On screen, clear of the header (the label's text sits above its anchor) and of the beats at the bottom.
+            const inFront = v3.z < 1 && Math.abs(v3.x) < 0.92 && v3.y < 0.74 && v3.y > -0.62;
+            const shownNow = on * fadeNow > 0.5 && inFront;
+            if (shownNow || el.hasAttribute('data-on')) {
+              setVar(el, '--x', `${((v3.x * 0.5 + 0.5) * width).toFixed(1)}px`);
+              setVar(el, '--y', `${((0.5 - v3.y * 0.5) * height).toFixed(1)}px`);
+            }
+            // A label leans away from the middle of the screen, unless that would push it off the edge.
+            if (shownNow && !el.hasAttribute('data-on')) setFlag(el, 'data-left', v3.x < 0 ? v3.x > -0.66 : v3.x > 0.66);
+            setFlag(el, 'data-on', shownNow);
+          });
+          for (const [key, el] of els) if (!labelSeen.has(key)) setFlag(el, 'data-on', false);
+        }
+      } else if (section) {
+        for (const el of labelEls.get(section)?.values() ?? []) setFlag(el, 'data-on', false);
       }
 
       // ── 8. Holograms: the hovered band's in the index; every band's in the finale ──
@@ -668,7 +728,9 @@ export function createDirectorRun({
       // ── 10. The acts' HTML ──
       if (current !== act.id) {
         const prev = current ? sections.get(current as (typeof ACTS)[number]['id']) : null;
-        for (const name of ['data-on', 'data-entered', 'data-main', 'data-lit', 'data-result', 'data-hub']) setFlag(prev, name, false);
+        for (const name of ['data-on', 'data-entered', 'data-main', 'data-lit', 'data-result', 'data-hub', 'data-card', 'data-recorded']) setFlag(prev, name, false);
+        setAttr(prev, 'data-beat', null);
+        for (const el of labelEls.get(prev as HTMLElement)?.values() ?? []) setFlag(el, 'data-on', false);
         // …and whatever the previous act's world marked on it (beats inside the act).
         for (const name of worldMarks.get(prev as HTMLElement) ?? []) setAttr(prev, name, null);
         worldMarks.delete(prev as HTMLElement);
@@ -688,8 +750,15 @@ export function createDirectorRun({
         } else if (!on) shown.delete(section as HTMLElement);
         setFlag(section, 'data-entered', p > 0.04 && p < 0.95);
         setFlag(section, 'data-main', isFinale ? p > 0.3 : p >= 0.15 && p <= 0.85);
-        setFlag(section, 'data-lit', isFinale ? p > 0.35 : p > 0.13 && p < 0.9);
-        setFlag(section, 'data-result', !isFinale && p > beats.result - 0.1 && p < 0.9);
+        // v2.4 §12: the title card once the entry is over, then the four beats; §13.2: the result, held in the centre.
+        const edges = isWorld ? beatEdges(act) : null;
+        const beat = isWorld ? beatAt(act, p) : 0;
+        setFlag(section, 'data-card', isWorld && p > 0.128 && (edges ? beat === 0 && p < 0.2 : p < 0.19));
+        setAttr(section, 'data-beat', edges && p > 0.128 && p < 0.9 ? String(beat) : null);
+        setFlag(section, 'data-lit', isFinale ? p > 0.35 : p > (edges ? 0.151 : 0.19) && p < 0.9);
+        setFlag(section, 'data-result', !isFinale && p > (edges ? beats.result - 0.012 : beats.result - 0.1) && p < 0.87);
+        // §13.3: leaving the act, its result is recorded on the navigator's band.
+        setFlag(section, 'data-recorded', isWorld && p > 0.853);
       }
       const vh = window.innerHeight;
       const heroTarget = clamp01((window.scrollY + 0.85 * vh - heroBottom) / (0.5 * vh));
@@ -698,7 +767,7 @@ export function createDirectorRun({
       setVar(hero, '--hero-fade', easeOutCubic(fade).toFixed(3));
       setFlag(hero, 'data-gone', fade > 0.985);
       // The navigator steps back while the core or a cut face owns the screen; it is there inside the worlds.
-      const actOn = (i === 0 && a > 0.25) || i === 1 || (isWorld && (p < 0.15 || p > 0.85)) || isFinale;
+      const actOn = (i === 0 && a > 0.25) || i === 1 || (isWorld && (p < 0.15 || p > 0.9)) || isFinale;
       setFlag(root, 'data-act-on', actOn);
       scrollLive.navOpacity = clamp01(nav.step(actOn ? 0 : 1, delta));
       setFlag(drawer, 'data-open', drawerP > 0.3);
@@ -751,6 +820,8 @@ export function createDirectorRun({
           debug.depth = 0;
           debug.beam = wallMaterial.uniforms.uBeam.value;
           debug.story = G;
+          debug.moving = story.moving();
+          debug.stardust = stardust.stats();
           debug.act = act.id;
           debug.p = p;
           debug.phase = phase;
@@ -779,6 +850,10 @@ export function createDirectorRun({
       window.removeEventListener('pointerdown', onPointer);
       window.removeEventListener('touchstart', onTouchStart);
       window.removeEventListener('touchmove', onTouchMove);
+      window.removeEventListener('touchend', onTouchEnd);
+      window.removeEventListener('touchcancel', onTouchEnd);
+      scene.remove(stardust.points);
+      stardust.dispose();
       root.removeEventListener('pointerleave', onLeave);
       ATTRACT.uAttractK.value = 0;
       setFlag(root, 'data-act-on', false);

@@ -75,7 +75,7 @@ test('the home keeps only the acts: no long panels, small DOM', async ({ page },
     expect(metrics, `${id}: at most 3 big numbers (catch-up: 4, one at a time)`).toBeLessThanOrEqual(id === 'catchup' ? 4 : 3);
     for (const m of await act.locator('.act-metric .metric').all()) await expect(m.locator('.metric-symbol')).toHaveCount(1);
   }
-  expect(await page.evaluate(() => document.getElementsByTagName('*').length)).toBeLessThan(1500);
+  expect(await page.evaluate(() => document.getElementsByTagName('*').length)).toBeLessThan(2000);
 });
 
 test('§8.2: vertical Mincho headlines on the Japanese desktop; horizontal on phones and in English', async ({ page }, testInfo) => {
@@ -100,7 +100,123 @@ test('3-4: the reconstruction notice is part of the whole section', async ({ pag
   await expect(badge.locator('.metric-badge[data-confidence="reconstructed"]')).toHaveText('再現');
 });
 
+test('v2.4 §12–§13: title cards, four beats, comparisons and the results ledger are plain HTML', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop', 'HTML only: once is enough');
+  for (const locale of ['ja', 'en'] as const) {
+    const content = CONTENT[locale];
+    const display = new Map(content.metrics.map((m) => [m.id, m.display]));
+    const plain = (text: string) => text.replace(/\{\{([a-z0-9-]+)\}\}/g, (_, id: string) => display.get(id) ?? '');
+    const squash = (text: string) => text.replace(/[\s✓≈↺]/g, '');
+    await page.goto(`/${locale}?quality=static`);
+    // §12.1: every section says which project it is.
+    for (const layer of content.layers.filter((l) => !['surface', 'next'].includes(l.id))) {
+      const card = page.locator(`section[data-act="${layer.id}"] .act-card`);
+      await expect(card.locator('.act-card-title')).toHaveText(layer.title);
+      await expect(card).toBeVisible();
+    }
+    // §12.2: the PM's four sentences, every number a Metric link with its evidence.
+    for (const [id, act] of Object.entries(content.cinema.acts) as [string, { beats?: readonly string[] }][]) {
+      const beats = page.locator(`section[data-act="${id}"] .act-beat`);
+      await expect(beats).toHaveCount(act.beats ? 4 : 0);
+      for (const [i, text] of (act.beats ?? []).entries()) {
+        expect(squash(await beats.nth(i).locator('.act-beat-text').innerText())).toBe(squash(plain(text)));
+        expect(await beats.nth(i).locator('a.metric').count()).toBe((text.match(/\{\{/g) ?? []).length);
+      }
+    }
+    // §13.1: comparisons made only of metrics.
+    await expect(page.locator('section[data-act="pegasus"] .compare-bars .compare-row')).toHaveCount(2);
+    await expect(page.locator('section[data-act="patent"] .compare-bars .compare-row')).toHaveCount(2);
+    await expect(page.locator('section[data-act="genten"] .compare-group')).toHaveCount(2);
+    await expect(page.locator('section[data-act="genten"] .compare-row a.metric')).toHaveCount(6);
+    await expect(page.locator('section[data-act="auction"] .compare-side')).toHaveCount(2);
+    await expect(page.locator('section[data-act="auction"] .compare-side[data-side="before"] a.metric')).toHaveCount(0);
+    await expect(page.locator('section[data-act="php-audit"] .compare-list li')).toHaveCount(4);
+    await expect(page.locator('section[data-act="php-audit"] .compare-stairs li')).toHaveCount(4);
+    // The shorter bar really is shorter, by the metrics' own values (20 minutes against up to 4 hours).
+    const widths = await page.locator('section[data-act="pegasus"] .compare-bar i').evaluateAll((els) => els.map((el) => el.getBoundingClientRect().width));
+    expect((widths[1] as number) / (widths[0] as number)).toBeCloseTo(20 / 240, 1);
+    // §13.3: the ledger in the finale — every row's numbers open their evidence.
+    const rows = page.locator('section[data-act="next"] .ledger-row');
+    expect(await rows.count()).toBeGreaterThanOrEqual(6);
+    for (const link of await page.locator('.ledger a.metric').all()) expect(await link.getAttribute('href')).toMatch(new RegExp(`^/${locale}/evidence/`));
+    // No cinema: the hint and the labels over the 3D are not shown.
+    await expect(page.locator('[data-nav-hint]')).toBeHidden();
+    await expect(page.locator('.act-labels').first()).toBeHidden();
+    // The KanjiVG credit is a link (allow-listed in src/content/links.ts).
+    await expect(page.locator('.site-footer a', { hasText: 'KanjiVG' })).toHaveAttribute('href', /kanjivg/);
+  }
+});
+
 test.describe('with the 3D', () => {
+  test('v2.4 §11.1: the stardust covers the screen and is drawn to the mouse within two seconds, then springs back', async ({ page }) => {
+    test.setTimeout(150_000);
+    await page.goto('/ja?quality=low&dpr=0.4&debug=1');
+    await startStage(page);
+    type Dust = { count: number; pulled: number; maxOff: number };
+    const dust = () => page.evaluate(() => (window as unknown as { __world: { stardust?: Dust } }).__world.stardust ?? { count: 0, pulled: 0, maxOff: 0 });
+    await expect.poll(async () => (await dust()).count, { timeout: 60_000 }).toBeGreaterThanOrEqual(150);
+    expect((await dust()).maxOff).toBeLessThan(0.002);
+    // The hint of the first screen is there until the first scroll.
+    await expect(page.locator('[data-nav-hint]')).toBeVisible();
+    const { width, height } = page.viewportSize() as { width: number; height: number };
+    await page.mouse.move(width * 0.3, height * 0.5);
+    await page.mouse.move(width * 0.55, height * 0.45, { steps: 8 });
+    const moved = Date.now();
+    // Grains within a quarter of the width come toward the pointer: several of them, by about 2 % of the width or more.
+    await expect.poll(async () => (await dust()).maxOff, { timeout: 2000, intervals: [100] }).toBeGreaterThan(0.02);
+    expect(Date.now() - moved).toBeLessThan(2000);
+    expect((await dust()).pulled).toBeGreaterThan(8);
+    await page.waitForTimeout(1200);
+    expect((await dust()).maxOff).toBeLessThanOrEqual(0.062);
+    // The pointer leaves the page: every grain goes home.
+    await page.evaluate(() => document.documentElement.dispatchEvent(new PointerEvent('pointerleave')));
+    await expect.poll(async () => (await dust()).maxOff, { timeout: 15_000 }).toBeLessThan(0.002);
+  });
+
+  test('v2.4 §12–§13: the title card, the beats in order, the result held, then recorded on the navigator', async ({ page }) => {
+    test.setTimeout(240_000);
+    await page.goto('/ja?quality=low&dpr=0.4&debug=1');
+    await startStage(page);
+    const section = page.locator('section[data-act="auction"]');
+    // Every change of the section's state, with its time.
+    await page.evaluate(() => {
+      const el = document.querySelector('section[data-act="auction"]') as HTMLElement;
+      const log: { t: number; beat: string | null; card: boolean; result: boolean }[] = [];
+      (window as unknown as { __log: typeof log }).__log = log;
+      new MutationObserver(() => log.push({ t: performance.now(), beat: el.getAttribute('data-beat'), card: el.hasAttribute('data-card'), result: el.hasAttribute('data-result') })).observe(el, {
+        attributes: true,
+        attributeFilter: ['data-beat', 'data-card', 'data-result'],
+      });
+    });
+    await page.evaluate(() => {
+      const el = document.querySelector<HTMLElement>('section[data-act="auction"]') as HTMLElement;
+      window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY + (el.offsetHeight - window.innerHeight) * 0.155);
+    });
+    // §12.1: the title card, once the entry is over.
+    await expect(section).toHaveAttribute('data-card', '', { timeout: 60_000 });
+    await expect(section.locator('.act-card')).toHaveCSS('opacity', '1', { timeout: 10_000 });
+    await expect(section.locator('.act-card-title')).toHaveText(contentJa.layers.find((l) => l.id === 'auction')?.title ?? '');
+    // Scroll straight to the end of the act: the picture still tells the four beats in order,
+    // each long enough to read, and holds the result before it leaves.
+    await page.evaluate(() => {
+      const el = document.querySelector<HTMLElement>('section[data-act="auction"]') as HTMLElement;
+      window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY + (el.offsetHeight - window.innerHeight) * 0.97);
+    });
+    await expect(page.locator('[data-nav-band="auction"]')).toHaveAttribute('data-recorded', '', { timeout: 120_000 });
+    const log = await page.evaluate(() => (window as unknown as { __log: { t: number; beat: string | null; card: boolean; result: boolean }[] }).__log);
+    const first = (b: string) => log.find((e) => e.beat === b)?.t ?? -1;
+    const times = ['1', '2', '3', '4'].map(first);
+    for (const t of times) expect(t).toBeGreaterThan(0);
+    for (let b = 1; b < 4; b += 1) expect((times[b] as number) - (times[b - 1] as number), `beat ${b} is shown for 1.5 s or more`).toBeGreaterThanOrEqual(1500);
+    const shown = log.find((e) => e.result)?.t ?? -1;
+    const gone = log.find((e) => e.t > shown && !e.result)?.t ?? -1;
+    expect(shown).toBeGreaterThan(0);
+    expect(gone - shown, '§13.2: the result is held for 2.5 s or more').toBeGreaterThanOrEqual(2500);
+    // §13.3: the band of the navigator now carries the result.
+    await expect(page.locator('[data-nav-band="auction"] .core-result')).toContainText(contentJa.metrics.find((m) => m.id === 'auction-errors')?.display ?? '—');
+  });
+
+
   test.beforeEach(({}, testInfo) => {
     test.skip(testInfo.project.name !== 'desktop', 'stage tests run once, on the desktop project');
   });

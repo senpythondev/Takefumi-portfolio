@@ -275,6 +275,18 @@ export default function createPatent(ctx: WorldContext): World {
       }
       grid.material.uniforms.uFade!.value = input.fade * seg(q, 0.76, 0.82);
     },
+    labels(input, put) {
+      const q = storyOf(input.p, ctx.result);
+      const t = docAt(q);
+      const keys = ['sign', 'sms', 'corp', 'pdf'];
+      put('doc', doc.position.x, doc.position.y + 0.55, doc.position.z, q < 0.78 && forward < 0.2 ? 1 : 0);
+      STATIONS.forEach((s, i) => {
+        curve(s, b);
+        // A station is named as the document reaches it, and until the next one is.
+        put(keys[i] as string, b.x, b.y - RADIUS, b.z, q < 0.8 && t >= s - 0.09 && t < s + 0.2 && forward < 0.2 ? 1 : 0);
+      });
+      put('users', 4.6, 2.7, -3.2, q > 0.84 ? 1 : 0);
+    },
     dispose() {
       disposed = true;
       pageImage.onload = null;

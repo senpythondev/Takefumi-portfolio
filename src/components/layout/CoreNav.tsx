@@ -3,7 +3,7 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import { useScrollState } from '@/lib/scroll/store';
 
-export type CoreLayer = { id: string; depth: string; title: string; color: string; kanji: string };
+export type CoreLayer = { id: string; depth: string; title: string; color: string; kanji: string; result?: string };
 
 /**
  * Boring-core navigator (BRIEF §3) — HTML version, always present and keyboard/no-JS usable:
@@ -11,7 +11,7 @@ export type CoreLayer = { id: string; depth: string; title: string; color: strin
  * (src/three/core) is drawn behind these links when the stage runs, the links stay the controls.
  * Also renders the depth meter (current depth and layer name).
  */
-export function CoreNav({ layers, label }: { layers: CoreLayer[]; label: string }) {
+export function CoreNav({ layers, label, recordedLabel }: { layers: CoreLayer[]; label: string; recordedLabel: string }) {
   const passed = useScrollState((s) => s.passed);
   const currentId = useScrollState((s) => s.layerId);
   const current = layers.find((l) => l.id === currentId) ?? layers[0];
@@ -28,7 +28,7 @@ export function CoreNav({ layers, label }: { layers: CoreLayer[]; label: string 
       <nav className="core-nav" aria-label={label} data-core-slot="" data-open={open ? '' : undefined}>
         <ol id="core-list">
           {layers.map((l) => (
-            <li key={l.id}>
+            <li key={l.id} data-nav-band={l.id}>
               <a
                 href={`#layer-${l.id}`}
                 className="core-ring"
@@ -43,6 +43,13 @@ export function CoreNav({ layers, label }: { layers: CoreLayer[]; label: string 
                     {l.kanji}
                   </span>
                   ：{l.title}
+                  {/* §13.3: the result this layer left on its band (shown on hover or focus once the act has been seen). */}
+                  {l.result ? (
+                    <span className="core-result">
+                      <span className="core-result-tag">{recordedLabel}</span>
+                      {l.result}
+                    </span>
+                  ) : null}
                 </span>
               </a>
             </li>

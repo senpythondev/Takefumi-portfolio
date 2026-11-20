@@ -1,3 +1,4 @@
+import { LINKS } from '@/content/links';
 import { getTranslations } from 'next-intl/server';
 import type { SiteContent } from '@/content';
 import { routing } from '@/i18n/routing';
@@ -32,7 +33,13 @@ export async function SiteFooter() {
     <footer className="site-footer">
       <p>{t('builtWith')}</p>
       <p>{t('rights')}</p>
-      <p>{t('kanjiCredit')}</p>
+      <p>
+        {t('kanjiCredit')}
+        <a href={LINKS.kanjivg} target="_blank" rel="noopener noreferrer">
+          KanjiVG
+        </a>
+        {t('kanjiCreditRest')}
+      </p>
     </footer>
   );
 }
