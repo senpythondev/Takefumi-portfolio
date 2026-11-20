@@ -89,7 +89,8 @@ function bodyText(): string {
     join(ROOT, 'src/content/layers.en.ts'),
     join(ROOT, 'messages/ja.json'),
     join(ROOT, 'messages/en.json'),
-    ...filesUnder(join(ROOT, 'src/components'), (f) => /\.(tsx?|ts)$/.test(f)),
+    // The owner's ?debug=scroll panel is set in the system's monospace face, never in the web fonts.
+    ...filesUnder(join(ROOT, 'src/components'), (f) => /\.(tsx?|ts)$/.test(f) && !f.endsWith('/debug/scroll-panel.ts')),
     ...filesUnder(join(ROOT, 'src/app'), (f) => /\.tsx?$/.test(f) && !f.includes('/lab/')),
   ];
   return unique(ASCII + EXTRA + files.map((f) => readFileSync(f, 'utf8')).join(''));

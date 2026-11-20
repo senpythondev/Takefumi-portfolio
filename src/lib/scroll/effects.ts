@@ -7,6 +7,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Lenis from 'lenis';
 import { scrollLive } from './store';
+import { loadTune, tune } from './tune';
 
 export type FrameListener = (timeMs: number) => void;
 
@@ -21,7 +22,23 @@ export function startEffects(): Effects {
   ScrollTrigger.config({ ignoreMobileResize: true });
 
   // Touch devices keep native scrolling (syncTouch off): iOS momentum and performance first.
-  const lenis = new Lenis({ autoRaf: false, syncTouch: false, anchors: true });
+  // Desktop (STORYBOARD v2.3 §9-3): a lighter wheel and a longer glide; both read from the tuning
+  // every time, so the ?debug=scroll panel changes them live.
+  loadTune();
+  const lenis = new Lenis({
+    autoRaf: false,
+    syncTouch: false,
+    anchors: true,
+    lerp: tune.inertia,
+    virtualScroll: (data) => {
+      if (data.event.type === 'wheel') {
+        data.deltaX *= tune.wheel;
+        data.deltaY *= tune.wheel;
+      }
+      lenis.options.lerp = tune.inertia;
+      return true;
+    },
+  });
   lenis.on('scroll', ScrollTrigger.update);
 
   const frameListeners = new Set<FrameListener>();

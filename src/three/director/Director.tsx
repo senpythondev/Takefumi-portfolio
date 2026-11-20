@@ -12,7 +12,7 @@
 import { useFrame, useThree } from '@react-three/fiber';
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { AdditiveBlending, BufferAttribute, BufferGeometry, CylinderGeometry, Group, Mesh, PerspectiveCamera, Points, ShaderMaterial, Vector3 } from 'three';
-import { FLUCT_GLSL } from '../worlds/kit';
+import { ATTRACT, ATTRACT_GLSL, FLUCT_GLSL } from '../worlds/kit';
 import { createDissolve } from './dissolve';
 import { createWorldHost } from './worlds';
 import { layer as layerColor, type LayerColorId } from '@/styles/tokens';
@@ -54,9 +54,10 @@ function createDust(count: number) {
     transparent: true,
     depthWrite: false,
     blending: AdditiveBlending,
-    uniforms: { uTime: { value: 0 }, uAmount: { value: 0 }, uPixelRatio: { value: 1 }, uCyan: { value: new Vector3() } },
+    uniforms: { uTime: { value: 0 }, uAmount: { value: 0 }, uPixelRatio: { value: 1 }, uCyan: { value: new Vector3() }, ...ATTRACT },
     vertexShader: /* glsl */ `
       ${FLUCT_GLSL}
+      ${ATTRACT_GLSL}
       attribute float seed;
       uniform float uTime;
       uniform float uPixelRatio;
@@ -74,6 +75,8 @@ function createDust(count: number) {
         vec4 mv = modelViewMatrix * vec4(p, 1.0);
         gl_PointSize = (1.2 + 3.5 * seed * seed) * uPixelRatio * (9.0 / max(0.5, -mv.z));
         gl_Position = projectionMatrix * mv;
+        // The motes drift toward the pointer and glimmer near it (§11.1).
+        vFlick *= 1.0 + 1.4 * attract(gl_Position, seed) * fluct(uTime * 2.3, seed + 0.37);
       }
     `,
     fragmentShader: /* glsl */ `

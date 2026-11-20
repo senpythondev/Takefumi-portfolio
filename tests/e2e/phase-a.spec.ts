@@ -110,8 +110,62 @@ test.describe('with the 3D', () => {
     const cursor = page.locator('.cursor');
     await expect(cursor).toHaveCount(1);
     await expect(cursor).not.toHaveAttribute('data-hidden', '');
+    // §11.2: moving fast leaves a short tail of light; pressing closes the ring.
+    await expect
+      .poll(
+        async () => {
+          for (let i = 0; i < 12; i += 1) await page.mouse.move(200 + ((i * 97) % 900), 300 + ((i * 53) % 300));
+          return page.locator('.cursor-spark').evaluateAll((els) => els.filter((el) => el.getAnimations().length > 0).length);
+        },
+        { timeout: 30_000 },
+      )
+      .toBeGreaterThan(0);
     await page.keyboard.press('Tab');
     await expect(cursor).toHaveAttribute('data-hidden', '');
+  });
+
+  test('§9: a key moment plays to its end at its own tempo; the picture is not scrubbed by the scroll', async ({ page }) => {
+    test.setTimeout(150_000);
+    await page.goto('/ja?quality=low&dpr=0.4&debug=1');
+    await startStage(page);
+    const surface = () => page.evaluate(() => (window as unknown as { __world: { acts?: { surface: number } } }).__world.acts?.surface ?? 0);
+    // Before the extraction's starting point: the picture follows the scroll and waits at the range's edge.
+    await scrollToAct(page, 'surface', 0.36);
+    await expect.poll(surface, { timeout: 30_000 }).toBeGreaterThan(0.29);
+    await page.waitForTimeout(1500);
+    expect(await surface()).toBeLessThanOrEqual(0.3);
+    // Past it: the core is pulled out to the end of the moment (70 %) with no further scrolling.
+    await scrollToAct(page, 'surface', 0.45);
+    await expect.poll(surface, { timeout: 30_000 }).toBeGreaterThanOrEqual(0.7);
+    await page.waitForTimeout(1000);
+    expect(await surface()).toBeCloseTo(0.7, 5);
+    // Scrolled back a little, it stays; back over the far point, it plays back.
+    await scrollToAct(page, 'surface', 0.62);
+    await page.waitForTimeout(1000);
+    expect(await surface()).toBeCloseTo(0.7, 5);
+    await scrollToAct(page, 'surface', 0.5);
+    await expect.poll(surface, { timeout: 30_000 }).toBeLessThanOrEqual(0.3);
+  });
+
+  test('§9-4: ?debug=scroll shows the tuning panel; a slider changes the page and is remembered', async ({ page }) => {
+    test.setTimeout(120_000);
+    await page.goto('/ja?quality=low&dpr=0.4&debug=scroll');
+    await startStage(page);
+    const panel = page.locator('.scroll-panel');
+    await expect(panel).toBeVisible();
+    await expect(panel.locator('input[type="range"]')).toHaveCount(5);
+    const height = () => page.locator('section[data-act="genten"]').evaluate((el) => (el as HTMLElement).offsetHeight / window.innerHeight);
+    const before = await height();
+    await panel.locator('input[data-tune="length"]').fill('2');
+    await expect.poll(height).toBeGreaterThan(before * 1.2);
+    expect(await page.evaluate(() => JSON.parse(window.localStorage.getItem('gt-scroll-tune') ?? '{}').length)).toBe(2);
+    await page.reload();
+    await expect(page.locator('.scroll-panel input[data-tune="length"]')).toHaveValue('2');
+    // Without the parameter the saved values are not used.
+    await page.goto('/ja?quality=low&dpr=0.4');
+    await startStage(page);
+    await expect(page.locator('.scroll-panel')).toHaveCount(0);
+    expect(await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--act-scale').trim())).toBe('1.5');
   });
 
   test('3-6: the name for the watermark is never sent anywhere', async ({ page }) => {

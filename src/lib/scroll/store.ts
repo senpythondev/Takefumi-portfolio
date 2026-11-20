@@ -60,13 +60,15 @@ export const scrollLive: {
   settling: boolean;
   /** Index of the band pointed at in 3D (the director's raycast), or -1. */
   pointerBand: number;
+  /** Where that band is on screen (px): the cursor's ring is drawn toward it (§11.2). */
+  pointerBandAt: [number, number] | null;
   /** Index of the band whose link is hovered or focused (src/lib/scroll/cinema-ui.ts), or -1. */
   linkBand: number;
   /** Set by a flight to an act (cinema-ui): the index of the act; the director snaps there instead of sweeping through the acts between (−1: none). */
   jumpTo: number;
   /** The split core is on screen and can be chosen from (act 2 and the moments between worlds). */
   hub: boolean;
-} = { progress: {}, acts: {}, navOpacity: 1, settling: false, pointerBand: -1, linkBand: -1, jumpTo: -1, hub: false };
+} = { progress: {}, acts: {}, navOpacity: 1, settling: false, pointerBand: -1, pointerBandAt: null, linkBand: -1, jumpTo: -1, hub: false };
 
 export function useScrollState<T>(select: (s: ScrollState) => T): T {
   return useSyncExternalStore(

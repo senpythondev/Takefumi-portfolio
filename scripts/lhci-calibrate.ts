@@ -4,15 +4,17 @@
  * page pass on a fast runner and fail on a slow one. The slowdown is scaled so every runner
  * emulates the same device:
  *
- *   cpuSlowdownMultiplier = clamp(4 × benchmarkIndex / 1750, 2, 10)   (1750: the reference machine)
+ *   cpuSlowdownMultiplier = clamp(4 × benchmarkIndex / 2900, 2, 10)
  *
- * Every runner seen so far is faster than the reference, so this is stricter than the old 4×.
+ * 2900 is the benchmarkIndex of a typical runner (PM decision 2026-11-20): a typical runner gets the
+ * 4× the budgets of CLAUDE.md §4 were designed for; a faster one is slowed more, a slower one less.
+ * (The first reference, 1750, gave runners 4.9–6.6×: stricter than the budgets were set at.)
  * Writes .lighthouseci/cpu.json, read by lighthouserc.cjs; `npm run lhci` runs this first.
  */
 import { execFileSync, spawn } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
 
-const REFERENCE = 1750;
+const REFERENCE = 2900;
 const PORT = 3301;
 const URL = `http://localhost:${PORT}/ja/evidence/genten-acc-genten`;
 

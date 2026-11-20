@@ -10,18 +10,20 @@
  * itself moves only to close on a cut face and inside the worlds (each world's `pose`).
  */
 import { Color, Matrix4, Raycaster, Vector2, Vector3, type Group, type Mesh, type PerspectiveCamera, type Scene } from 'three';
-import { ACTS, beatsOf } from '@/content/acts';
+import { ACTS, beatsOf, cuesOf } from '@/content/acts';
 import { scrollLive } from '@/lib/scroll/store';
+import { omegaFor, tune } from '@/lib/scroll/tune';
 import { base, layer as layerColor, type LayerColorId } from '@/styles/tokens';
 import type { BandMaterial } from '../materials/band';
 import { WALL_HORIZON, type WallMaterial } from '../materials/wall';
 import { createWallController } from '../world/controller';
 import type { createWall } from '../world/wall';
-import { blendPose, fluct, setPose, type Pose, type WorldInput } from '../worlds/kit';
+import { ATTRACT, blendPose, fluct, setPose, type Pose, type WorldInput } from '../worlds/kit';
 import type { Holograms } from '../holo';
 import type { Dust, Sparks } from './Director';
 import type { Dissolve } from './dissolve';
 import { Spring, clamp01, easeOutCubic, mix, seg } from './motion';
+import { Playhead } from './playhead';
 import { postLive } from './post-live';
 import { BANDS, CORE_RADIUS, HUB_FOV, HUB_GAP, HUB_Z, shotAt, type Frame } from './shots';
 import type { createWorldHost, WorldId } from './worlds';
@@ -64,7 +66,12 @@ export function createDirectorRun({
   scene: Scene;
 }) {
   const controller = createWallController(wall.get('low'));
-  const story = new Spring(0, 6.5);
+  // The story position: follows the scroll softly, plays the key moments at a fixed tempo (§9).
+  const story = new Playhead(
+    ACTS.flatMap((act, index) =>
+      cuesOf(act).map((c) => ({ g0: index + c.from, g1: index + c.to, dur: c.dur })),
+    ),
+  );
   const nav = new Spring(1, 5);
   const hover = Array.from({ length: BANDS }, () => new Spring(0, 9));
   // The band turned to the camera, smoothed: after a flight the new band turns forward instead of snapping.
@@ -145,11 +152,12 @@ export function createDirectorRun({
   };
 
   // ── Pointer (the worlds' lights, the index) ──
-  const pointer = { x: 0, y: 0, on: false, moved: false, last: -1e9 };
+  const pointer = { x: 0, y: 0, on: false, moved: false, last: -1e9, mouse: false };
   const onPointer = (e: PointerEvent) => {
     pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
     pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
     pointer.moved = true;
+    pointer.mouse = e.pointerType === 'mouse';
     if (e.pointerType === 'mouse' || e.buttons > 0 || e.type === 'pointerdown') {
       pointer.on = true;
       pointer.last = performance.now();
@@ -158,6 +166,31 @@ export function createDirectorRun({
   window.addEventListener('pointermove', onPointer, { passive: true });
   window.addEventListener('pointerdown', onPointer, { passive: true });
   const coarse = window.matchMedia('(pointer: coarse)').matches;
+  // §11.1: motes and stars drift toward the pointer through slow springs (a quicker and a slower
+  // follower; each mote mixes the two), and back once it has left. A finger's drag makes them flow.
+  const onLeave = () => {
+    pointer.mouse = false;
+  };
+  root.addEventListener('pointerleave', onLeave);
+  const attract = { fx: new Spring(0, 3.0), fy: new Spring(0, 3.0), sx: new Spring(0, 1.3), sy: new Spring(0, 1.3), k: new Spring(0, 1.5), dx: new Spring(0, 2.4), dy: new Spring(0, 2.4) };
+  const drag = { x: 0, y: 0, lastX: 0, lastY: 0, on: false };
+  const onTouchStart = (e: TouchEvent) => {
+    const t = e.touches[0];
+    if (!t) return;
+    drag.lastX = t.clientX;
+    drag.lastY = t.clientY;
+    drag.on = true;
+  };
+  const onTouchMove = (e: TouchEvent) => {
+    const t = e.touches[0];
+    if (!t || !drag.on) return;
+    drag.x = Math.max(-0.3, Math.min(0.3, drag.x + ((t.clientX - drag.lastX) / window.innerWidth) * 0.9));
+    drag.y = Math.max(-0.3, Math.min(0.3, drag.y - ((t.clientY - drag.lastY) / window.innerHeight) * 0.9));
+    drag.lastX = t.clientX;
+    drag.lastY = t.clientY;
+  };
+  window.addEventListener('touchstart', onTouchStart, { passive: true });
+  window.addEventListener('touchmove', onTouchMove, { passive: true });
 
   // ── Controls in the acts' HTML ──
   const controls = new Map<string, HTMLInputElement | null>();
@@ -229,10 +262,9 @@ export function createDirectorRun({
         // A flight from the index: snap to the target act's first frame (the same hub framing).
         story.snap(scrollLive.jumpTo);
         scrollLive.jumpTo = -1;
-      } else if (Math.abs(raw - story.x) > 1.5) {
-        story.snap(raw);
       }
-      const G = Math.max(0, story.step(raw, delta));
+      const follow = omegaFor(tune.smooth);
+      const G = Math.max(0, story.step(raw, delta, follow, tune.tempo));
       const i = Math.min(LAST, Math.floor(G));
       const p = i === LAST ? clamp01(G - i) : G - i;
       const act = ACTS[i] as (typeof ACTS)[number];
@@ -269,6 +301,19 @@ export function createDirectorRun({
       }
       if (G > 0.6) loadHolo();
 
+      // ── Motes and stars toward the pointer (§11.1) ──
+      const there = pointer.mouse ? 1 : 0;
+      const decay = Math.exp(-delta * 1.1);
+      drag.x *= decay;
+      drag.y *= decay;
+      if (Math.abs(drag.x) < 1e-4) drag.x = 0;
+      if (Math.abs(drag.y) < 1e-4) drag.y = 0;
+      ATTRACT.uAttract.value.set(attract.fx.step(pointer.x, delta), attract.fy.step(pointer.y, delta), attract.sx.step(pointer.x, delta), attract.sy.step(pointer.y, delta));
+      ATTRACT.uAttractK.value = attract.k.step(there, delta);
+      ATTRACT.uDrag.value.set(attract.dx.step(drag.x, delta), attract.dy.step(drag.y, delta));
+      const attracting =
+        attract.k.moving(there) || attract.sx.moving(pointer.x) || attract.sy.moving(pointer.y) || attract.fx.moving(pointer.x) || attract.fy.moving(pointer.y) || attract.dx.moving(drag.x) || attract.dy.moving(drag.y);
+
       // ── 3. Wall (acts 0–1) ──
       const lantern = i === 0 ? clamp01(1 - (window.scrollY / window.innerHeight - 0.35) / 0.9) : 0;
       controller.frame(elapsed, delta, width, height, lantern);
@@ -281,6 +326,8 @@ export function createDirectorRun({
       u.uGeoPulse.value = shot.wall.geoPulse;
       u.uRig.value = shot.wall.rig;
       u.uBeam.value *= shot.wall.beam;
+      u.uStar.value.set(attract.sx.x * 0.5 + 0.5, attract.sy.x * 0.5 + 0.5, attract.k.x);
+      u.uStarDrag.value.set(attract.dx.x * 0.06, -attract.dy.x * 0.06);
       if (wallMesh.current) wallMesh.current.visible = wallDim > 0.002;
       elapsedShaft += delta;
       const len = shaft.step(shaftTarget, delta);
@@ -575,6 +622,7 @@ export function createDirectorRun({
       }
       const vh = window.innerHeight;
       const heroTarget = clamp01((window.scrollY + 0.85 * vh - heroBottom) / (0.5 * vh));
+      heroFade.omega = follow;
       const fade = clamp01(heroFade.step(heroTarget, delta));
       setVar(hero, '--hero-fade', easeOutCubic(fade).toFixed(3));
       setFlag(hero, 'data-gone', fade > 0.985);
@@ -586,7 +634,8 @@ export function createDirectorRun({
 
       const decodingNow = runDecode(elapsed);
       scrollLive.settling =
-        story.moving(raw) ||
+        story.moving() ||
+        attracting ||
         nav.moving(actOn ? 0 : 1) ||
         heroFade.moving(heroTarget) ||
         hover.some((s, j) => s.moving(j === hoverBand ? 1 : 0)) ||
@@ -604,6 +653,11 @@ export function createDirectorRun({
         const hit = raycaster.intersectObjects(meshes, false)[0];
         scrollLive.pointerBand = hit ? bandMeshes.current.indexOf(hit.object as Mesh) : -1;
       } else if (!hub) scrollLive.pointerBand = -1;
+      const pointed = scrollLive.pointerBand >= 0 ? bandMeshes.current[scrollLive.pointerBand] : null;
+      if (pointed) {
+        pointed.getWorldPosition(v3).project(camera);
+        scrollLive.pointerBandAt = [(v3.x * 0.5 + 0.5) * width, (0.5 - v3.y * 0.5) * height];
+      } else scrollLive.pointerBandAt = null;
 
       // Rock textures fade in on the bands once the wall has them.
       if (rockMix < 1 && wall.rock()) {
@@ -649,6 +703,10 @@ export function createDirectorRun({
       window.removeEventListener('resize', measure);
       window.removeEventListener('pointermove', onPointer);
       window.removeEventListener('pointerdown', onPointer);
+      window.removeEventListener('touchstart', onTouchStart);
+      window.removeEventListener('touchmove', onTouchMove);
+      root.removeEventListener('pointerleave', onLeave);
+      ATTRACT.uAttractK.value = 0;
       setFlag(root, 'data-act-on', false);
       scrollLive.navOpacity = 1;
       scrollLive.settling = false;

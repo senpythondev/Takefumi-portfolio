@@ -53,3 +53,24 @@ export function beatsOf(act: Act) {
   const pause = act.len > 0 ? act.pause / act.len : 0;
   return { entry: 0.15, result: 0.85 - pause, ret: 0.85 };
 }
+
+/**
+ * The key moments of an act (STORYBOARD v2.3 §9-2): ranges of its progress that are not scrubbed by
+ * the scroll but played at a fixed tempo once the scroll crosses into them (and played back the
+ * same way). `dur` is in seconds at tempo 1. Everything between them follows the scroll softly.
+ */
+export type ActCue = { from: number; to: number; dur: number };
+
+export function cuesOf(act: Act): ActCue[] {
+  // Act 1: the core is pulled out of the borehole, then turned onto its side.
+  if (act.id === 'surface') return [{ from: 0.3, to: 0.7, dur: 3.0 }, { from: 0.7, to: 1, dur: 2.6 }];
+  // Act 2: the bands come apart; at the end, the first band turns its cut face forward.
+  if (act.id === 'explode') return [{ from: 0, to: 0.5, dur: 2.8 }, { from: 0.85, to: 1, dur: 1.4 }];
+  // The finale: the bands close and their seams turn gold.
+  if (act.id === 'next') return [{ from: 0.02, to: 0.5, dur: 3.8 }];
+  const { entry, result, ret } = beatsOf(act);
+  const cues: ActCue[] = [{ from: 0, to: entry, dur: 2.4 }, { from: ret, to: 1, dur: 2.2 }];
+  // 3-4: the dome, the cracks sealed in gold, the hash crystallising.
+  if (act.id === 'php-audit') cues.push({ from: entry + 0.62 * (result - entry), to: entry + 0.98 * (result - entry), dur: 4.2 });
+  return cues;
+}

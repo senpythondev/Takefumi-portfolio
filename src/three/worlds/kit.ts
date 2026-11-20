@@ -4,7 +4,7 @@
  * LineSegments, InstancedMesh, CanvasTexture…): a world that used another class would grow the base
  * for everyone. Geometry is built here by hand instead of with three's geometry helpers.
  */
-import { AdditiveBlending, BufferAttribute, BufferGeometry, Color, DoubleSide, Group, LineSegments, Mesh, Points, ShaderMaterial, type PerspectiveCamera, type WebGLRenderer } from 'three';
+import { AdditiveBlending, BufferAttribute, BufferGeometry, Color, DoubleSide, Group, LineSegments, Mesh, Points, ShaderMaterial, Vector2, Vector4, type PerspectiveCamera, type WebGLRenderer } from 'three';
 
 export type Tier = 'high' | 'medium' | 'low';
 
@@ -300,6 +300,31 @@ export function disposeGroup(group: Group) {
 }
 
 /** A drifting cloud of motes around a world (every world has its own air). */
+/**
+ * Motes and stars drift toward the pointer (STORYBOARD v2.3 §11.1): slowly, as if through water,
+ * nearer ones more than far ones, and back when it leaves; those close to it glimmer. One set of
+ * uniforms shared by every material that includes `ATTRACT_GLSL` (the director drives them through
+ * slow springs): `uAttract` = the pointer in NDC, twice (xy: a quicker follower, zw: a slower one —
+ * each mote follows a mix of the two by its seed, so they never move as one sheet), `uAttractK` =
+ * how much the pointer is there (0 once it has left), `uDrag` = the flow of a finger's drag.
+ */
+export const ATTRACT = { uAttract: { value: new Vector4() }, uAttractK: { value: 0 }, uDrag: { value: new Vector2() } };
+export const ATTRACT_GLSL = /* glsl */ `
+uniform vec4 uAttract;
+uniform float uAttractK;
+uniform vec2 uDrag;
+// Moves the clip-space position toward the pointer; returns 0–1, how close to it the mote is.
+float attract(inout vec4 clip, float seed) {
+  vec2 ndc = clip.xy / max(clip.w, 1e-3);
+  vec2 to = mix(uAttract.xy, uAttract.zw, seed) - ndc;
+  float d = length(to);
+  float depth = clamp(7.0 / max(clip.w, 0.5), 0.12, 1.0);
+  ndc += to * (uAttractK * depth * 0.3 * smoothstep(1.5, 0.0, d)) + uDrag * depth;
+  clip.xy = ndc * clip.w;
+  return uAttractK * smoothstep(0.45, 0.0, d);
+}
+`;
+
 export function motes(count: number, box: [number, number, number], center: [number, number, number], color: Color, size = 1.6, seed = 5) {
   const r = rng(seed);
   const pos = new Float32Array(count * 3);
@@ -314,8 +339,10 @@ export function motes(count: number, box: [number, number, number], center: [num
   return glowPoints(g, {
     color,
     size,
+    uniforms: ATTRACT,
     vertex: /* glsl */ `
       ${FLUCT_GLSL}
+      ${ATTRACT_GLSL}
       attribute float seed;
       uniform float uTime;
       uniform float uPx;
@@ -327,9 +354,10 @@ export function motes(count: number, box: [number, number, number], center: [num
         p.y += sin(uTime * (0.04 + seed * 0.05) + seed * 17.0) * 0.4;
         p.z += cos(uTime * (0.06 + seed * 0.04) + seed * 11.0) * 0.4;
         vec4 mv = modelViewMatrix * vec4(p, 1.0);
-        vA = 0.15 + 0.85 * pow(fluct(uTime, seed), 2.0);
         gl_PointSize = uSize * (0.5 + seed) * uPx * (10.0 / max(0.5, -mv.z));
         gl_Position = projectionMatrix * mv;
+        float near = attract(gl_Position, seed);
+        vA = (0.15 + 0.85 * pow(fluct(uTime, seed), 2.0)) * (1.0 + 1.4 * near * fluct(uTime * 2.3, seed + 0.37));
       }`,
   });
 }

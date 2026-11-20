@@ -61,7 +61,9 @@ for (const size of sizes.length ? sizes : ['1440x900', '390x844']) {
           const el = document.querySelector(`[data-act="${act}"]`);
           if (!el) return -1;
           const top = el.getBoundingClientRect().top + window.scrollY;
-          return top + frac * (l / 100) * window.innerHeight;
+          // The pinned length is the act's `len` times the tuning scale (src/lib/scroll/tune.ts).
+          const scale = Number(getComputedStyle(document.documentElement).getPropertyValue('--act-scale')) || 1.5;
+          return top + frac * (l / 100) * scale * window.innerHeight;
         },
         [id, f, len],
       );

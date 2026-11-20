@@ -15,7 +15,7 @@
  *
  * Procedural placeholders stand in for the rock textures the PM will issue (MEDIA_PROMPTS.md).
  */
-import { Color, ShaderMaterial, Vector2, type Texture } from 'three';
+import { Color, ShaderMaterial, Vector2, Vector3, type Texture } from 'three';
 import { base, city, layer, signal } from '@/styles/tokens';
 
 export type WallQuality = 'high' | 'medium' | 'low';
@@ -45,6 +45,8 @@ uniform vec2 uRes;
 uniform float uDepth;      // viewport heights scrolled
 uniform float uTime;
 uniform vec2 uPointer;     // beam centre, uv
+uniform vec3 uStar;        // the pointer the stars drift toward (uv, slow) and how much it is there
+uniform vec2 uStarDrag;    // the flow of a finger's drag
 uniform float uBeam;       // 0..1 beam strength
 uniform float uShaftX;     // borehole x, uv
 uniform float uCalm;       // 1: the left side falls to calm dark rock (desktop); 0: none (mobile)
@@ -266,9 +268,24 @@ void main() {
     float up = (horizon - p.y) / HORIZON;
     col = mix(vec3(0.020, 0.030, 0.052), vec3(0.006, 0.009, 0.018), smoothstep(0.0, 1.0, up));
     // Stars are far away: they scroll with the page but do not grow when the camera closes in.
-    vec2 sg = vec2((vUv.x - uShaftX) * aspect, uDepth + 1.0 - vUv.y) * 340.0;
-    float star = step(0.9978, hash(floor(sg))) * smoothstep(0.45, 0.1, length(fract(sg) - 0.5));
-    col += vec3(0.75, 0.8, 0.95) * star * (0.35 + 0.65 * hash(floor(sg) + 3.0)) * smoothstep(0.05, 0.5, up);
+    // Two depths of them drift toward the pointer — the nearer layer more — and those close to it
+    // glimmer; when the pointer leaves they ease back (STORYBOARD v2.3 §11.1; uStar is a slow spring).
+    vec2 suv = vec2((vUv.x - uShaftX) * aspect, uDepth + 1.0 - vUv.y);
+    vec2 toP = (uStar.xy - vUv) * vec2(aspect, -1.0);
+    float dP = length(toP);
+    vec3 stars = vec3(0.0);
+    for (int L = 0; L < 2; L++) {
+      float near = float(L);
+      float pull = uStar.z * mix(0.05, 0.13, near) * smoothstep(0.9, 0.0, dP);
+      vec2 sg = (suv - toP * pull - uStarDrag * mix(0.4, 1.0, near)) * mix(340.0, 215.0, near) + near * 17.3;
+      vec2 cell = floor(sg);
+      float seed = hash(cell);
+      float star = step(mix(0.9978, 0.9986, near), seed) * smoothstep(0.45, 0.1, length(fract(sg) - 0.5));
+      float twinkle = 0.78 + 0.22 * sin(uTime * (0.5 + 1.7 * hash(cell + 5.0)) + seed * 400.0);
+      float glimmer = uStar.z * smoothstep(0.24, 0.0, dP) * (0.6 + 0.4 * sin(uTime * 2.1 + seed * 900.0));
+      stars += vec3(0.75, 0.8, 0.95) * star * (0.35 + 0.65 * hash(cell + 3.0)) * twinkle * (1.0 + 1.8 * glimmer) * mix(1.0, 1.25, near);
+    }
+    col += stars * smoothstep(0.05, 0.5, up);
     float ridge = horizon - 0.006 - noise(vec2(p.x * 3.2 + 4.0, 1.0)) * 0.022;
     if (p.y > ridge) col = vec3(0.010, 0.014, 0.022);
     // Drill rig over the borehole: a small lattice tower, a shed, one warm light.
@@ -450,6 +467,8 @@ export type WallMaterial = ShaderMaterial & {
     uDepth: { value: number };
     uTime: { value: number };
     uPointer: { value: Vector2 };
+    uStar: { value: Vector3 };
+    uStarDrag: { value: Vector2 };
     uBeam: { value: number };
     uShaftX: { value: number };
     uCalm: { value: number };
@@ -479,6 +498,8 @@ export function createWallUniforms(ids: readonly string[]): WallUniforms {
     uDepth: { value: 0 },
     uTime: { value: 0 },
     uPointer: { value: new Vector2(0.7, 0.5) },
+    uStar: { value: new Vector3(0.5, 0.5, 0) },
+    uStarDrag: { value: new Vector2() },
     uBeam: { value: 0 },
     uShaftX: { value: 0.8 },
     uCalm: { value: 1 },

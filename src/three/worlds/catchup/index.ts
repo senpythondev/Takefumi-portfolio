@@ -9,7 +9,7 @@
  */
 import { Color, Group } from 'three';
 import { layer as layerColor } from '@/styles/tokens';
-import { COLORS, FLUCT_GLSL, clamp01, disposeGroup, geometry, glowLines, glowPoints, mix, rng, seg, setPose, storyOf, type Pose, type World, type WorldContext, type WorldInput } from '../kit';
+import { COLORS, FLUCT_GLSL, clamp01, disposeGroup, geometry, glowLines, glowPoints, mix, rng, setPose, storyOf, type Pose, type World, type WorldContext, type WorldInput } from '../kit';
 
 const LEN = 92;
 const RADIUS = 2.2;
@@ -130,7 +130,12 @@ export default function createCatchup(ctx: WorldContext): World {
       ringSeg.push(Math.cos(a0), Math.sin(a0), z, Math.cos(a1), Math.sin(a1), z);
       ringId.push(id, id);
     }
-    if (id >= CHANGES.length) for (let t = 0; t < 12; t += 1) ringSeg.push(Math.cos(t * 0.52) * 0.85, Math.sin(t * 0.52) * 0.85, z, Math.cos(t * 0.52), Math.sin(t * 0.52), z), ringId.push(id, id);
+    if (id >= CHANGES.length) {
+      for (let t = 0; t < 12; t += 1) {
+        ringSeg.push(Math.cos(t * 0.52) * 0.85, Math.sin(t * 0.52) * 0.85, z, Math.cos(t * 0.52), Math.sin(t * 0.52), z);
+        ringId.push(id, id);
+      }
+    }
   });
   const ringAmt = new Float32Array(CHANGES.length + TICKS.length);
   const rings = glowLines(geometry({ position: { array: new Float32Array(ringSeg), size: 3 }, aRing: { array: new Float32Array(ringId), size: 1 } }), COLORS.evidence.clone(), {
