@@ -1,3 +1,4 @@
+import { StaticHtml } from '@/lib/static-html';
 import { getTranslations } from 'next-intl/server';
 import type { Layer } from '@/content';
 import { kanjiOf } from '@/content/acts';
@@ -18,7 +19,7 @@ export async function ActIndex({ layers, guide, locale }: { layers: Layer[]; gui
   const td = await getTranslations('depth');
   return (
     <section id="index" className="act act-explode" data-act="explode" aria-labelledby="layer-index-title">
-      <div className="act-frame">
+      <StaticHtml className="act-frame">
         <nav className="band-labels layer-index" aria-labelledby="layer-index-title">
           <h2 id="layer-index-title">{t('layers')}</h2>
           <ol>
@@ -42,7 +43,7 @@ export async function ActIndex({ layers, guide, locale }: { layers: Layer[]; gui
           </ol>
         </nav>
         <p className="index-guide">{guide}</p>
-      </div>
+      </StaticHtml>
       <ActStill name="explode" />
     </section>
   );

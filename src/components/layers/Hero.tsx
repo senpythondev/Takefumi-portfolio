@@ -1,3 +1,4 @@
+import { StaticHtml } from '@/lib/static-html';
 import { getTranslations } from 'next-intl/server';
 import { KanjiMark } from '@/components/acts/KanjiMark';
 import type { CSSProperties } from 'react';
@@ -43,7 +44,8 @@ export async function Hero({ layer, person, ctx, nextAnchor, coreHeadline }: { l
       {/* §10-G: today's date on the thin glowing bed just under the surface. Filled in the browser
           from the visitor's own clock (cinema-ui.ts); decorative, and never sent anywhere. */}
       <p className="today-layer needs-cinema" data-today="" data-label={tc('todayLayer')} aria-hidden="true" />
-      <div className="hero-content" data-hero-content="">
+      {/* Server-only HTML (src/lib/static-html.tsx): React is handed one string for each part. */}
+      <StaticHtml className="hero-content" data-hero-content="">
         <header className="hero-header">
           <h1 id={`${anchor}-title`}>
             <span className="hero-name">{person.name}</span>
@@ -69,15 +71,15 @@ export async function Hero({ layer, person, ctx, nextAnchor, coreHeadline }: { l
             {tn('dig')} <span aria-hidden="true">↓</span>
           </a>
         </p>
-      </div>
-      <div className="act-frame">
+      </StaticHtml>
+      <StaticHtml className="act-frame">
         {act.kanji ? <KanjiMark kanji={act.kanji} /> : null}
         <div className="act-head">
           <h2 className="act-headline" id="act-core-title" tabIndex={-1} data-act-headline="surface">
             <InkText text={coreHeadline} ctx={ctx} />
           </h2>
         </div>
-      </div>
+      </StaticHtml>
       <ActStill name="surface" />
     </section>
   );

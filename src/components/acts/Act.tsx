@@ -10,6 +10,7 @@ import { layerName, type LayerColorId } from '@/styles/tokens';
 import { ActStill } from './ActStill';
 import { layerAnchor, workPath } from './anchors';
 import { InkText } from './InkText';
+import { StaticHtml } from '@/lib/static-html';
 
 /** The small mono label over a headline: depth, kanji, colour name, period (STORYBOARD v2.1 §8.3, §8.8). */
 export async function ActEyebrow({ layer, index, locale }: { layer: Layer; index: number; locale: string }) {
@@ -152,7 +153,8 @@ export async function Act({
       aria-labelledby={`${anchor}-title`}
       style={{ '--len': act.len, '--tint': `var(--color-layer-${layer.id})` } as CSSProperties}
     >
-      <div className="act-frame">
+      {/* Server-only HTML: one string for React, not a tree to describe again and hydrate (src/lib/static-html.tsx). */}
+      <StaticHtml className="act-frame">
         {act.kanji ? <KanjiMark kanji={act.kanji} /> : null}
         {act.id !== 'next' ? <ActCard layer={layer} index={index} ctx={ctx} role={copy.role} /> : null}
         <div className="act-head">
@@ -173,7 +175,7 @@ export async function Act({
             </a>
           ) : null}
         </div>
-      </div>
+      </StaticHtml>
       {/* An act with content after its frame (the finale's drawer): the pinned part ends here. */}
       {after ? <div className="act-spacer" data-act-end="" aria-hidden="true" /> : null}
       {after}
