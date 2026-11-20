@@ -118,6 +118,117 @@ export function startCinemaUi({ lenis, addFrameListener }: { lenis: Lenis; addFr
     scrollLive.linkBand = -1;
   });
 
+  // ── 3-6: 確認 opens the sample document as a full page, watermarked in this browser (the viewer
+  //    is its own chunk, fetched when the name field is first used) ──
+  const nameInput = document.querySelector<HTMLInputElement>('[data-control="watermark"]');
+  const confirm = document.querySelector<HTMLButtonElement>('[data-watermark-confirm]');
+  const viewer = document.querySelector<HTMLDialogElement>('[data-doc-viewer]');
+  if (nameInput && confirm && viewer) {
+    const patent = nameInput.closest<HTMLElement>('section[data-act]');
+    const sync = () => {
+      confirm.disabled = nameInput.value.trim() === '';
+    };
+    const open = () => {
+      const name = nameInput.value.trim().slice(0, 40);
+      if (!name) return;
+      void import('@/lib/watermark/viewer').then(({ openDocViewer }) => {
+        patent?.setAttribute('data-viewing', '');
+        lenis.stop();
+        openDocViewer(viewer, name, () => {
+          patent?.removeAttribute('data-viewing');
+          lenis.start();
+          confirm.focus({ preventScroll: true });
+        });
+      });
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' && !e.isComposing) open();
+    };
+    nameInput.addEventListener('input', sync);
+    nameInput.addEventListener('keydown', onKey);
+    confirm.addEventListener('click', open);
+    sync();
+    cleanups.push(() => {
+      nameInput.removeEventListener('input', sync);
+      nameInput.removeEventListener('keydown', onKey);
+      confirm.removeEventListener('click', open);
+    });
+  }
+
+  // ── §10-G: today's date on the newest bed (the visitor's own clock; nothing is sent) ──
+  const today = document.querySelector<HTMLElement>('[data-today]');
+  if (today) {
+    const d = new Date();
+    today.textContent = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}　${today.dataset.label ?? ''}`;
+  }
+
+  // ── §10-C: the thread of evidence. A big number under the pointer (or focused) sends a thread of
+  //    light into the rock (the director draws it); clicked with a pointer, the camera follows the
+  //    thread for a moment and then the evidence opens as it always does. From the keyboard, and
+  //    for every number that is not one of an act's big numbers, the evidence opens at once. ──
+  const BIG = '.act-metric a.metric[data-metric]';
+  const seedOf = (id: string) => [...id].reduce((n, ch) => (n * 31 + ch.charCodeAt(0)) % 9973, 7);
+  const aim = (el: Element | null) => {
+    const link = el?.closest?.(BIG) as HTMLElement | null;
+    if (!link) {
+      scrollLive.thread = null;
+      return null;
+    }
+    const r = link.getBoundingClientRect();
+    scrollLive.thread = { x: r.left + r.width / 2, y: r.top + r.height / 2, seed: seedOf(link.dataset.metric ?? '') };
+    return link;
+  };
+  on('pointerover', (e) => {
+    if (e.pointerType === 'mouse') aim(e.target as Element);
+  });
+  on('focusin', (e) => {
+    aim(e.target as Element);
+  });
+  on('focusout', () => {
+    scrollLive.thread = null;
+  });
+  let following = false;
+  on(
+    'click',
+    (e) => {
+      if (following || e.defaultPrevented || e.detail === 0 || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      const link = aim(e.target as Element);
+      if (!link) return;
+      e.preventDefault();
+      e.stopPropagation();
+      scrollLive.threadFollow = performance.now();
+      window.setTimeout(() => {
+        following = true;
+        link.click(); // now the evidence opens (EvidenceController), exactly as without the thread
+        following = false;
+        if (!link.matches(':hover')) scrollLive.thread = null;
+      }, 900);
+    },
+    { capture: true },
+  );
+
+  // ── §10-H: sound, optional and off by default. Its code is fetched on the first switch-on. ──
+  const soundToggle = document.querySelector<HTMLButtonElement>('[data-sound-toggle]');
+  let sound: { stop: () => void } | null = null;
+  const onSound = () => {
+    if (!soundToggle) return;
+    const turnOn = soundToggle.getAttribute('aria-pressed') !== 'true';
+    soundToggle.setAttribute('aria-pressed', String(turnOn));
+    if (turnOn) {
+      void import('@/lib/sound').then(({ startSound }) => {
+        if (soundToggle.getAttribute('aria-pressed') === 'true' && !sound) sound = startSound(addFrameListener);
+      });
+    } else {
+      sound?.stop();
+      sound = null;
+    }
+  };
+  soundToggle?.addEventListener('click', onSound);
+  cleanups.push(() => {
+    soundToggle?.removeEventListener('click', onSound);
+    sound?.stop();
+  });
+
   // ── Count-up when the result appears ──
   const NUMBER = /\d[\d,]*(?:\.\d+)?/g;
   const counting = new Map<HTMLElement, { from: number; to: number; start: number; format: (v: number) => string }>();
@@ -196,6 +307,7 @@ export function startCinemaUi({ lenis, addFrameListener }: { lenis: Lenis; addFr
       nextRipple += 1;
       el.style.left = `${e.clientX}px`;
       el.style.top = `${e.clientY}px`;
+      window.dispatchEvent(new Event('gt:ripple')); // the optional sound answers with one small note
       el.getAnimations().forEach((a) => a.cancel());
       el.animate(
         [
@@ -411,6 +523,21 @@ export function startCinemaUi({ lenis, addFrameListener }: { lenis: Lenis; addFr
     }
   });
   cleanups.push(removeFrame);
+
+  // §11.4: a click on bare rock drills it (its own small chunk, fetched once the page is idle).
+  let stopDrill: (() => void) | null = null;
+  let live = true;
+  const loadDrill = () => {
+    void import('./drill').then(({ startDrill }) => {
+      if (live) stopDrill = startDrill(addFrameListener);
+    });
+  };
+  if ('requestIdleCallback' in window) window.requestIdleCallback(loadDrill, { timeout: 4000 });
+  else setTimeout(loadDrill, 2000);
+  cleanups.push(() => {
+    live = false;
+    stopDrill?.();
+  });
 
   return () => cleanups.forEach((f) => f());
 }

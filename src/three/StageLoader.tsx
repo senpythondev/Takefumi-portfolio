@@ -38,7 +38,11 @@ function setDrill(value: number) {
   // On the small fixed backdrop, never on <html>: a custom property changed on the root makes the
   // browser recompute the style of every element of this long page (measured on CI: +80 ms of
   // style and layout at 4× on the static page).
-  document.querySelector<HTMLElement>('.world')?.style.setProperty('--drill', value.toFixed(3));
+  const world = document.querySelector<HTMLElement>('.world');
+  world?.style.setProperty('--drill', value.toFixed(3));
+  // §10-A: the borehole is not drilled step by step any more — the strata are laid down while the
+  // page loads, and the hole is driven down in one go when loading is done.
+  world?.style.setProperty('--bore', value >= 0.88 ? value.toFixed(3) : '0');
   const pct = document.querySelector<HTMLElement>('[data-drill-pct]');
   if (pct) pct.textContent = `${Math.round(value * 100)}%`;
 }

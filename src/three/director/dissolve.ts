@@ -49,6 +49,7 @@ export function createDissolve(count: number) {
       uDisk: { value: new Vector3(1, 1, 5) }, // radius x, radius y, distance
       uTint: { value: new Color('#988979') },
       uTarget: { value: new Color('#8fcbd0') },
+      uSwirl: { value: 0 },
     },
     vertexShader: /* glsl */ `
       ${FLUCT_GLSL}
@@ -61,10 +62,18 @@ export function createDissolve(count: number) {
       uniform vec3 uDisk;
       uniform vec3 uTint;
       uniform vec3 uTarget;
+      uniform float uSwirl;
       varying vec3 vColor;
       varying float vA;
       void main() {
-        vec3 a = vec3(position.xy * uDisk.xy, -uDisk.z);
+        // Suminagashi (§10-D): before the grains leave, the face's bedding turns like ink floated on
+        // water — the middle further than the rim, with a slow ripple through it. uSwirl is signed:
+        // every act winds its own way and at its own rate.
+        float rr = length(position.xy);
+        float turn = uSwirl * (1.2 - rr) * 2.6 + uSwirl * 0.35 * sin(rr * 9.0 - uTime * 0.8);
+        vec2 sw2 = mat2(cos(turn), -sin(turn), sin(turn), cos(turn)) * position.xy;
+        sw2 += abs(uSwirl) * 0.05 * vec2(sin(sw2.y * 7.0 + uTime * 0.6), cos(sw2.x * 6.0 - uTime * 0.5));
+        vec3 a = vec3(sw2 * uDisk.xy, -uDisk.z);
         float delay = aSeed.x * 0.45;
         float t = clamp((uMorph - delay) / 0.55, 0.0, 1.0);
         float e = t < 0.5 ? 4.0 * t * t * t : 1.0 - pow(-2.0 * t + 2.0, 3.0) / 2.0;

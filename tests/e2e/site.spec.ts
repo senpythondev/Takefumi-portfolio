@@ -53,7 +53,9 @@ for (const locale of LOCALES) {
 
     test('the page carries one empty evidence dialog, and every metric links to its evidence page', async ({ page, request }) => {
       await page.goto(`/${locale}`);
-      await expect(page.locator('dialog')).toHaveCount(1);
+      await expect(page.locator('dialog#evidence-dialog')).toHaveCount(1);
+      // (The only other dialog is the sample-document viewer of act 3-6, closed until 確認 is pressed.)
+      await expect(page.locator('dialog:not(.doc-viewer)')).toHaveCount(1);
       await expect(page.locator('dialog#evidence-dialog .evidence-figure')).toHaveCount(0);
       const hrefs = await page.locator('a.metric').evaluateAll((els) => [...new Set(els.map((e) => e.getAttribute('href') ?? ''))]);
       for (const href of hrefs) {

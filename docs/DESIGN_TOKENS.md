@@ -71,7 +71,7 @@
 
 ## 書体・余白・動き
 - 本文：`var(--font-face-sans, system-ui), var(--font-face-mono, system-ui), 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', 'Noto Sans CJK JP', 'Yu Gothic UI', 'Meiryo', system-ui, sans-serif`
-- 見出し：`var(--font-face-heading, var(--font-face-sans, system-ui)), var(--font-face-sans, system-ui), 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', 'Noto Sans CJK JP', 'Yu Gothic UI', 'Meiryo', system-ui, sans-serif`
+- 見出し：`var(--font-face-hero, var(--font-face-sans, system-ui)), var(--font-face-heading, var(--font-face-sans, system-ui)), var(--font-face-sans, system-ui), 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', 'Noto Sans CJK JP', 'Yu Gothic UI', 'Meiryo', system-ui, sans-serif`
 - 等幅：`var(--font-face-mono, ui-monospace), ui-monospace, 'SFMono-Regular', 'Menlo', 'Consolas', var(--font-face-sans, system-ui), 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', 'Noto Sans CJK JP', 'Yu Gothic UI', 'Meiryo', monospace`
 - 余白：gutter `clamp(1rem, 4vw, 3rem)`、本文の幅 `46rem`
 - イージング：strata `cubic-bezier(0.2, 0.7, 0.2, 1)`、drill `cubic-bezier(0.6, 0, 0.4, 1)`

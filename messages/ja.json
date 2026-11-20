@@ -69,7 +69,8 @@
   },
   "footer": {
     "builtWith": "このサイトはHTMLだけでも全文が読めるように作っています。",
-    "rights": "© 2026 Takefumi Ono"
+    "rights": "© 2026 Takefumi Ono",
+    "kanjiCredit": "漢字の書き順データ：KanjiVG（© Ulrich Apel、CC BY-SA 3.0）"
   },
   "cinema": {
     "drilling": "掘削中",
@@ -119,6 +120,18 @@
       "Genten"
     ],
     "correctShort": "○",
-    "incorrectShort": "×"
+    "incorrectShort": "×",
+    "confirm": "確認",
+    "sampleLabel": "架空の見本文書",
+    "viewerTitle": "透かし入りの書類（見本）",
+    "viewerFooter": "閲覧者：{name} {stamp}　見本",
+    "download": "透かし入りPDFをダウンロード",
+    "downloading": "PDFを作成中…",
+    "closeViewer": "閉じる",
+    "viewerNote": "透かしとPDFは、このブラウザの中だけで作ります。名前はどこにも送信・保存しません。",
+    "samplePageAlt": "架空の見本文書の{n}ページ目",
+    "todayLayer": "今日の層 — あなたが訪れた今日も、地層になる",
+    "sound": "音",
+    "soundLabel": "音を鳴らす（既定はオフ）"
   }
 }

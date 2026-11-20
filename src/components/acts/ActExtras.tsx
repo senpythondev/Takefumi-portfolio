@@ -151,8 +151,36 @@ export async function PatentExtras() {
           <span>{t('yourName')}</span>
           <input type="text" maxLength={40} autoComplete="off" spellCheck={false} data-control="watermark" />
         </label>
+        <button type="button" className="watermark-confirm" data-watermark-confirm="" disabled>
+          {t('confirm')}
+        </button>
         <p className="watermark-note">{t('nameNote')}</p>
       </div>
+      {/* After 確認: the document as a full page, watermarked here in the browser (STORYBOARD 3-6). */}
+      <dialog className="doc-viewer" data-doc-viewer="" aria-labelledby="doc-viewer-title" data-footer={t.raw('viewerFooter') as string} data-downloading={t('downloading')}>
+        <header className="doc-viewer-head">
+          <h3 id="doc-viewer-title">{t('viewerTitle')}</h3>
+          <span className="doc-sample-label">{t('sampleLabel')}</span>
+          <button type="button" className="doc-viewer-close" data-doc-close="">
+            {t('closeViewer')}
+          </button>
+        </header>
+        <div className="doc-viewer-scroll">
+          {[1, 2].map((n) => (
+            <figure key={n} className="doc-page">
+              {/* eslint-disable-next-line @next/next/no-img-element -- a generated page image, loaded only when the viewer opens */}
+              <img data-src={`/media/patent/sample-page-${n}.webp`} alt={t('samplePageAlt', { n })} width={909} height={1286} />
+              <figcaption data-doc-footer="" />
+            </figure>
+          ))}
+        </div>
+        <footer className="doc-viewer-foot">
+          <p>{t('viewerNote')}</p>
+          <button type="button" data-doc-download="">
+            {t('download')}
+          </button>
+        </footer>
+      </dialog>
     </>
   );
 }

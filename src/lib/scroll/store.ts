@@ -68,7 +68,17 @@ export const scrollLive: {
   jumpTo: number;
   /** The split core is on screen and can be chosen from (act 2 and the moments between worlds). */
   hub: boolean;
-} = { progress: {}, acts: {}, navOpacity: 1, settling: false, pointerBand: -1, pointerBandAt: null, linkBand: -1, jumpTo: -1, hub: false };
+  /** Bare rock is on screen (the wall of acts 0–1, the bedrock): a click on it drills (§11.4). */
+  rock: boolean;
+  /** The layer of the act on screen (the numbers a drilled hole prefers). */
+  layer: string;
+  /** §10-C: the big number under the pointer (screen px, and a number that tells the numbers apart), or null. */
+  thread: { x: number; y: number; seed: number } | null;
+  /** §10-C: when a number was clicked (performance.now()), 0 otherwise: the camera follows its thread. */
+  threadFollow: number;
+  /** A sealing in gold is playing (3-4, the finale): the optional sound rings once (§10-H). */
+  gold: boolean;
+} = { progress: {}, acts: {}, navOpacity: 1, settling: false, pointerBand: -1, pointerBandAt: null, linkBand: -1, jumpTo: -1, hub: false, rock: false, layer: 'surface', thread: null, threadFollow: 0, gold: false };
 
 export function useScrollState<T>(select: (s: ScrollState) => T): T {
   return useSyncExternalStore(

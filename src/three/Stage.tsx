@@ -148,8 +148,11 @@ export async function mountStage({ quality, adaptive, addFrameListener }: { qual
   const ACTIVITY = ['scroll', 'pointermove', 'pointerdown', 'keydown', 'wheel', 'touchmove'] as const;
   for (const type of ACTIVITY) window.addEventListener(type, poke, { passive: true });
   const unsubscribe = scrollStore.subscribe(poke);
+  // R3F takes the timestamp as it is given and hands it to every useFrame as the clock: it must be
+  // in seconds. (Until 2026-11-20 milliseconds were passed: every `elapsed` and `delta` in the 3D was
+  // 1000× too large — shader time raced and every spring ran at its per-frame cap.)
   const removeFrame = addFrameListener((ms) => {
-    if (scrollStore.get().quality !== 'low' || performance.now() - lastActivity < 1800 || scrollLive.settling) advance(ms);
+    if (scrollStore.get().quality !== 'low' || performance.now() - lastActivity < 1800 || scrollLive.settling) advance(ms / 1000);
   });
   const onResize = () => {
     poke();
@@ -180,6 +183,7 @@ export async function mountStage({ quality, adaptive, addFrameListener }: { qual
       // Without 3D the acts are the stacked poster-and-HTML version (runtime step-down to static).
       delete document.documentElement.dataset.cinema;
       document.querySelector<HTMLElement>('.world')?.style.setProperty('--drill', '1');
+    document.querySelector<HTMLElement>('.world')?.style.setProperty('--bore', '1');
     },
   };
   return handle;

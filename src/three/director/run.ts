@@ -22,6 +22,8 @@ import { ATTRACT, blendPose, fluct, setPose, type Pose, type WorldInput } from '
 import type { Holograms } from '../holo';
 import type { Dust, Sparks } from './Director';
 import type { Dissolve } from './dissolve';
+import type { Thread } from './thread';
+import type { Tunnel } from './tunnel';
 import { Spring, clamp01, easeOutCubic, mix, seg } from './motion';
 import { Playhead } from './playhead';
 import { postLive } from './post-live';
@@ -49,6 +51,8 @@ export function createDirectorRun({
   dissolve,
   worlds,
   scene,
+  tunnel,
+  thread,
 }: {
   wall: ReturnType<typeof createWall>;
   wallMaterial: WallMaterial;
@@ -64,6 +68,8 @@ export function createDirectorRun({
   dissolve: Dissolve;
   worlds: ReturnType<typeof createWorldHost>;
   scene: Scene;
+  tunnel: Tunnel;
+  thread: Thread;
 }) {
   const controller = createWallController(wall.get('low'));
   // The story position: follows the scroll softly, plays the key moments at a fixed tempo (§9).
@@ -244,6 +250,17 @@ export function createDirectorRun({
   };
   const worldActs = ACTS.filter((a) => a.layer && a.layer !== 'surface').map((a) => a.id as WorldId);
 
+  // §10-E: a flight from the index enters this act from outside; a plain scroll travels inside the core.
+  let flightAct = -1;
+  const firstWorld = 2;
+  const lastWorld = ACTS.findIndex((a) => a.id === 'bedrock');
+  // §10-F: how fast the story moves (0–1), smoothed; §10-C: the thread of evidence.
+  const speedS = new Spring(0, 5);
+  let lastG = 0;
+  const threadGrow = new Spring(0, 5);
+  const threadAt = { x: 0, y: 0, seed: 0 };
+  const followV = new Vector3();
+  const followS = new Spring(0, 4.5);
   const debugOn = new URLSearchParams(window.location.search).has('debug');
 
   return {
@@ -261,6 +278,7 @@ export function createDirectorRun({
       if (scrollLive.jumpTo >= 0) {
         // A flight from the index: snap to the target act's first frame (the same hub framing).
         story.snap(scrollLive.jumpTo);
+        flightAct = scrollLive.jumpTo;
         scrollLive.jumpTo = -1;
       }
       const follow = omegaFor(tune.smooth);
@@ -351,6 +369,9 @@ export function createDirectorRun({
       // The index: which band is pointed at, hovered or focused.
       const hub = (i === 1 && shot.hub > 0.5) || (isFinale && p > 0.45);
       scrollLive.hub = hub;
+      scrollLive.rock = (i <= 1 && wallDim > 0.3) || (act.id === 'bedrock' && inWorld && phase === 'story');
+      scrollLive.layer = act.layer ?? 'surface';
+      scrollLive.gold = story.timed && ((act.id === 'php-audit' && p > 0.5 && p < 0.8) || (isFinale && p > 0.15 && p < 0.5));
       let hoverBand = hub ? (scrollLive.pointerBand >= 0 ? scrollLive.pointerBand : scrollLive.linkBand) : -1;
       if (hub && hoverBand < 0 && coarse && i === 1) hoverBand = Math.min(BANDS - 1, Math.floor(seg(b, 0.55, 0.85, lin) * BANDS));
       if (isFinale && hoverBand !== BANDS - 1) hoverBand = -1;
@@ -369,7 +390,12 @@ export function createDirectorRun({
       const drawerP = clamp01(acts.drawer ?? 0);
       const o = outer.current;
       const n = inner.current;
-      const coreVisible = (i <= 1 && c.visible) || (isWorld && !inWorld) || isFinale;
+      // §10-E: between two consecutive sections the camera stays inside the core.
+      if (flightAct >= 0 && (i !== flightAct || p > 0.2)) flightAct = -1;
+      const tunnelOut = isWorld && phase === 'return' && i < lastWorld;
+      const tunnelIn = isWorld && phase === 'entry' && i > firstWorld && flightAct !== i;
+      const inTunnel = tunnelOut || tunnelIn;
+      const coreVisible = (i <= 1 && c.visible) || (isWorld && !inWorld && !inTunnel) || isFinale;
       let scale = 1;
       if (o && n) {
         const halfH = Math.tan(((HUB_FOV / 2) * Math.PI) / 180) * HUB_Z;
@@ -480,6 +506,9 @@ export function createDirectorRun({
             if (inWorld) {
               w.pose(0.15, wide, worldPose);
               setPose(pose, worldPose.pos, worldPose.look, mix(HUB_FOV, worldPose.fov, seg(e, 0.4, 1.0)));
+            } else if (tunnelIn) {
+              w.pose(0.15, wide, worldPose);
+              setPose(pose, worldPose.pos, worldPose.look, HUB_FOV);
             } else blendPose(pose, hubPose, facePose, seg(e, 0.0, 0.45));
             worldFade = seg(e, 0.7, 1.0);
           } else if (phase === 'story') {
@@ -489,6 +518,9 @@ export function createDirectorRun({
             if (inWorld) {
               w.pose(0.85, wide, worldPose);
               setPose(pose, worldPose.pos, worldPose.look, mix(worldPose.fov, HUB_FOV, seg(r, 0.0, 0.6)));
+            } else if (tunnelOut) {
+              w.pose(0.85, wide, worldPose);
+              setPose(pose, worldPose.pos, worldPose.look, HUB_FOV);
             } else blendPose(pose, facePose, hubPose, seg(r, 0.55, 0.85));
             worldFade = 1 - seg(r, 0.0, 0.32);
           }
@@ -505,6 +537,40 @@ export function createDirectorRun({
         camera.updateProjectionMatrix();
       }
       camera.updateMatrixWorld();
+
+      // ── §10-C: the thread of evidence from the number under the pointer; clicked, the camera
+      //    follows it a little way (0.9 s out, then back as the evidence opens) ──
+      const aimed = scrollLive.thread;
+      if (aimed) {
+        threadAt.x = (aimed.x / width) * 2 - 1;
+        threadAt.y = -(aimed.y / height) * 2 + 1;
+        threadAt.seed = aimed.seed;
+      }
+      const followT = scrollLive.threadFollow ? (performance.now() - scrollLive.threadFollow) / 1000 : -1;
+      const following = followT >= 0 && followT < 0.9;
+      if (followT >= 1.6) scrollLive.threadFollow = 0;
+      const grow = threadGrow.step(aimed || following ? 1 : 0, delta);
+      const followAmount = followS.step(following ? 1 : 0, delta);
+      thread.frame(camera, threadAt.x, threadAt.y, threadAt.seed, grow, elapsed, 0.16 * followAmount, followV);
+      if (followAmount > 0.001) {
+        camera.position.add(followV);
+        camera.updateMatrixWorld();
+      }
+
+      // ── §10-E: the passage inside the core, between consecutive sections ──
+      const tunnelAmount = tunnelOut ? seg(r, 0.18, 0.5) : tunnelIn ? 1 - seg(e, 0.5, 0.85) : 0;
+      const k2 = tunnelOut ? i + 1 : i - 1;
+      if (inTunnel) {
+        const from = ACTS[tunnelOut ? i : k2] as (typeof ACTS)[number];
+        const to = ACTS[tunnelOut ? k2 : i] as (typeof ACTS)[number];
+        (tunnel.material.uniforms.uFrom!.value as Color).set(layerColor[(from.layer ?? 'next') as LayerColorId]);
+        (tunnel.material.uniforms.uTo!.value as Color).set(layerColor[(to.layer ?? 'next') as LayerColorId]);
+      }
+      // §10-F: the speed of the story, as light.
+      const speed = speedS.step(Math.min(1, (Math.abs(G - lastG) / Math.max(delta, 1e-3)) * 2.2), delta);
+      lastG = G;
+      ATTRACT.uSpeed.value = speed * 0.55;
+      tunnel.frame(camera, tunnelAmount, tunnelOut ? r * 0.5 : 0.5 + e * 0.5, elapsed, speed);
 
       // ── 6. Entry / return particles ──
       let morph = 0;
@@ -529,6 +595,9 @@ export function createDirectorRun({
       dissolve.points.visible = alpha > 0.001;
       dissolve.material.uniforms.uMorph!.value = morph;
       dissolve.material.uniforms.uAlpha!.value = alpha;
+      // §10-D: the bedding winds like floated ink before it leaves, each act its own way.
+      const wind = phase === 'entry' ? seg(e, 0.36, 0.8) * (1 - seg(e, 0.8, 1.0)) : phase === 'return' ? seg(r, 0.62, 0.3) : 0;
+      dissolve.material.uniforms.uSwirl!.value = (i % 2 ? -1 : 1) * (0.7 + 0.5 * ((i * 0.618) % 1)) * wind;
       dissolve.frame(camera.fov, aspect, elapsed, dpr);
 
       // ── 7. The world of the act ──
@@ -635,6 +704,9 @@ export function createDirectorRun({
       const decodingNow = runDecode(elapsed);
       scrollLive.settling =
         story.moving() ||
+        threadGrow.moving(aimed || following ? 1 : 0) ||
+        followAmount > 0.001 ||
+        speed > 0.002 ||
         attracting ||
         nav.moving(actOn ? 0 : 1) ||
         heroFade.moving(heroTarget) ||
@@ -711,6 +783,7 @@ export function createDirectorRun({
       scrollLive.navOpacity = 1;
       scrollLive.settling = false;
       scrollLive.hub = false;
+      scrollLive.rock = false;
       scrollLive.pointerBand = -1;
       if (holo) {
         scene.remove(holo.group);

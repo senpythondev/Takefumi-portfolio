@@ -98,7 +98,8 @@ export const city = {
 const systemJa = ["'Hiragino Sans'", "'Hiragino Kaku Gothic ProN'", "'Noto Sans JP'", "'Noto Sans CJK JP'", "'Yu Gothic UI'", "'Meiryo'"];
 export const font = {
   sans: ['var(--font-face-sans, system-ui)', 'var(--font-face-mono, system-ui)', ...systemJa, 'system-ui', 'sans-serif'],
-  heading: ['var(--font-face-heading, var(--font-face-sans, system-ui))', 'var(--font-face-sans, system-ui)', ...systemJa, 'system-ui', 'sans-serif'],
+  // The hero headline's own small face first (the only preloaded one): same design as the heading face.
+  heading: ['var(--font-face-hero, var(--font-face-sans, system-ui))', 'var(--font-face-heading, var(--font-face-sans, system-ui))', 'var(--font-face-sans, system-ui)', ...systemJa, 'system-ui', 'sans-serif'],
   mono: ['var(--font-face-mono, ui-monospace)', 'ui-monospace', "'SFMono-Regular'", "'Menlo'", "'Consolas'", 'var(--font-face-sans, system-ui)', ...systemJa, 'monospace'],
 } as const;
 

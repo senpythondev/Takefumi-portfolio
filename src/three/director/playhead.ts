@@ -124,7 +124,10 @@ export class Playhead {
         if (q.g0 >= x) hi = Math.min(hi, q.g0);
       }
       this.spring.omega = omega * boost;
-      this.x = this.spring.step(Math.min(hi + LEAD, Math.max(lo - LEAD, target)), t);
+      // The spring takes steps of at most 0.1 s: on a slow frame it takes several, so the picture
+      // follows at the same pace in wall-clock time on a slow device.
+      const aim = Math.min(hi + LEAD, Math.max(lo - LEAD, target));
+      for (let left = t; left > 1e-5; left -= 0.1) this.x = this.spring.step(aim, Math.min(left, 0.1));
       if (this.x >= hi) this.spring.snap((this.x = hi));
       else if (this.x <= lo) this.spring.snap((this.x = lo));
       break;

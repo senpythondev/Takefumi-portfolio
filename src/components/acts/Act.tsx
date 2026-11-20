@@ -1,4 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react';
+import { KanjiMark } from '@/components/acts/KanjiMark';
 import { getTranslations } from 'next-intl/server';
 import { kanjiOf, type Act as ActDef } from '@/content/acts';
 import type { ActCopy, Layer, Metric } from '@/content';
@@ -86,9 +87,7 @@ export async function Act({
       style={{ '--len': act.len } as CSSProperties}
     >
       <div className="act-frame">
-        <span className="act-kanji" aria-hidden="true">
-          {act.kanji}
-        </span>
+        {act.kanji ? <KanjiMark kanji={act.kanji} /> : null}
         <div className="act-head">
           <ActEyebrow layer={layer} index={index} locale={ctx.locale} />
           <h2 className="act-headline" id={`${anchor}-title`} tabIndex={-1} data-act-headline={act.id}>

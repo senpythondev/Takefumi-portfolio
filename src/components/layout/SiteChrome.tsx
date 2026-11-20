@@ -32,6 +32,7 @@ export async function SiteFooter() {
     <footer className="site-footer">
       <p>{t('builtWith')}</p>
       <p>{t('rights')}</p>
+      <p>{t('kanjiCredit')}</p>
     </footer>
   );
 }

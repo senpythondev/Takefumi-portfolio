@@ -47,6 +47,10 @@ uniform float uTime;
 uniform vec2 uPointer;     // beam centre, uv
 uniform vec3 uStar;        // the pointer the stars drift toward (uv, slow) and how much it is there
 uniform vec2 uStarDrag;    // the flow of a finger's drag
+uniform vec3 uSkyLow;      // sky at the horizon and high up, by the visitor's local hour
+uniform vec3 uSkyHigh;
+uniform float uStars;
+uniform float uToday;      // today's thin glowing bed under the surface
 uniform float uBeam;       // 0..1 beam strength
 uniform float uShaftX;     // borehole x, uv
 uniform float uCalm;       // 1: the left side falls to calm dark rock (desktop); 0: none (mobile)
@@ -266,7 +270,9 @@ void main() {
   if (p.y < horizon) {
     // ── Sky: only at the very top of the page ──
     float up = (horizon - p.y) / HORIZON;
-    col = mix(vec3(0.020, 0.030, 0.052), vec3(0.006, 0.009, 0.018), smoothstep(0.0, 1.0, up));
+    // The sky of the visitor's own hour (§10-G): night, the horizon paling at dawn, a pale blue day,
+    // madder red at dusk. uSky.w = how much of the stars shows.
+    col = mix(uSkyLow, uSkyHigh, smoothstep(0.0, 1.0, up));
     // Stars are far away: they scroll with the page but do not grow when the camera closes in.
     // Two depths of them drift toward the pointer — the nearer layer more — and those close to it
     // glimmer; when the pointer leaves they ease back (STORYBOARD v2.3 §11.1; uStar is a slow spring).
@@ -285,7 +291,7 @@ void main() {
       float glimmer = uStar.z * smoothstep(0.24, 0.0, dP) * (0.6 + 0.4 * sin(uTime * 2.1 + seed * 900.0));
       stars += vec3(0.75, 0.8, 0.95) * star * (0.35 + 0.65 * hash(cell + 3.0)) * twinkle * (1.0 + 1.8 * glimmer) * mix(1.0, 1.25, near);
     }
-    col += stars * smoothstep(0.05, 0.5, up);
+    col += stars * smoothstep(0.05, 0.5, up) * uStars;
     float ridge = horizon - 0.006 - noise(vec2(p.x * 3.2 + 4.0, 1.0)) * 0.022;
     if (p.y > ridge) col = vec3(0.010, 0.014, 0.022);
     // Drill rig over the borehole: a small lattice tower, a shed, one warm light.
@@ -451,6 +457,9 @@ void main() {
     float breath = 0.5 + (sin(uTime * 0.31) + 0.707 * sin(uTime * 0.83 + 1.3) + 0.577 * sin(uTime * 1.97 + 2.1) + 0.5 * sin(uTime * 4.13 + 0.7) + 0.447 * sin(uTime * 8.71 + 4.2)) / 6.462;
     col += uEvidence * (1.5 * core * pulse + 0.30 * exp(-px * 60.0) + 0.07 * exp(-px * 9.0)) * below * (0.84 + 0.16 * breath);
     col = mix(col, vec3(0.16, 0.2, 0.21) + uEvidence * 0.25, joint * smoothstep(0.0075, 0.0055, px) * below);
+    // Today (§10-G): the thinnest, newest bed, just under the surface, still glowing.
+    float today = (p.y - horizon - 0.011) / 0.0028;
+    col += uEvidence * exp(-today * today) * (0.42 + 0.14 * sin(uTime * 0.8 + p.x * 11.0) + 0.08 * breath) * uToday;
   }
 
   // Sink to the page colour at the far edges so the HTML sits on the same ground.
@@ -469,6 +478,10 @@ export type WallMaterial = ShaderMaterial & {
     uPointer: { value: Vector2 };
     uStar: { value: Vector3 };
     uStarDrag: { value: Vector2 };
+    uSkyLow: { value: Vector3 };
+    uSkyHigh: { value: Vector3 };
+    uStars: { value: number };
+    uToday: { value: number };
     uBeam: { value: number };
     uShaftX: { value: number };
     uCalm: { value: number };
@@ -500,6 +513,10 @@ export function createWallUniforms(ids: readonly string[]): WallUniforms {
     uPointer: { value: new Vector2(0.7, 0.5) },
     uStar: { value: new Vector3(0.5, 0.5, 0) },
     uStarDrag: { value: new Vector2() },
+    uSkyLow: { value: new Vector3(0.02, 0.03, 0.052) },
+    uSkyHigh: { value: new Vector3(0.006, 0.009, 0.018) },
+    uStars: { value: 1 },
+    uToday: { value: 1 },
     uBeam: { value: 0 },
     uShaftX: { value: 0.8 },
     uCalm: { value: 1 },

@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import { KanjiMark } from '@/components/acts/KanjiMark';
 import type { CSSProperties } from 'react';
 import { ActStill } from '@/components/acts/ActStill';
 import { InkText } from '@/components/acts/InkText';
@@ -24,6 +25,7 @@ import { RichText, type RichContext } from './RichText';
  */
 export async function Hero({ layer, person, ctx, nextAnchor, coreHeadline }: { layer: Layer; person: SiteContent['person']; ctx: RichContext; nextAnchor: string; coreHeadline: string }) {
   const tn = await getTranslations('nav');
+  const tc = await getTranslations('cinema');
   const anchor = layerAnchor(layer.id);
   const firstView = layer.blocks.filter((b) => b.kind === 'chips' || b.kind === 'availability');
   const act = ACTS[0] as (typeof ACTS)[number];
@@ -38,6 +40,9 @@ export async function Hero({ layer, person, ctx, nextAnchor, coreHeadline }: { l
       aria-labelledby={`${anchor}-title`}
       style={{ '--len': act.len } as CSSProperties}
     >
+      {/* §10-G: today's date on the thin glowing bed just under the surface. Filled in the browser
+          from the visitor's own clock (cinema-ui.ts); decorative, and never sent anywhere. */}
+      <p className="today-layer needs-cinema" data-today="" data-label={tc('todayLayer')} aria-hidden="true" />
       <div className="hero-content" data-hero-content="">
         <header className="hero-header">
           <h1 id={`${anchor}-title`}>
@@ -66,9 +71,7 @@ export async function Hero({ layer, person, ctx, nextAnchor, coreHeadline }: { l
         </p>
       </div>
       <div className="act-frame">
-        <span className="act-kanji" aria-hidden="true">
-          {act.kanji}
-        </span>
+        {act.kanji ? <KanjiMark kanji={act.kanji} /> : null}
         <div className="act-head">
           <h2 className="act-headline" id="act-core-title" tabIndex={-1} data-act-headline="surface">
             <InkText text={coreHeadline} ctx={ctx} />

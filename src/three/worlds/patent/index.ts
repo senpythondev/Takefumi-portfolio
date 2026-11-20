@@ -10,6 +10,7 @@
  * then the duration numbers (HTML).
  */
 import { CanvasTexture, Color, DoubleSide, Group, Mesh, PlaneGeometry, ShaderMaterial, Vector3 } from 'three';
+import { createInkLine, drawWatermark, stampOf } from '@/lib/watermark/ink';
 import { COLORS, FLUCT_GLSL, disposeGroup, geometry, glowLines, glowMesh, glowPoints, mix, motes, rng, seg, setPose, storyOf, type Pose, type World, type WorldContext, type WorldInput } from '../kit';
 
 const SEGS = 140;
@@ -128,33 +129,35 @@ export default function createPatent(ctx: WorldContext): World {
   group.add(stations.lines);
 
   // ── The document: a page drawn on a canvas; the watermark is drawn on it, here, in the browser ──
+  // The page is the fictional sample's first page (an image made from the PDF at build time); the
+  // name forms on it a moment after each keystroke, from motes that settle like ink (§11.3).
   const canvas = document.createElement('canvas');
-  canvas.width = 384;
-  canvas.height = 512;
+  canvas.width = 512;
+  canvas.height = 724;
   const c2d = canvas.getContext('2d');
   const texture = new CanvasTexture(canvas);
-  let drawn = '';
-  const draw = (name: string, stamp: string) => {
-    const key = `${name}|${stamp}`;
-    if (!c2d || key === drawn) return;
-    drawn = key;
-    c2d.fillStyle = '#e9e4da';
-    c2d.fillRect(0, 0, 384, 512);
-    c2d.fillStyle = '#9a958c';
-    for (let l = 0; l < 18; l += 1) c2d.fillRect(36, 48 + l * 24, l % 5 === 4 ? 150 : 300 - (l % 3) * 30, 6);
-    if (name) {
-      c2d.save();
-      c2d.translate(192, 256);
-      c2d.rotate(-Math.PI / 6);
-      c2d.fillStyle = 'rgba(40, 110, 120, 0.32)';
-      c2d.font = '600 22px system-ui, sans-serif';
-      c2d.textAlign = 'center';
-      for (let row = -5; row <= 5; row += 1) c2d.fillText(`${name} · ${stamp}`, 0, row * 46);
-      c2d.restore();
-    }
-    texture.needsUpdate = true;
+  const pageImage = new Image();
+  let pageReady = false;
+  let disposed = false;
+  pageImage.onload = () => {
+    pageReady = true;
+    dirty = true;
   };
-  draw('', '');
+  pageImage.src = '/media/patent/sample-page-1.webp';
+  const ink = createInkLine();
+  let dirty = true;
+  let shownName = '';
+  let shownStamp = '';
+  const draw = (stamp: string) => {
+    if (!c2d || disposed) return;
+    const now = performance.now();
+    c2d.fillStyle = '#f4f1ea';
+    c2d.fillRect(0, 0, canvas.width, canvas.height);
+    if (pageReady) c2d.drawImage(pageImage, 0, 0, canvas.width, canvas.height);
+    if (ink.length || !ink.settled(now)) drawWatermark(c2d, ink, now, canvas.width, canvas.height, stamp, 'rgba(20, 96, 110, 0.62)', 0.075);
+    texture.needsUpdate = true;
+    dirty = !ink.settled(now);
+  };
   const docMaterial = new ShaderMaterial({
     transparent: true,
     side: DoubleSide,
@@ -170,10 +173,10 @@ export default function createPatent(ctx: WorldContext): World {
       void main() {
         vec3 c = texture2D(uMap, vUv).rgb;
         float edge = smoothstep(0.0, 0.03, min(min(vUv.x, 1.0 - vUv.x), min(vUv.y, 1.0 - vUv.y)));
-        gl_FragColor = vec4(c * (0.55 + 0.35 * uGlow), uFade * edge);
+        gl_FragColor = vec4(c * (0.4 + 0.22 * uGlow), uFade * edge);   // paper, not a lamp: the print must survive the bloom
       }`,
   });
-  const doc = new Mesh(new PlaneGeometry(0.62, 0.82), docMaterial);
+  const doc = new Mesh(new PlaneGeometry(0.58, 0.82), docMaterial);
   group.add(doc);
 
   // ── The registration limit: a grid of points that fills up ──
@@ -218,7 +221,7 @@ export default function createPatent(ctx: WorldContext): World {
     setPose(out, [mix(a.x * 0.55, 0, end), mix(0.9, 1.4, end), mix(7.4, 10.5, end) + back], [mix(a.x * 0.65, 0, end), mix(0.25, 0.6, end), mix(0, -1.2, end)], wide ? 40 : 52);
   };
 
-  let lastMinute = '';
+  let forward = 0;
   return {
     group,
     shape: (n) => {
@@ -243,11 +246,24 @@ export default function createPatent(ctx: WorldContext): World {
       input.attr('data-step', String(passed));
       // The watermark: the visitor's name and the current time, drawn here only.
       const name = passed >= STATIONS.length ? String(input.control('watermark') ?? '').trim().slice(0, 40) : '';
-      const now = new Date();
-      const minute = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-      if (minute !== lastMinute || name !== drawn.split('|')[0]) {
-        lastMinute = minute;
-        draw(name, minute);
+      const stamp = stampOf(new Date());
+      if (name !== shownName) {
+        shownName = name;
+        ink.set(name, performance.now());
+        dirty = true;
+      }
+      if (stamp !== shownStamp) {
+        shownStamp = stamp;
+        dirty = true;
+      }
+      if (dirty) draw(stamp);
+      // While a name is on it, the page is held up to the camera so the characters can be seen
+      // forming; after 確認 it comes all the way forward to meet the full-page viewer.
+      const viewing = ctx.section.hasAttribute('data-viewing');
+      forward += ((viewing ? 1 : name ? 0.78 : 0) - forward) * (1 - Math.exp(-input.dt * 3.5));
+      if (forward > 0.001) {
+        doc.position.lerp(input.camera.position, 0.68 * forward);
+        doc.rotation.z *= 1 - Math.min(1, forward * 2);
       }
       docMaterial.uniforms.uFade!.value = input.fade;
       docMaterial.uniforms.uGlow!.value = passed >= STATIONS.length ? 1 : 0;
@@ -260,6 +276,8 @@ export default function createPatent(ctx: WorldContext): World {
       grid.material.uniforms.uFade!.value = input.fade * seg(q, 0.76, 0.82);
     },
     dispose() {
+      disposed = true;
+      pageImage.onload = null;
       texture.dispose();
       disposeGroup(group);
     },

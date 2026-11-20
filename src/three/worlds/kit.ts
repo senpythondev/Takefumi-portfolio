@@ -307,12 +307,15 @@ export function disposeGroup(group: Group) {
  * slow springs): `uAttract` = the pointer in NDC, twice (xy: a quicker follower, zw: a slower one —
  * each mote follows a mix of the two by its seed, so they never move as one sheet), `uAttractK` =
  * how much the pointer is there (0 once it has left), `uDrag` = the flow of a finger's drag.
+ * `uSpeed` (§10-F) = how fast the story is moving, 0–1: motes stretch into short streaks of light
+ * while it moves fast and are quiet points again when it slows (kept small on purpose).
  */
-export const ATTRACT = { uAttract: { value: new Vector4() }, uAttractK: { value: 0 }, uDrag: { value: new Vector2() } };
+export const ATTRACT = { uAttract: { value: new Vector4() }, uAttractK: { value: 0 }, uDrag: { value: new Vector2() }, uSpeed: { value: 0 } };
 export const ATTRACT_GLSL = /* glsl */ `
 uniform vec4 uAttract;
 uniform float uAttractK;
 uniform vec2 uDrag;
+uniform float uSpeed;
 // Moves the clip-space position toward the pointer; returns 0–1, how close to it the mote is.
 float attract(inout vec4 clip, float seed) {
   vec2 ndc = clip.xy / max(clip.w, 1e-3);
@@ -340,6 +343,17 @@ export function motes(count: number, box: [number, number, number], center: [num
     color,
     size,
     uniforms: ATTRACT,
+    fragment: /* glsl */ `
+      uniform vec3 uColor;
+      uniform float uFade;
+      uniform float uSpeed;
+      varying float vA;
+      void main() {
+        // Moving fast, a mote is a short upright streak; slow, a round point.
+        vec2 c = (gl_PointCoord - 0.5) * vec2(1.0 + 5.0 * uSpeed, 1.0);
+        float a = smoothstep(0.5, 0.0, length(c));
+        gl_FragColor = vec4(uColor * a * vA * uFade, 1.0);
+      }`,
     vertex: /* glsl */ `
       ${FLUCT_GLSL}
       ${ATTRACT_GLSL}
@@ -354,7 +368,7 @@ export function motes(count: number, box: [number, number, number], center: [num
         p.y += sin(uTime * (0.04 + seed * 0.05) + seed * 17.0) * 0.4;
         p.z += cos(uTime * (0.06 + seed * 0.04) + seed * 11.0) * 0.4;
         vec4 mv = modelViewMatrix * vec4(p, 1.0);
-        gl_PointSize = uSize * (0.5 + seed) * uPx * (10.0 / max(0.5, -mv.z));
+        gl_PointSize = uSize * (0.5 + seed) * uPx * (10.0 / max(0.5, -mv.z)) * (1.0 + 2.2 * uSpeed);
         gl_Position = projectionMatrix * mv;
         float near = attract(gl_Position, seed);
         vA = (0.15 + 0.85 * pow(fluct(uTime, seed), 2.0)) * (1.0 + 1.4 * near * fluct(uTime * 2.3, seed + 0.37));

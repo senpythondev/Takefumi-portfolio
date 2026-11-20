@@ -14,6 +14,8 @@ import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { AdditiveBlending, BufferAttribute, BufferGeometry, CylinderGeometry, Group, Mesh, PerspectiveCamera, Points, ShaderMaterial, Vector3 } from 'three';
 import { ATTRACT, ATTRACT_GLSL, FLUCT_GLSL } from '../worlds/kit';
 import { createDissolve } from './dissolve';
+import { createThread } from './thread';
+import { createTunnel } from './tunnel';
 import { createWorldHost } from './worlds';
 import { layer as layerColor, type LayerColorId } from '@/styles/tokens';
 import { createBandMaterial } from '../materials/band';
@@ -73,7 +75,7 @@ function createDust(count: number) {
         p.y += mod(uTime * (0.03 + seed * 0.04) + seed * 8.0, 8.0) - 4.0 - position.y * 0.0;
         p.z += cos(uTime * (0.05 + seed * 0.03) + seed * 17.0) * 0.4;
         vec4 mv = modelViewMatrix * vec4(p, 1.0);
-        gl_PointSize = (1.2 + 3.5 * seed * seed) * uPixelRatio * (9.0 / max(0.5, -mv.z));
+        gl_PointSize = (1.2 + 3.5 * seed * seed) * uPixelRatio * (9.0 / max(0.5, -mv.z)) * (1.0 + 2.2 * uSpeed);
         gl_Position = projectionMatrix * mv;
         // The motes drift toward the pointer and glimmer near it (§11.1).
         vFlick *= 1.0 + 1.4 * attract(gl_Position, seed) * fluct(uTime * 2.3, seed + 0.37);
@@ -81,11 +83,13 @@ function createDust(count: number) {
     `,
     fragmentShader: /* glsl */ `
       uniform float uAmount;
+      uniform float uSpeed;
       uniform vec3 uCyan;
       varying float vSeed;
       varying float vFlick;
       void main() {
-        float d = length(gl_PointCoord - 0.5);
+        // §10-F: a short upright streak while the story moves fast.
+        float d = length((gl_PointCoord - 0.5) * vec2(1.0 + 5.0 * uSpeed, 1.0));
         float a = smoothstep(0.5, 0.0, d);
         vec3 c = mix(vec3(1.0, 0.86, 0.68), uCyan, step(0.72, vSeed));
         gl_FragColor = vec4(c * a * uAmount * (0.25 + 0.55 * vSeed) * vFlick, 1.0);
@@ -194,6 +198,8 @@ export default function Director({ ids, quality }: Props) {
   const dust = useMemo(() => createDust(DUST[quality]), [quality]);
   const dissolve = useMemo(() => createDissolve(DISSOLVE[quality]), [quality]);
   const sparks = useMemo(() => createSparks(quality === 'low' ? 120 : 320), [quality]);
+  const tunnel = useMemo(() => createTunnel(bandGeometry, CORE_RADIUS), [bandGeometry]);
+  const thread = useMemo(() => createThread(), []);
   const [postReady, setPostReady] = useState(false);
 
   const outer = useRef<Group>(null);
@@ -224,13 +230,13 @@ export default function Director({ ids, quality }: Props) {
   const run = useRef<ReturnType<typeof createDirectorRun> | null>(null);
 
   useEffect(() => {
-    const r = createDirectorRun({ wall, wallMaterial, wallMesh, ids, bands, dust, sparks, camera, outer, inner, bandMeshes, dissolve, worlds, scene });
+    const r = createDirectorRun({ wall, wallMaterial, wallMesh, ids, bands, dust, sparks, camera, outer, inner, bandMeshes, dissolve, worlds, scene, tunnel, thread });
     run.current = r;
     return () => {
       r.dispose();
       run.current = null;
     };
-  }, [wall, wallMaterial, ids, bands, dust, sparks, camera, dissolve, worlds, scene]);
+  }, [wall, wallMaterial, ids, bands, dust, sparks, camera, dissolve, worlds, scene, tunnel, thread]);
 
   useEffect(() => {
     // After the first frames: textures (medium/high), then the lower tiers' shaders.
@@ -251,6 +257,8 @@ export default function Director({ ids, quality }: Props) {
   useEffect(() => () => dust.dispose(), [dust]);
   useEffect(() => () => dissolve.dispose(), [dissolve]);
   useEffect(() => () => sparks.dispose(), [sparks]);
+  useEffect(() => () => tunnel.dispose(), [tunnel]);
+  useEffect(() => () => thread.dispose(), [thread]);
   useEffect(() => () => worlds.dispose(), [worlds]);
   useEffect(() => frameWall(wallMaterial, size.width, size.height), [wallMaterial, size.width, size.height]);
 
@@ -280,6 +288,8 @@ export default function Director({ ids, quality }: Props) {
       <primitive object={dust.points} />
       <primitive object={dissolve.points} />
       <primitive object={sparks.points} />
+      <primitive object={tunnel.mesh} />
+      <primitive object={thread.lines} />
       <FullViewport />
       {usePost ? (
         <Suspense fallback={null}>

@@ -69,7 +69,8 @@
   },
   "footer": {
     "builtWith": "Everything on this site can be read as plain HTML.",
-    "rights": "© 2026 Takefumi Ono"
+    "rights": "© 2026 Takefumi Ono",
+    "kanjiCredit": "Kanji stroke-order data: KanjiVG (© Ulrich Apel, CC BY-SA 3.0)"
   },
   "cinema": {
     "drilling": "Drilling",
@@ -119,6 +120,18 @@
       "Genten"
     ],
     "correctShort": "correct",
-    "incorrectShort": "wrong"
+    "incorrectShort": "wrong",
+    "confirm": "Confirm",
+    "sampleLabel": "Fictional sample document",
+    "viewerTitle": "The watermarked document (sample)",
+    "viewerFooter": "Viewer: {name} {stamp} — SAMPLE",
+    "download": "Download the watermarked PDF",
+    "downloading": "Making the PDF…",
+    "closeViewer": "Close",
+    "viewerNote": "The watermark and the PDF are made inside this browser only. Your name is never sent or stored.",
+    "samplePageAlt": "Page {n} of the fictional sample document",
+    "todayLayer": "today’s layer — the day you visited becomes a stratum too",
+    "sound": "Sound",
+    "soundLabel": "Play sound (off by default)"
   }
 }

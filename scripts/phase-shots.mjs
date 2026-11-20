@@ -47,7 +47,7 @@ for (const size of sizes.length ? sizes : ['1440x900', '390x844']) {
   // The debug HUD (needed for the state log) is hidden in the pictures.
   await page.addStyleTag({ content: '.debug-hud { display: none !important; } nextjs-portal { display: none !important; }' });
   await page.waitForTimeout(2000);
-  await page.screenshot({ path: `${out}/00-hero-${size}.png` });
+  await page.screenshot({ path: `${out}/00-hero-${size}.png`, timeout: 180000 });
   let n = 1;
   for (const [id, [len, pause]] of Object.entries(ACTS)) {
     if (only && !only.includes(id)) {
@@ -71,7 +71,7 @@ for (const size of sizes.length ? sizes : ['1440x900', '390x844']) {
       await page.evaluate((v) => window.scrollTo(0, v), y);
       await page.waitForTimeout(wait);
       const name = `${String(n).padStart(2, '0')}-${id}-${beat.name}-${size}`;
-      await page.screenshot({ path: `${out}/${name}.png` });
+      await page.screenshot({ path: `${out}/${name}.png`, timeout: 180000 });
       const state = await page.evaluate(() => JSON.stringify((window).__world ?? {}));
       console.log(name, state.slice(0, 220));
     }

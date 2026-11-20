@@ -81,7 +81,9 @@ test('INP in the cinema: a band chosen in the index, a slider moved (mobile, CPU
     const top = el.getBoundingClientRect().top + window.scrollY;
     window.scrollTo(0, top + ((el as HTMLElement).offsetHeight - window.innerHeight) * 0.7);
   });
-  await page.waitForTimeout(4000);
+  // The split is a key moment with its own tempo (§9): wait until the index is there and at rest.
+  await expect.poll(() => page.evaluate(() => (window as unknown as { __world: { hub?: boolean } }).__world.hub), { timeout: 60_000 }).toBe(true);
+  await page.waitForTimeout(2500);
   const cdp = await context.newCDPSession(page);
   await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
   await page.waitForTimeout(1000);

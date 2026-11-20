@@ -94,6 +94,10 @@ export default async function Page({ params }: PageProps<'/[locale]'>) {
       {/* The world behind the page: a poster until the 3D wall is drawn over it (src/three/world). */}
       <div className="world" data-world-slot="" aria-hidden="true">
         <div className="world-poster" />
+        {/* §10-A: while the page loads, the strata are laid down from the oldest up (CSS only). */}
+        <div className="world-sediment">
+          <div className="world-sediment-cover" />
+        </div>
         {/* Act 0: the borehole is drilled as the 3D loads (StageLoader sets --drill 0–1). */}
         <div className="world-drill" />
         <span className="world-drill-meter">
@@ -101,6 +105,15 @@ export default async function Page({ params }: PageProps<'/[locale]'>) {
         </span>
       </div>
       <SiteHeader locale={locale} person={content.person} />
+      {/* §10-H: sound is optional and off; the audio code is fetched only when this is switched on. */}
+      <button type="button" className="sound-toggle needs-cinema" data-sound-toggle="" aria-pressed="false" aria-label={tcin('soundLabel')}>
+        <span aria-hidden="true" className="sound-toggle-bars">
+          <i />
+          <i />
+          <i />
+        </span>
+        {tcin('sound')}
+      </button>
       <main id="main" tabIndex={-1} data-cursor-enter={tcin('enter')} data-cursor-read={tcin('read')}>
         <Hero layer={surface} person={content.person} ctx={ctx} nextAnchor="index" coreHeadline={content.cinema.coreHeadline} />
         <ActIndex layers={content.layers} guide={content.cinema.indexGuide} locale={locale} />
