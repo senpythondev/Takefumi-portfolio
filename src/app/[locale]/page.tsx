@@ -6,6 +6,8 @@ import { getContent, metricLayers, metricMap, type Layer } from '@/content';
 import { ACTS, isWorkId, kanjiOf, type Act as ActDef } from '@/content/acts';
 import { COMPARE } from '@/content/results';
 import { routing } from '@/i18n/routing';
+import { LINKS, SCHEMA_ORG } from '@/content/links';
+import { siteUrl } from '@/lib/site';
 import { EvidenceController } from '@/components/evidence/EvidenceController';
 import { EvidenceDialog } from '@/components/evidence/EvidenceDialog';
 import { METRIC_HINT_ID } from '@/components/evidence/ids';
@@ -114,6 +116,22 @@ export default async function Page({ params }: PageProps<'/[locale]'>) {
           {tcin('drilling')} <span data-drill-pct="">0%</span>
         </span>
       </div>
+      {/* Person structured data: the same public facts as the page (name, role, GitHub, DEV) — no e-mail. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': SCHEMA_ORG,
+            '@type': 'Person',
+            name: content.person.name,
+            alternateName: content.person.nameLatin,
+            jobTitle: content.person.role,
+            url: new URL(`/${locale}`, siteUrl()).toString(),
+            sameAs: [LINKS.github, LINKS.devProfile],
+            knowsLanguage: ['ja', 'en'],
+          }).replace(/</g, '\\u003c'),
+        }}
+      />
       <SiteHeader locale={locale} person={content.person} />
       {/* §10-H: sound is optional and off; the audio code is fetched only when this is switched on. */}
       <button type="button" className="sound-toggle needs-cinema" data-sound-toggle="" aria-pressed="false" aria-label={tcin('soundLabel')}>

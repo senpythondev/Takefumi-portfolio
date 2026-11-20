@@ -7,6 +7,8 @@ test.describe('boring core, depth meter, evidence extras, HUD', () => {
     const rings = page.locator('nav.core-nav a.core-ring');
     await expect(rings).toHaveCount(11);
     await expect(rings.first()).toHaveAttribute('aria-current', 'location');
+    // (A visitor's first action comes first: the stacked version lays out the sections below the screen then.)
+    await page.keyboard.press('Shift');
     await page.locator('section[data-layer="auction"]').evaluate((el) => el.scrollIntoView({ block: 'start' }));
     await expect(page.locator('a.core-ring[href="#layer-auction"]')).toHaveAttribute('aria-current', 'location');
     await expect(page.locator('a.core-ring[data-passed]')).toHaveCount(6);

@@ -55,9 +55,9 @@ jobs:
         # late renders with the system fallback, so the runner needs a CJK font for that path.
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends fonts-droid-fallback
 
-      - name: Browsers and their system packages (Chromium, WebKit), in one apt run
+      - name: Browsers and their system packages (Chromium, WebKit, Firefox), in one apt run
         timeout-minutes: 15
-        run: npx playwright install --with-deps chromium webkit
+        run: npx playwright install --with-deps chromium webkit firefox
 
       - name: E2E (desktop / mobile / reduced-motion)
         # Visual baselines are machine-specific (font rasterisation, WebGL): checked locally only.
@@ -71,6 +71,13 @@ jobs:
         run: npx playwright test --project=webkit
         env:
           PW_REPORT: webkit
+
+      - name: Firefox behaviour (Playwright Firefox, desktop viewport)
+        if: ${{ !cancelled() }}
+        timeout-minutes: 10
+        run: npx playwright test --project=firefox
+        env:
+          PW_REPORT: firefox
 
       - name: Initial-JS budget
         # Measurements still run when an earlier check fails, so every result is reported.

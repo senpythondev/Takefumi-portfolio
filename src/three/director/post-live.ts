@@ -8,4 +8,6 @@ export const postLive = {
   aberration: 0,
   /** 0–1 the film grain rises for a moment with the same pulse. */
   grain: 0,
+  /** Bloom strength as a fraction of the tier's own (1 everywhere; lower inside the brightest world). */
+  bloom: 1,
 };

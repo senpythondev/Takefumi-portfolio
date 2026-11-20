@@ -125,7 +125,8 @@ test('v2.4 §12–§13: title cards, four beats, comparisons and the results led
       const beats = page.locator(`section[data-act="${id}"] .act-beat`);
       await expect(beats).toHaveCount(act.beats ? 4 : 0);
       for (const [i, text] of (act.beats ?? []).entries()) {
-        expect(squash(await beats.nth(i).locator('.act-beat-text').innerText())).toBe(squash(plain(text)));
+        // (textContent: what the HTML says. A section below the screen is not laid out before the first interaction.)
+        expect(squash((await beats.nth(i).locator('.act-beat-text').textContent()) ?? '')).toBe(squash(plain(text)));
         expect(await beats.nth(i).locator('a.metric').count()).toBe((text.match(/\{\{/g) ?? []).length);
       }
     }

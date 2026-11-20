@@ -249,6 +249,37 @@ export function startCinemaUi({ lenis, addFrameListener }: { lenis: Lenis; addFr
   document.addEventListener('focusin', onFocusIn);
   cleanups.push(() => document.removeEventListener('focusin', onFocusIn));
 
+  // ── Headlines (§8.2): one span per character (English: per word), so the ink can come one at a
+  //    time with the scroll. Only the cinema needs them, so they are made here, not in the HTML. ──
+  const JAPANESE = /[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}]/u;
+  const graphemes = new Intl.Segmenter('ja', { granularity: 'grapheme' });
+  for (const headline of document.querySelectorAll<HTMLElement>('.act-headline:not([data-inked])')) {
+    let i = 0;
+    const unit = (content: Node | string, cls = 'ink') => {
+      const span = document.createElement('span');
+      span.className = cls;
+      span.style.setProperty('--i', String(i));
+      span.append(content);
+      i += 1;
+      return span;
+    };
+    for (const node of [...headline.childNodes]) {
+      if (node.nodeType === Node.TEXT_NODE) {
+        const text = node.textContent ?? '';
+        const parts = JAPANESE.test(text) ? [...graphemes.segment(text)].map((g) => g.segment) : text.split(/(?<=\s)/);
+        const frag = document.createDocumentFragment();
+        for (const part of parts) if (part) frag.append(unit(part));
+        node.replaceWith(frag);
+      } else if (node instanceof HTMLElement && node.tagName !== 'WBR') {
+        // A number: revealed as one unit, and it stays a real link.
+        const holder = unit('', 'ink ink-metric');
+        node.replaceWith(holder);
+        holder.append(node);
+      }
+    }
+    headline.setAttribute('data-inked', '');
+  }
+
   // ── The brush of light (§10-B): the strokes of each act's mark, added here because only the cinema draws them. ──
   for (const mark of document.querySelectorAll<HTMLElement>('.act-kanji[data-kanji]')) {
     const strokes = KANJI_STROKES[mark.dataset.kanji ?? ''] ?? [];

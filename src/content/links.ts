@@ -20,7 +20,14 @@ export const LINKS = {
 
 export type LinkKeyName = keyof typeof LINKS;
 
-export const ALLOWED_URLS: readonly string[] = Object.values(LINKS);
+/**
+ * Not a link: the vocabulary identifier that Person structured data must name (JSON-LD `@context`).
+ * It is never rendered as an href and nothing is fetched from it; it is listed here because this
+ * file is the only place a URL may be written (PM: "Person structured data", final round 2026-11-20).
+ */
+export const SCHEMA_ORG = 'https://schema.org';
+
+export const ALLOWED_URLS: readonly string[] = [...Object.values(LINKS), SCHEMA_ORG];
 
 /** Public contact address, split so that it is never written whole in HTML. */
 export const EMAIL_PARTS = { user: 'sen.python.dev', domain: 'gmail.com' } as const;

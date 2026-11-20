@@ -218,7 +218,10 @@ export default function createPatent(ctx: WorldContext): World {
     curve(docAt(q), a);
     const end = seg(q, 0.8, 1.0);
     const back = wide ? 0 : 5;
-    setPose(out, [mix(a.x * 0.55, 0, end), mix(0.9, 1.4, end), mix(7.4, 10.5, end) + back], [mix(a.x * 0.65, 0, end), mix(0.25, 0.6, end), mix(0, -1.2, end)], wide ? 40 : 52);
+    // Portrait: the camera looks lower, so the pipe sits in the upper half and the stations and the
+    // name field below it no longer cover it (final round, 2026-11-20).
+    const lower = wide ? 0 : mix(2.6, 1.2, end);
+    setPose(out, [mix(a.x * 0.55, 0, end), mix(0.9, 1.4, end), mix(7.4, 10.5, end) + back], [mix(a.x * 0.65, 0, end), mix(0.25, 0.6, end) - lower, mix(0, -1.2, end)], wide ? 40 : 52);
   };
 
   let forward = 0;

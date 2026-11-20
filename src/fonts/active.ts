@@ -3,17 +3,17 @@ import localFont from 'next/font/local';
 
 // next/font names each family after its constant: distinctive names, so no installed font can match.
 // Only the hero's two small subsets (headline, lead paragraph) are preloaded (PM decision 2026-11-20,
-// and the CLS found on CI the same day). Every other face is optional and not preloaded. Traced on
-// 2026-11-20: when any face arrived after the first paint (swap), the browser laid out the whole
-// page a second time — all 2,400 layout objects of the static home, whichever part used the face —
-// and that second layout was the static page's blocking time over budget on CI. With optional, a
-// face that is not ready when the page is first drawn is not applied to that page view at all (no
-// second layout, no shift); it is cached, and used from the next page view on.
+// and the CLS found on CI the same day). The others are not preloaded and swap in when they arrive:
+// a first visit must have the Mincho headings, the numbers and the body face.
+// (Tried on 2026-11-20 and dropped: optional for these. It left a first visit in system fonts, and
+// made Lighthouse's simulated LCP jump whenever the face arrived inside the short wait — CI run
+// 44750222280, /en LCP 0.9 s or 4.9 s. What a late face costs — one more layout of the page — is
+// dealt with where it hurt, on the stacked static page: see data-static in layout.tsx.)
 export const gtHero = localFont({ src: [{ path: './a/hero-600.woff2', weight: '600', style: 'normal' }], variable: '--font-face-hero', display: 'optional', preload: true, adjustFontFallback: 'Times New Roman' });
 export const gtLead = localFont({ src: [{ path: './a/lead-400.woff2', weight: '400', style: 'normal' }], variable: '--font-face-lead', display: 'optional', preload: true, adjustFontFallback: 'Arial' });
-export const gtSans = localFont({ src: [{ path: './a/sans-400.woff2', weight: '400', style: 'normal' }, { path: './a/sans-600.woff2', weight: '600', style: 'normal' }], variable: '--font-face-sans', display: 'optional', preload: false, adjustFontFallback: 'Arial' });
-export const gtHeading = localFont({ src: [{ path: './a/heading-600.woff2', weight: '600', style: 'normal' }], variable: '--font-face-heading', display: 'optional', preload: false, adjustFontFallback: 'Times New Roman' });
-export const gtMono = localFont({ src: [{ path: './a/mono-400.woff2', weight: '400', style: 'normal' }, { path: './a/mono-600.woff2', weight: '600', style: 'normal' }], variable: '--font-face-mono', display: 'optional', preload: false, adjustFontFallback: 'Arial' });
+export const gtSans = localFont({ src: [{ path: './a/sans-400.woff2', weight: '400', style: 'normal' }, { path: './a/sans-600.woff2', weight: '600', style: 'normal' }], variable: '--font-face-sans', display: 'swap', preload: false, adjustFontFallback: 'Arial' });
+export const gtHeading = localFont({ src: [{ path: './a/heading-600.woff2', weight: '600', style: 'normal' }], variable: '--font-face-heading', display: 'swap', preload: false, adjustFontFallback: 'Times New Roman' });
+export const gtMono = localFont({ src: [{ path: './a/mono-400.woff2', weight: '400', style: 'normal' }, { path: './a/mono-600.woff2', weight: '600', style: 'normal' }], variable: '--font-face-mono', display: 'swap', preload: false, adjustFontFallback: 'Arial' });
 
 /** CSS variables for <html>: --font-face-hero / -sans / -heading / -mono (used by the stacks in tokens.ts). */
 export const fontVariables = [gtHero, gtLead, gtSans, gtHeading, gtMono].flatMap((f) => (f ? [f.variable] : [])).join(' ');

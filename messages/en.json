@@ -1,7 +1,9 @@
 {
   "meta": {
     "title": "Takefumi Ono — Full-stack engineer | GROUND TRUTH",
-    "description": "{years} in Finland and Japan. A full-stack engineer who measures first, finds the root cause, and acts on evidence. Every number on this site comes with its evidence."
+    "description": "{years} in Finland and Japan. A full-stack engineer who measures first, finds the root cause, and acts on evidence. Every number on this site comes with its evidence.",
+    "ogAlt": "A cross-section of rock strata with a lit borehole: the portfolio of Takefumi Ono, “GROUND TRUTH”",
+    "siteName": "GROUND TRUTH"
   },
   "nav": {
     "skip": "Skip to content",
@@ -155,5 +157,10 @@
     "recorded": "Recorded",
     "hintScroll": "Scroll to dig",
     "hintBand": "Pick a band to jump"
+  },
+  "notFound": {
+    "title": "Nothing is buried at this depth",
+    "body": "That page was not found. Head back to the surface.",
+    "home": "Back to the surface"
   }
 }

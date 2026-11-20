@@ -2504,6 +2504,11 @@ html[data-cinema] .act .act-headline:focus-within {
   opacity: 1;
 }
 
+/* Until the scroll effects have wrapped its characters, a headline does not show at once. */
+html[data-cinema] .act .act-headline:not([data-inked]):not(:focus-within) {
+  opacity: 0;
+}
+
 html[data-cinema] .act .act-headline .ink {
   --shown: clamp(0, var(--ink, 0) * 44 - var(--i) * 0.9, 1);
   opacity: var(--shown);
@@ -3039,7 +3044,7 @@ html[data-cinema] .act-genten .clash {
   transition: opacity 240ms var(--ease-strata);
 }
 
-html[data-cinema] .act-genten[data-raced] .clash {
+html[data-cinema] .act-genten[data-raced] .clash:not(:focus-within) {
   opacity: 0;
   pointer-events: none;
 }
@@ -3068,13 +3073,47 @@ html[data-cinema] .act-genten .gate {
 
 /* 6: with the 3D the principles are carved in the rock and read by light; the list stays for
    screen readers (and is the plain version without the 3D). */
+/* 6: the creed the light is on is also written out, one at a time, where the other sections have
+   their captions (final round: the relief alone could not be read without moving the light). */
 html[data-cinema] .act-bedrock .creeds {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
+  position: fixed;
+  left: 50%;
+  bottom: 6svh;
+  display: grid;
+  width: min(44rem, calc(100vw - 2 * var(--gutter) - 4rem));
+  gap: 0;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+html[data-cinema] .act-bedrock .creeds li {
+  grid-area: 1 / 1;
+  justify-self: center;
+  padding: 0.6rem 1.25rem;
+  border: 0;
+  border-radius: 6px;
+  background: rgb(12 11 10 / 0.72);
+  font-family: var(--font-heading);
+  font-size: clamp(1.1rem, 2vw, 1.5rem);
+  font-weight: 600;
+  line-height: 1.6;
+  text-align: center;
+  text-wrap: balance;
+  opacity: 0;
+  transition: opacity 240ms ease-out;
+}
+
+html[data-cinema] .act-bedrock[data-step='1'] .creeds li:nth-child(1),
+html[data-cinema] .act-bedrock[data-step='2'] .creeds li:nth-child(2),
+html[data-cinema] .act-bedrock[data-step='3'] .creeds li:nth-child(3) {
+  opacity: 1;
+}
+
+@media (max-aspect-ratio: 115/100), (max-width: 899px) {
+  html[data-cinema] .act-bedrock .creeds {
+    bottom: calc(2.5svh + 3.5rem);
+    width: calc(100vw - 2 * var(--gutter));
+  }
 }
 
 /* §11.4: a hole drilled in the rock (a small canvas at the click) and the number that rises from
@@ -3824,7 +3863,8 @@ html[data-cinema] .act-world > .act-frame > .act-card {
     transform 240ms var(--ease-strata);
 }
 
-html[data-cinema] .act-world[data-card] > .act-frame > .act-card {
+html[data-cinema] .act-world[data-card] > .act-frame > .act-card,
+html[data-cinema] .act-world > .act-frame > .act-card:focus-within {
   opacity: 1;
   transform: translate(-50%, -50%);
   transition:
@@ -4215,7 +4255,7 @@ html[data-cinema] .act-next .act-drawer-open {
     left: 0.75rem;
     right: 0.75rem;
     width: auto;
-    max-height: 62svh;
+    max-height: 50svh;
     padding: 0.9rem 1rem;
     overflow: auto;
     transform: none;
@@ -4235,4 +4275,47 @@ html[data-cinema] .act-world:not(.act-next) > .act-frame {
   position: fixed;
   inset: 0;
   height: 100svh;
+}
+
+/* ── 404 (src/app/global-not-found.tsx): both languages, the way back up ── */
+.not-found {
+  display: grid;
+  gap: 2.5rem;
+  align-content: center;
+  min-height: 100svh;
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 3rem var(--gutter);
+}
+
+.not-found-code {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  letter-spacing: 0.2em;
+  color: var(--color-evidence);
+}
+
+.not-found h1 {
+  margin: 0 0 0.5rem;
+  font-family: var(--font-heading);
+  font-size: clamp(1.5rem, 5vw, 2.25rem);
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.not-found section p {
+  margin: 0;
+  color: var(--color-ink-muted);
+}
+
+.not-found .act-case {
+  margin-top: 1.25rem;
+}
+
+/* The stacked version, before the visitor's first action (src/app/[locale]/layout.tsx, STATIC_FIRST):
+   sections below the screen are not laid out yet. Their place is held at about their usual height. */
+html[data-static] .act-world {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 60rem;
 }

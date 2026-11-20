@@ -400,7 +400,14 @@ export function createDirectorRun({
 
       // ── 4. The core ──
       // From act 2 on, the core sits in the hub framing (the end of act 2).
-      const c = i >= 2 ? shotAt({ surface: 1, explode: 1 }, frameInfo).core : shot.core;
+      let c = i >= 2 ? shotAt({ surface: 1, explode: 1 }, frameInfo).core : shot.core;
+      if (isFinale && !wide) {
+        // Portrait: in the hub the core stands upright; for the finale it is laid on the archive table
+        // like on a wide screen — across the upper part of the screen, above the ledger.
+        const lie = shotAt({ surface: 1, explode: 1 }, { ...frameInfo, wide: true }).core;
+        const t = seg(p, 0.08, 0.4);
+        c = { ...c, u: mix(c.u, 0.5, t), v: mix(c.v, 0.66, t), tilt: mix(c.tilt, lie.tilt, t), yaw: mix(c.yaw, lie.yaw, t), roll: mix(c.roll, lie.roll, t), lengthVh: mix(c.lengthVh, 0.8 * aspect, t) };
+      }
       front.fill(0);
       if (i === 1) front[1] = shot.front;
       if (isWorld && k >= 0) {
@@ -755,6 +762,9 @@ export function createDirectorRun({
       postLive.focus = camera.position.z - (outer.current?.position.z ?? 0);
       const pulse = isWorld ? (phase === 'entry' ? Math.sin(Math.PI * seg(e, 0.35, 0.85, lin)) : phase === 'return' ? Math.sin(Math.PI * seg(r, 0.05, 0.55, lin)) : 0) : 0;
       postLive.aberration = pulse * 0.9;
+      // One exposure for every section: the auction's eight pillars are by far the brightest thing on
+      // the site, and bloomed to white; inside that world the bloom is held back.
+      postLive.bloom = act.id === 'auction' ? mix(1, 0.7, worldFade) : 1;
       postLive.grain = pulse;
 
       // ── 10. The acts' HTML ──
