@@ -22,20 +22,21 @@ export function startEffects(): Effects {
   ScrollTrigger.config({ ignoreMobileResize: true });
 
   // Touch devices keep native scrolling (syncTouch off): iOS momentum and performance first.
-  // Desktop (STORYBOARD v2.3 §9-3): a lighter wheel and a longer glide; both read from the tuning
-  // every time, so the ?debug=scroll panel changes them live.
+  // Desktop (STORYBOARD v2.5 §9-2): no inertia — the page moves with the wheel and stops with it
+  // (lerp 1: every wheel event is applied at once) — and a shorter distance for each step of the
+  // wheel, read from the tuning every time so the ?debug=scroll panel changes it live.
+  // Lenis stays for the flights (scrollTo with an easing) and for the anchors.
   loadTune();
   const lenis = new Lenis({
     autoRaf: false,
     syncTouch: false,
     anchors: true,
-    lerp: tune.inertia,
+    lerp: 1,
     virtualScroll: (data) => {
       if (data.event.type === 'wheel') {
         data.deltaX *= tune.wheel;
         data.deltaY *= tune.wheel;
       }
-      lenis.options.lerp = tune.inertia;
       return true;
     },
   });

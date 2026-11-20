@@ -545,6 +545,7 @@ export const contentJa = {
     acts: {
       // The four beats (§12.2) are the PM's sentences (STORYBOARD v2.4), with every number as a metric.
       current: {
+        role: '既存リポジトリの機能追加・不具合修正・リファクタリング',
         headline: '初見のコードを、短時間で読み解く。',
         metrics: [],
         beats: [
@@ -556,6 +557,7 @@ export const contentJa = {
         labels: { repo: '初見のリポジトリ', structure: 'ファイル構造', ai: 'AI検証', human: '担当者レビュー' },
       },
       genten: {
+        role: '個人開発（企画・実装・評価・公開）',
         headline: '答えに、原典を添える。',
         metrics: ['genten-acc-closed', 'genten-acc-keyword', 'genten-acc-genten'],
         then: ['genten-cite-closed', 'genten-cite-keyword', 'genten-cite-genten'],
@@ -568,6 +570,7 @@ export const contentJa = {
         labels: { closed: 'モデル単体', keyword: 'キーワード検索', genten: 'Genten', gates: '設問 {{genten-questions}}', wrong: '誤答', rules: '検証済みルール {{genten-rules}}' },
       },
       pegasus: {
+        role: '移行設計・実装・計測設計・公開作業（応募{{pegasus-applicants}}から選出）',
         headline: 'URL資産を、ひとつも失わずに運ぶ。',
         metrics: ['pegasus-downtime', 'pegasus-posts', 'pegasus-plugins'],
         beats: [
@@ -579,6 +582,7 @@ export const contentJa = {
         labels: { old: '旧サイト', new: '新サイト', posts: '投稿 {{pegasus-posts}}', tangle: '不規則なURL {{pegasus-url-patterns}}', redirect: '301転送', ads: '広告の計測 {{pegasus-conversions}}', plugins: 'プラグイン {{pegasus-plugins}}' },
       },
       'php-audit': {
+        role: 'セキュリティ診断・緊急対応・報告書と改善計画',
         headline: '攻撃の道筋を、該当するコード行まで。',
         metrics: ['php-files', 'php-duration', 'php-size'],
         beats: [
@@ -590,6 +594,7 @@ export const contentJa = {
         labels: { files: 'PHPファイル {{php-files}}', wave: '応答サイズ', spike: 'わずかな差', tainted: '汚染ファイル', path: '攻撃の道筋', dome: '無害化', hash: 'SHA-256 証拠保全' },
       },
       auction: {
+        role: '本番障害の原因調査・インフラ改修・検証環境の構築',
         headline: '推測で増やさず、実測で冷ます。',
         metrics: ['auction-hours', 'auction-bids', 'auction-errors'],
         beats: [
@@ -601,6 +606,7 @@ export const contentJa = {
         labels: { cpu: 'CPU {{auction-cores}}', bids: '入札', errors: 'エラー', monitor: '{{auction-monitor-interval}}の監視', cause: 'CPUの飽和' },
       },
       patent: {
+        role: '一人で要件定義から納品まで',
         headline: '書類に、受け手の名を透かす。',
         metrics: ['patent-typical', 'patent-duration', 'patent-capacity'],
         beats: [

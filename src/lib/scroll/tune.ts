@@ -1,6 +1,7 @@
 /**
- * The feel of the cinematic home (docs/STORYBOARD.md v2.3 §9): how long the acts are, how the wheel
- * scrolls, how slowly the picture follows the scroll, and how fast the key moments play.
+ * The feel of the cinematic home (docs/STORYBOARD.md v2.5 §9, §11.1): how long the acts are, how far
+ * one step of the wheel goes, how briefly the picture is smoothed behind the scroll, and how
+ * present the stardust is.
  *
  * One mutable object read every frame by the scroll effects and the director. The defaults are the
  * site's values; `?debug=scroll` (src/components/debug/scroll-panel.ts) lets the owner change them
@@ -10,30 +11,35 @@
 export type Tune = {
   /** Scroll length of every act, as a multiple of its `len` (src/content/acts.ts). */
   length: number;
-  /** Wheel sensitivity on desktop (1 = the browser's own step). */
+  /** Distance of one wheel step on desktop, as a multiple of the browser's own (no inertia: the page stops with the wheel). */
   wheel: number;
-  /** Inertia of the desktop scroll: Lenis's lerp per frame at 60 fps (smaller glides longer). */
-  inertia: number;
-  /** Seconds for the picture to cover 63 % of the way to where the scroll is (critically damped). */
+  /** Seconds the picture is smoothed behind the scroll (63 % of a step; 0 = none). Only to take out judder. */
   smooth: number;
-  /** Speed of the key moments (1 = the durations in acts.ts; 2 = twice as fast). */
-  tempo: number;
+  /** Stardust (§11.1): how many grains (1 = the default amount), how bright, how far the pointer draws them (fraction of the width). */
+  stars: number;
+  starLight: number;
+  starPull: number;
 };
 
-export const TUNE_DEFAULTS: Readonly<Tune> = { length: 1.5, wheel: 0.7, inertia: 0.07, smooth: 0.7, tempo: 1 };
+export const TUNE_DEFAULTS: Readonly<Tune> = { length: 1.5, wheel: 0.5, smooth: 0.12, stars: 1, starLight: 1, starPull: 0.025 };
 export const TUNE_RANGES: Readonly<Record<keyof Tune, readonly [min: number, max: number, step: number]>> = {
   length: [1, 2.5, 0.05],
-  wheel: [0.3, 1.5, 0.05],
-  inertia: [0.03, 0.15, 0.005],
-  smooth: [0.2, 1.5, 0.05],
-  tempo: [0.5, 2, 0.05],
+  wheel: [0.2, 1, 0.05],
+  smooth: [0, 0.3, 0.01],
+  stars: [0, 2, 0.05],
+  starLight: [0, 2, 0.05],
+  starPull: [0, 0.05, 0.0025],
 };
-export const TUNE_KEY = 'gt-scroll-tune';
+/** A new key: the values saved by the v2.3 panel (inertia, tempo) no longer mean anything. */
+export const TUNE_KEY = 'gt-scroll-tune-2';
 
 export const tune: Tune = { ...TUNE_DEFAULTS };
 
+/** After the scroll has stopped, the picture comes to rest within this long (§9-1). */
+export const REST_SECONDS = 0.28;
+
 /** Angular frequency of a critically damped spring that covers 63 % of a step in `seconds`. */
-export const omegaFor = (seconds: number) => 2.146 / Math.max(0.05, seconds);
+export const omegaFor = (seconds: number) => 2.146 / Math.max(0.01, seconds);
 
 /** Apply the saved values (only with ?debug=scroll) and the act length to the page. */
 export function loadTune(): void {

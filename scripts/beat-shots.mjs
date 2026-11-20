@@ -78,37 +78,45 @@ for (const size of sizes.length ? sizes : ['1440x900', '390x844']) {
     await shot('00-hero-stardust');
   }
   let n = 1;
-  for (const [id, [len, pause, cuts]] of Object.entries(ACTS)) {
+  for (const [id, [len, , cuts]] of Object.entries(ACTS)) {
     const prefix = `${String(n).padStart(2, '0')}-${id}`;
     n += 1;
     if (only && !only.includes(id)) continue;
-    const result = 0.85 - pause / len;
     if (id === 'next') {
       await goto(id, 0.9, len);
-      await settle(3000);
+      await settle(2000);
       await shot(`${prefix}-ledger`);
       continue;
     }
-    await goto(id, 0.152, len);
-    await settle(4500);
+    // Scroll shares of a world act (src/content/acts.ts SHARES): entry 13 %, card 5 %, story 50 %, held result 16 %, return 16 %.
+    await goto(id, 0.155, len);
+    await settle(2500);
     await shot(`${prefix}-0-card`);
     if (cuts) {
-      const edges = [0.15, ...cuts.map((c) => 0.15 + c * (result - 0.15)), result];
+      // Each beat's share of the story's scroll: in proportion to its part of the story, at least a sixth.
+      const q = [0, ...cuts, 1];
+      const spans = [0, 1, 2, 3].map((k) => Math.max(1 / 6, q[k + 1] - q[k]));
+      const total = spans.reduce((a, b) => a + b, 0);
+      let at = 0.18;
       for (let b = 0; b < 4; b += 1) {
-        // Past the point where the beat starts playing; the picture then rests at the end of the beat.
-        await goto(id, edges[b] + 0.6 * (edges[b + 1] - edges[b]), len);
-        await settle(b === 3 ? 1000 : 2500);
-        if (b < 3) await shot(`${prefix}-${b + 1}-beat`);
+        const next = at + (spans[b] / total) * 0.5;
+        // Near the end of the beat's stretch (the last beat: before its result panel comes up).
+        if (b < 3) {
+          await goto(id, at + 0.85 * (next - at), len);
+          await settle(1500);
+          await shot(`${prefix}-${b + 1}-beat`);
+        }
+        at = next;
       }
-      await goto(id, result + (0.85 - result) * 0.5, len);
-      await settle(3500);
+      await goto(id, 0.76, len);
+      await settle(2000);
       await shot(`${prefix}-4-result`);
     } else {
-      await goto(id, 0.15 + 0.5 * (result - 0.15), len);
-      await settle(2500);
+      await goto(id, 0.43, len);
+      await settle(1500);
       await shot(`${prefix}-1-story`);
-      await goto(id, result + (0.85 - result) * 0.5, len);
-      await settle(2500);
+      await goto(id, 0.76, len);
+      await settle(1500);
       await shot(`${prefix}-2-result`);
     }
   }

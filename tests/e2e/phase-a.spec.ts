@@ -10,6 +10,7 @@ import { startStage } from './stage-helpers';
  */
 const WORK = ['current', 'genten', 'pegasus', 'php-audit', 'auction', 'patent', 'deep', 'catchup'];
 const CONTENT = { ja: contentJa, en: contentEn } as const;
+const plainRole = (id: 'auction') => (contentJa.cinema.acts[id].role ?? '').replace(/\{\{([a-z0-9-]+)\}\}/g, (_, m: string) => contentJa.metrics.find((x) => x.id === m)?.display ?? '');
 
 const scrollToAct = (page: Page, act: string, at: number) =>
   page.evaluate(
@@ -88,8 +89,9 @@ test('§8.2: vertical Mincho headlines on the Japanese desktop; horizontal on ph
   // Every act carries its one-character mark (§8.3), with its strokes in writing order (§10-B)
   // and the credit the stroke data's licence asks for.
   expect(await page.locator('.act-kanji').count()).toBe(11);
-  expect(await page.locator('.act-kanji svg.kanji-strokes').count()).toBe(11);
-  expect(await page.locator('section[data-act="genten"] .kanji-strokes path').count()).toBe(12);
+  // (v2.5: the strokes are only drawn by the cinema, which adds them on the client — see the 3D tests.)
+  expect(await page.locator('.act-kanji .kanji-glyph').count()).toBe(11);
+  expect(await page.locator('.kanji-strokes').count()).toBe(0);
   await expect(page.locator('.site-footer')).toContainText('KanjiVG');
 });
 
@@ -100,14 +102,18 @@ test('3-4: the reconstruction notice is part of the whole section', async ({ pag
   await expect(badge.locator('.metric-badge[data-confidence="reconstructed"]')).toHaveText('再現');
 });
 
-test('v2.4 §12–§13: title cards, four beats, comparisons and the results ledger are plain HTML', async ({ page }, testInfo) => {
+test('v2.4 §12–§13: title cards, four beats, comparisons and the results ledger are plain HTML — with JavaScript off too', async ({ browser }, testInfo) => {
   test.skip(testInfo.project.name !== 'desktop', 'HTML only: once is enough');
-  for (const locale of ['ja', 'en'] as const) {
+  test.setTimeout(120_000);
+  // Option A (PM, v2.5): the 3D-only markup is built on the client; everything a reader needs stays in the HTML.
+  for (const [locale, javaScriptEnabled] of [['ja', true], ['en', true], ['ja', false], ['en', false]] as const) {
+    const context = await browser.newContext({ javaScriptEnabled });
+    const page = await context.newPage();
     const content = CONTENT[locale];
     const display = new Map(content.metrics.map((m) => [m.id, m.display]));
     const plain = (text: string) => text.replace(/\{\{([a-z0-9-]+)\}\}/g, (_, id: string) => display.get(id) ?? '');
     const squash = (text: string) => text.replace(/[\s✓≈↺]/g, '');
-    await page.goto(`/${locale}?quality=static`);
+    await page.goto(`/${locale}${javaScriptEnabled ? '?quality=static' : ''}`);
     // §12.1: every section says which project it is.
     for (const layer of content.layers.filter((l) => !['surface', 'next'].includes(l.id))) {
       const card = page.locator(`section[data-act="${layer.id}"] .act-card`);
@@ -139,22 +145,26 @@ test('v2.4 §12–§13: title cards, four beats, comparisons and the results led
     const rows = page.locator('section[data-act="next"] .ledger-row');
     expect(await rows.count()).toBeGreaterThanOrEqual(6);
     for (const link of await page.locator('.ledger a.metric').all()) expect(await link.getAttribute('href')).toMatch(new RegExp(`^/${locale}/evidence/`));
-    // No cinema: the hint and the labels over the 3D are not shown.
-    await expect(page.locator('[data-nav-hint]')).toBeHidden();
-    await expect(page.locator('.act-labels').first()).toBeHidden();
     // The KanjiVG credit is a link (allow-listed in src/content/links.ts).
     await expect(page.locator('.site-footer a', { hasText: 'KanjiVG' })).toHaveAttribute('href', /kanjivg/);
+    // Every number of every act is a link to its evidence, in the HTML as served.
+    for (const [id, act] of Object.entries(content.cinema.acts) as [string, { metrics: string[]; then?: string[] }][]) {
+      for (const m of [...act.metrics, ...(act.then ?? [])]) expect(await page.locator(`section[data-act="${id}"] a.metric[data-metric="${m}"]`).count(), `${locale} ${id} ${m}`).toBeGreaterThan(0);
+    }
+    // The 3D-only markup is not in the served page.
+    await expect(page.locator('.act-labels, .kanji-strokes, [data-nav-hint]')).toHaveCount(0);
+    await context.close();
   }
 });
 
 test.describe('with the 3D', () => {
-  test('v2.4 §11.1: the stardust covers the screen and is drawn to the mouse within two seconds, then springs back', async ({ page }) => {
+  test('§11.1 (v2.5): the stardust is drawn a little to the mouse within two seconds, then springs back', async ({ page }) => {
     test.setTimeout(150_000);
     await page.goto('/ja?quality=low&dpr=0.4&debug=1');
     await startStage(page);
     type Dust = { count: number; pulled: number; maxOff: number };
     const dust = () => page.evaluate(() => (window as unknown as { __world: { stardust?: Dust } }).__world.stardust ?? { count: 0, pulled: 0, maxOff: 0 });
-    await expect.poll(async () => (await dust()).count, { timeout: 60_000 }).toBeGreaterThanOrEqual(150);
+    await expect.poll(async () => (await dust()).count, { timeout: 60_000 }).toBeGreaterThanOrEqual(75);
     expect((await dust()).maxOff).toBeLessThan(0.002);
     // The hint of the first screen is there until the first scroll.
     await expect(page.locator('[data-nav-hint]')).toBeVisible();
@@ -162,57 +172,57 @@ test.describe('with the 3D', () => {
     await page.mouse.move(width * 0.3, height * 0.5);
     await page.mouse.move(width * 0.55, height * 0.45, { steps: 8 });
     const moved = Date.now();
-    // Grains within a quarter of the width come toward the pointer: several of them, by about 2 % of the width or more.
-    await expect.poll(async () => (await dust()).maxOff, { timeout: 2000, intervals: [100] }).toBeGreaterThan(0.02);
+    // Grains within a quarter of the width come toward the pointer: several of them, by 1 % of the width or more…
+    await expect.poll(async () => (await dust()).maxOff, { timeout: 2000, intervals: [100] }).toBeGreaterThan(0.01);
     expect(Date.now() - moved).toBeLessThan(2000);
-    expect((await dust()).pulled).toBeGreaterThan(8);
+    expect((await dust()).pulled).toBeGreaterThan(4);
     await page.waitForTimeout(1200);
-    expect((await dust()).maxOff).toBeLessThanOrEqual(0.062);
+    // …and never further than about 3 % (v2.5: noticeable, not showy).
+    expect((await dust()).maxOff).toBeLessThanOrEqual(0.034);
     // The pointer leaves the page: every grain goes home.
     await page.evaluate(() => document.documentElement.dispatchEvent(new PointerEvent('pointerleave')));
     await expect.poll(async () => (await dust()).maxOff, { timeout: 15_000 }).toBeLessThan(0.002);
   });
 
-  test('v2.4 §12–§13: the title card, the beats in order, the result held, then recorded on the navigator', async ({ page }) => {
+  test('§12–§13 (v2.5): by scroll position — the title card, each beat, the result held over a stretch of scroll, then recorded', async ({ page }) => {
     test.setTimeout(240_000);
     await page.goto('/ja?quality=low&dpr=0.4&debug=1');
     await startStage(page);
     const section = page.locator('section[data-act="auction"]');
-    // Every change of the section's state, with its time.
-    await page.evaluate(() => {
-      const el = document.querySelector('section[data-act="auction"]') as HTMLElement;
-      const log: { t: number; beat: string | null; card: boolean; result: boolean }[] = [];
-      (window as unknown as { __log: typeof log }).__log = log;
-      new MutationObserver(() => log.push({ t: performance.now(), beat: el.getAttribute('data-beat'), card: el.hasAttribute('data-card'), result: el.hasAttribute('data-result') })).observe(el, {
-        attributes: true,
-        attributeFilter: ['data-beat', 'data-card', 'data-result'],
-      });
-    });
-    await page.evaluate(() => {
-      const el = document.querySelector<HTMLElement>('section[data-act="auction"]') as HTMLElement;
-      window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY + (el.offsetHeight - window.innerHeight) * 0.155);
-    });
-    // §12.1: the title card, once the entry is over.
+    const go = (t: number) => scrollToAct(page, 'auction', t);
+    // Scroll shares of a world act (src/content/acts.ts SHARES): entry 13 %, card 5 %, beats 50 %, held result 16 %, return 16 %.
+    await go(0.155);
     await expect(section).toHaveAttribute('data-card', '', { timeout: 60_000 });
     await expect(section.locator('.act-card')).toHaveCSS('opacity', '1', { timeout: 10_000 });
     await expect(section.locator('.act-card-title')).toHaveText(contentJa.layers.find((l) => l.id === 'auction')?.title ?? '');
-    // Scroll straight to the end of the act: the picture still tells the four beats in order,
-    // each long enough to read, and holds the result before it leaves.
-    await page.evaluate(() => {
-      const el = document.querySelector<HTMLElement>('section[data-act="auction"]') as HTMLElement;
-      window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY + (el.offsetHeight - window.innerHeight) * 0.97);
-    });
-    await expect(page.locator('[data-nav-band="auction"]')).toHaveAttribute('data-recorded', '', { timeout: 120_000 });
-    const log = await page.evaluate(() => (window as unknown as { __log: { t: number; beat: string | null; card: boolean; result: boolean }[] }).__log);
-    const first = (b: string) => log.find((e) => e.beat === b)?.t ?? -1;
-    const times = ['1', '2', '3', '4'].map(first);
-    for (const t of times) expect(t).toBeGreaterThan(0);
-    for (let b = 1; b < 4; b += 1) expect((times[b] as number) - (times[b - 1] as number), `beat ${b} is shown for 1.5 s or more`).toBeGreaterThanOrEqual(1500);
-    const shown = log.find((e) => e.result)?.t ?? -1;
-    const gone = log.find((e) => e.t > shown && !e.result)?.t ?? -1;
-    expect(shown).toBeGreaterThan(0);
-    expect(gone - shown, '§13.2: the result is held for 2.5 s or more').toBeGreaterThanOrEqual(2500);
-    // §13.3: the band of the navigator now carries the result.
+    await expect(section.locator('.act-card-lead')).toHaveText(plainRole('auction'));
+    // The four beats, each on its own stretch of scroll, with its sentence and labels built on the client.
+    const seen: string[] = [];
+    for (let t = 0.19; t < 0.68; t += 0.02) {
+      await go(t);
+      await page.waitForTimeout(450);
+      const b = (await section.getAttribute('data-beat')) ?? '';
+      if (seen[seen.length - 1] !== b) seen.push(b);
+    }
+    expect(seen.filter((b) => b !== '0')).toEqual(['1', '2', '3', '4']);
+    await expect(section.locator('.act-labels li')).toHaveCount(Object.keys(contentJa.cinema.acts.auction.labels ?? {}).length);
+    // §13.2: the result stays put across its whole stretch of scroll (16 % of the act), wherever the scroll rests in it.
+    for (const t of [0.69, 0.75, 0.82]) {
+      await go(t);
+      await page.waitForTimeout(600);
+      await expect(section).toHaveAttribute('data-result', '');
+      await expect(section.locator('.act-result')).toHaveCSS('opacity', '1');
+      expect(await section.evaluate((el) => getComputedStyle(el).getPropertyValue('--reveal').trim())).toBe('1.000');
+    }
+    // Back a little: the bars are part-grown again (the result is written by the scroll, both ways).
+    await go(0.655);
+    await page.waitForTimeout(600);
+    const partly = Number(await section.evaluate((el) => getComputedStyle(el).getPropertyValue('--reveal')));
+    expect(partly).toBeGreaterThan(0);
+    expect(partly).toBeLessThan(1);
+    // §13.3: leaving the act records its result on the navigator's band.
+    await go(0.93);
+    await expect(page.locator('[data-nav-band="auction"]')).toHaveAttribute('data-recorded', '', { timeout: 30_000 });
     await expect(page.locator('[data-nav-band="auction"] .core-result')).toContainText(contentJa.metrics.find((m) => m.id === 'auction-errors')?.display ?? '—');
   });
 
@@ -244,27 +254,61 @@ test.describe('with the 3D', () => {
     await expect(cursor).toHaveAttribute('data-hidden', '');
   });
 
-  test('§9: a key moment plays to its end at its own tempo; the picture is not scrubbed by the scroll', async ({ page }) => {
+  test('v2.5 §9: the picture is tied to the scroll — it stops within 0.3 s of the scroll stopping, and plays back', async ({ page }) => {
     test.setTimeout(150_000);
     await page.goto('/ja?quality=low&dpr=0.4&debug=1');
     await startStage(page);
     const surface = () => page.evaluate(() => (window as unknown as { __world: { acts?: { surface: number } } }).__world.acts?.surface ?? 0);
-    // Before the extraction's starting point: the picture follows the scroll and waits at the range's edge.
-    await scrollToAct(page, 'surface', 0.36);
-    await expect.poll(surface, { timeout: 30_000 }).toBeGreaterThan(0.29);
-    await page.waitForTimeout(1500);
-    expect(await surface()).toBeLessThanOrEqual(0.3);
-    // Past it: the core is pulled out to the end of the moment (70 %) with no further scrolling.
-    await scrollToAct(page, 'surface', 0.45);
-    await expect.poll(surface, { timeout: 30_000 }).toBeGreaterThanOrEqual(0.7);
-    await page.waitForTimeout(1000);
-    expect(await surface()).toBeCloseTo(0.7, 5);
-    // Scrolled back a little, it stays; back over the far point, it plays back.
-    await scrollToAct(page, 'surface', 0.62);
-    await page.waitForTimeout(1000);
-    expect(await surface()).toBeCloseTo(0.7, 5);
+    // The brush of light: the strokes of every mark, in writing order, added by the cinema (§10-B).
+    await expect(page.locator('.act-kanji svg.kanji-strokes')).toHaveCount(11);
+    await expect(page.locator('section[data-act="genten"] .kanji-strokes path')).toHaveCount(12);
+    await scrollToAct(page, 'surface', 0.25);
+    await expect.poll(surface, { timeout: 30_000 }).toBeGreaterThan(0.2);
+    // Every scroll position has its own picture: the same position gives the same progress, forward and back.
+    const at: number[] = [];
+    for (const t of [0.2, 0.45, 0.6, 0.45, 0.2]) {
+      await scrollToAct(page, 'surface', t);
+      await page.waitForTimeout(700);
+      const a = await surface();
+      // Nothing moves any more: the picture came to rest with the scroll.
+      await page.waitForTimeout(500);
+      expect(await surface()).toBe(a);
+      at.push(a);
+    }
+    expect(at[1]).toBeGreaterThan(at[0] as number);
+    expect(at[2]).toBeGreaterThan(at[1] as number);
+    expect(at[3]).toBeCloseTo(at[1] as number, 6);
+    expect(at[4]).toBeCloseTo(at[0] as number, 6);
+    // The extraction of the core has its own range of scroll (30–70 %): half-way through the range it is half done, not finished.
     await scrollToAct(page, 'surface', 0.5);
-    await expect.poll(surface, { timeout: 30_000 }).toBeLessThanOrEqual(0.3);
+    await page.waitForTimeout(700);
+    expect(await surface()).toBeCloseTo(0.5, 2);
+    // How long the picture keeps moving after a jump of the scroll: under 0.3 s (plus one slow frame of this machine).
+    const settle = await page.evaluate(async () => {
+      const w = (window as unknown as { __world: { acts?: { surface: number } } }).__world;
+      const el = document.querySelector<HTMLElement>('[data-act="surface"]') as HTMLElement;
+      window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY + (el.offsetHeight - window.innerHeight) * 0.62);
+      const start = performance.now();
+      let last = w.acts?.surface ?? 0;
+      let lastChange = start;
+      let frames = 0;
+      let slowest = 0;
+      let prev = start;
+      while (performance.now() - start < 1500) {
+        await new Promise((r) => requestAnimationFrame(r));
+        const now = performance.now();
+        slowest = Math.max(slowest, now - prev);
+        prev = now;
+        frames += 1;
+        const v = w.acts?.surface ?? 0;
+        if (v !== last) {
+          last = v;
+          lastChange = now;
+        }
+      }
+      return { ms: lastChange - start, slowest, frames };
+    });
+    expect(settle.ms, JSON.stringify(settle)).toBeLessThanOrEqual(300 + 2 * settle.slowest);
   });
 
   test('§9-4: ?debug=scroll shows the tuning panel; a slider changes the page and is remembered', async ({ page }) => {
@@ -273,12 +317,12 @@ test.describe('with the 3D', () => {
     await startStage(page);
     const panel = page.locator('.scroll-panel');
     await expect(panel).toBeVisible();
-    await expect(panel.locator('input[type="range"]')).toHaveCount(5);
+    await expect(panel.locator('input[type="range"]')).toHaveCount(6);
     const height = () => page.locator('section[data-act="genten"]').evaluate((el) => (el as HTMLElement).offsetHeight / window.innerHeight);
     const before = await height();
     await panel.locator('input[data-tune="length"]').fill('2');
     await expect.poll(height).toBeGreaterThan(before * 1.2);
-    expect(await page.evaluate(() => JSON.parse(window.localStorage.getItem('gt-scroll-tune') ?? '{}').length)).toBe(2);
+    expect(await page.evaluate(() => JSON.parse(window.localStorage.getItem('gt-scroll-tune-2') ?? '{}').length)).toBe(2);
     await page.reload();
     await expect(page.locator('.scroll-panel input[data-tune="length"]')).toHaveValue('2');
     // Without the parameter the saved values are not used.

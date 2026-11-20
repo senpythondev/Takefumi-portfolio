@@ -18,6 +18,7 @@ import { LAYER_IDS } from '@/content/layer-ids';
 import { scrollLive } from './store';
 import type { FrameListener } from './effects';
 import { tune } from './tune';
+import { KANJI_STROKES } from '@/content/kanji-strokes';
 import { Spring } from '@/three/director/motion';
 
 /**
@@ -54,7 +55,7 @@ export function startCinemaUi({ lenis, addFrameListener }: { lenis: Lenis; addFr
     const length = (act.len / 100) * tune.length * window.innerHeight;
     scrollLive.jumpTo = index;
     lenis.scrollTo(top, { immediate: true, force: true });
-    const target = then ? topOf(then) - 0.1 * window.innerHeight : top + (act.id === 'next' ? 0.4 : 0.16) * length;
+    const target = then ? topOf(then) - 0.1 * window.innerHeight : top + (act.id === 'next' ? 0.4 : 0.155) * length;
     lenis.scrollTo(target, {
       duration: then ? 2.2 : 1.6,
       easing: easeInOutCubic,
@@ -248,10 +249,33 @@ export function startCinemaUi({ lenis, addFrameListener }: { lenis: Lenis; addFr
   document.addEventListener('focusin', onFocusIn);
   cleanups.push(() => document.removeEventListener('focusin', onFocusIn));
 
+  // ── The brush of light (§10-B): the strokes of each act's mark, added here because only the cinema draws them. ──
+  for (const mark of document.querySelectorAll<HTMLElement>('.act-kanji[data-kanji]')) {
+    const strokes = KANJI_STROKES[mark.dataset.kanji ?? ''] ?? [];
+    if (strokes.length === 0 || mark.querySelector('svg')) continue;
+    mark.style.setProperty('--n', String(strokes.length));
+    const NS = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('class', 'kanji-strokes');
+    svg.setAttribute('viewBox', '0 0 109 109');
+    svg.setAttribute('focusable', 'false');
+    strokes.forEach((d, i) => {
+      const path = document.createElementNS(NS, 'path');
+      path.setAttribute('d', d);
+      path.setAttribute('pathLength', '1');
+      path.style.setProperty('--i', String(i));
+      svg.append(path);
+    });
+    mark.append(svg);
+  }
+  cleanups.push(() => {
+    for (const svg of document.querySelectorAll('.kanji-strokes')) svg.remove();
+  });
+
   // ── Count-up when the result appears ──
   const NUMBER = /\d[\d,]*(?:\.\d+)?/g;
-  const counting = new Map<HTMLElement, { from: number; to: number; start: number; format: (v: number) => string }>();
-  const startCount = (value: HTMLElement, id: string) => {
+  const counting = new Map<HTMLElement, { from: number; to: number; act: string; format: (v: number) => string }>();
+  const startCount = (value: HTMLElement, id: string, act: string) => {
     const text = value.textContent ?? '';
     const numbers = text.match(NUMBER) ?? [];
     let format: ((v: number) => string) | null = null;
@@ -275,7 +299,7 @@ export function startCinemaUi({ lenis, addFrameListener }: { lenis: Lenis; addFr
       };
     }
     if (!format) return;
-    counting.set(value, { from, to, start: performance.now(), format });
+    counting.set(value, { from, to, act, format });
   };
   const sections = [...document.querySelectorAll<HTMLElement>('section[data-act]')];
   let recordHook: ((section: HTMLElement) => void) | null = null;
@@ -283,12 +307,22 @@ export function startCinemaUi({ lenis, addFrameListener }: { lenis: Lenis; addFr
     for (const r of records) {
       const section = r.target as HTMLElement;
       const now = section.hasAttribute(r.attributeName ?? '');
-      if (!now) continue;
+      if (!now) {
+        // The result has gone (scrolled on or back): its numbers show their real text again.
+        if (r.attributeName === 'data-result') {
+          for (const [el, c] of counting) {
+            if (c.act !== section.dataset.act) continue;
+            counting.delete(el);
+            el.removeAttribute('data-ticker');
+          }
+        }
+        continue;
+      }
       if (r.attributeName === 'data-recorded') recordHook?.(section);
       if (r.attributeName === 'data-result') {
         for (const li of section.querySelectorAll<HTMLElement>('.act-metrics:not(.act-metrics-then) .act-metric')) {
           const v = li.querySelector<HTMLElement>('.metric-value');
-          if (v && section.dataset.act !== 'catchup') startCount(v, li.dataset.count ?? '');
+          if (v && section.dataset.act !== 'catchup') startCount(v, li.dataset.count ?? '', section.dataset.act ?? '');
         }
       }
     }
@@ -340,8 +374,31 @@ export function startCinemaUi({ lenis, addFrameListener }: { lenis: Lenis; addFr
   });
 
   // ── §12.3 The first hint: once, right after the hero has appeared; gone with the first scroll. ──
-  const hint = document.querySelector<HTMLElement>('[data-nav-hint]');
-  if (hint) {
+  const ICON_WHEEL = '<svg viewBox="0 0 16 24" width="12" height="18" aria-hidden="true"><rect x="1.5" y="1.5" width="13" height="21" rx="6.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path class="nav-hint-wheel" d="M8 6v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
+  const ICON_BANDS = '<svg viewBox="0 0 18 24" width="13" height="18" aria-hidden="true"><path d="M3 3h12M3 9h12M3 15h12M3 21h12" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" opacity="0.45"/><path d="M3 9h12" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>';
+  let hintEl: HTMLElement | null = null;
+  if (main?.dataset.hintScroll && main.dataset.hintBand) {
+    const hint = document.createElement('p');
+    hint.className = 'nav-hint';
+    hint.setAttribute('data-nav-hint', '');
+    hint.setAttribute('aria-hidden', 'true');
+    const item = (icon: string, text: string) => {
+      const span = document.createElement('span');
+      span.className = 'nav-hint-item';
+      span.innerHTML = icon;
+      span.append(text);
+      return span;
+    };
+    const sep = document.createElement('span');
+    sep.className = 'nav-hint-sep';
+    sep.textContent = '／';
+    hint.append(item(ICON_WHEEL, main.dataset.hintScroll), sep, item(ICON_BANDS, main.dataset.hintBand));
+    main.before(hint);
+    cleanups.push(() => hint.remove());
+    hintEl = hint;
+  }
+  if (hintEl) {
+    const hint = hintEl;
     const HINT_KEY = 'gt-hint';
     let seen = false;
     try {
@@ -524,14 +581,11 @@ export function startCinemaUi({ lenis, addFrameListener }: { lenis: Lenis; addFr
   const removeFrame = addFrameListener((timeMs) => {
     // Count-up: 1.2 s, eased out long (§8.1), ending on the real text.
     const now = performance.now();
+    // §9-3: the numbers count with the scroll (and back), not with a clock.
     for (const [el, c] of counting) {
-      const t = Math.min(1, (now - c.start) / 1200);
-      if (t >= 1) {
-        counting.delete(el);
-        el.removeAttribute('data-ticker');
-        continue;
-      }
-      el.setAttribute('data-ticker', c.format(c.from + (c.to - c.from) * easeOutQuint(t)));
+      const t = scrollLive.revealAct === c.act ? scrollLive.reveal : 1;
+      if (t >= 0.999) el.removeAttribute('data-ticker');
+      else el.setAttribute('data-ticker', c.format(c.from + (c.to - c.from) * easeOutQuint(t)));
     }
     if (!cursor || !ring) return;
     const dt = Math.min(0.1, lastFrame ? (timeMs - lastFrame) / 1000 : 0.016);

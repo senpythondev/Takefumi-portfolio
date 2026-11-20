@@ -545,6 +545,7 @@ export const contentEn = {
     auctionAfter: '{{auction-bids}}, {{auction-errors}}',
     acts: {
       current: {
+        role: 'Feature work, bug fixes and refactoring in existing repositories',
         headline: 'Reading unfamiliar code, quickly.',
         metrics: [],
         beats: [
@@ -556,6 +557,7 @@ export const contentEn = {
         labels: { repo: 'Unfamiliar repository', structure: 'File structure', ai: 'AI checks', human: 'Human review' },
       },
       genten: {
+        role: 'Personal project: concept, build, evaluation and release',
         headline: 'Every answer, backed by its source.',
         metrics: ['genten-acc-closed', 'genten-acc-keyword', 'genten-acc-genten'],
         then: ['genten-cite-closed', 'genten-cite-keyword', 'genten-cite-genten'],
@@ -568,6 +570,7 @@ export const contentEn = {
         labels: { closed: 'Model alone', keyword: 'Keyword search', genten: 'Genten', gates: '{{genten-questions}}', wrong: 'Wrong answer', rules: '{{genten-rules}}, verified' },
       },
       pegasus: {
+        role: 'Migration design, implementation, tracking design and launch (selected from {{pegasus-applicants}})',
         headline: 'A move that lost not a single URL.',
         metrics: ['pegasus-downtime', 'pegasus-posts', 'pegasus-plugins'],
         beats: [
@@ -579,6 +582,7 @@ export const contentEn = {
         labels: { old: 'Old site', new: 'New site', posts: '{{pegasus-posts}}', tangle: '{{pegasus-url-patterns}}', redirect: '301 redirects', ads: '{{pegasus-conversions}}', plugins: 'Plugins: {{pegasus-plugins}}' },
       },
       'php-audit': {
+        role: 'Security audit, emergency response, report and remediation plan',
         headline: 'Tracing each attack to its line of code.',
         metrics: ['php-files', 'php-duration', 'php-size'],
         beats: [
@@ -590,6 +594,7 @@ export const contentEn = {
         labels: { files: '{{php-files}}', wave: 'Response size', spike: 'A slight difference', tainted: 'Planted files', path: 'Attack path', dome: 'Neutralised', hash: 'SHA-256 evidence' },
       },
       auction: {
+        role: 'Root-cause investigation of a production incident, infrastructure changes, test-environment setup',
         headline: 'Cooled by measurement, not by guesswork.',
         metrics: ['auction-hours', 'auction-bids', 'auction-errors'],
         beats: [
@@ -601,6 +606,7 @@ export const contentEn = {
         labels: { cpu: 'CPU: {{auction-cores}}', bids: 'Bids', errors: 'Errors', monitor: 'Monitoring {{auction-monitor-interval}}', cause: 'CPU saturation' },
       },
       patent: {
+        role: 'Requirements through delivery, solo',
         headline: 'Every document carries its reader’s name.',
         metrics: ['patent-typical', 'patent-duration', 'patent-capacity'],
         beats: [

@@ -192,6 +192,7 @@ export function* cinemaStrings(c: SiteContent): Generator<{ path: string; text: 
   yield { path: 'cinema.auctionAfter', text: c.cinema.auctionAfter, rich: true };
   for (const [id, act] of Object.entries(c.cinema.acts)) {
     yield { path: `cinema.acts.${id}.headline`, text: act.headline, rich: true };
+    if (act.role) yield { path: `cinema.acts.${id}.role`, text: act.role, rich: true };
     // Genten's first beat quotes the amount of the article's claim, like the citation it comes from.
     for (const [i, text] of (act.beats ?? []).entries()) yield { path: `cinema.acts.${id}.beats.${i}`, text, rich: true, citation: id === 'genten' && i === 0 };
     for (const [key, text] of Object.entries(act.labels ?? {})) yield { path: `cinema.acts.${id}.labels.${key}`, text, rich: true };
@@ -284,7 +285,7 @@ export function parityProblems(ja: SiteContent, en: SiteContent): string[] {
   for (const id of Object.keys(ja.cinema.acts) as (keyof SiteContent['cinema']['acts'])[]) {
     const ids = (x: SiteContent) => [...x.cinema.acts[id].metrics, '|', ...(x.cinema.acts[id].then ?? [])].join(',');
     if (ids(ja) !== ids(en)) problems.push(`cinema.acts.${id}: big numbers differ between ja and en`);
-    const keys = (x: SiteContent) => `${x.cinema.acts[id].beats ? 'beats' : ''}|${Object.keys(x.cinema.acts[id].labels ?? {}).sort().join(',')}`;
+    const keys = (x: SiteContent) => `${x.cinema.acts[id].beats ? 'beats' : ''}${x.cinema.acts[id].role ? 'role' : ''}|${Object.keys(x.cinema.acts[id].labels ?? {}).sort().join(',')}`;
     if (keys(ja) !== keys(en)) problems.push(`cinema.acts.${id}: beats or labels differ between ja and en`);
   }
   for (const [i, l] of ja.layers.entries()) {

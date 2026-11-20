@@ -2445,13 +2445,15 @@ html[data-cinema] .kanji-glyph {
   display: none;
 }
 
+/* v2.5 §9-3: the brush follows the scroll — --write (0–1) draws the strokes in order, --sink then
+   lets the written character bleed into the background. Both are set by the director. */
 html[data-cinema] .kanji-strokes {
   display: block;
   width: 100%;
   height: 100%;
   overflow: visible;
-  opacity: 0;
-  transition: opacity 600ms var(--ease-strata);
+  opacity: calc((0.75 - 0.68 * var(--sink, 0)) * min(1, var(--write, 0) * 12));
+  filter: blur(calc(var(--sink, 0) * 2px));
 }
 
 html[data-cinema] .kanji-strokes path {
@@ -2461,46 +2463,12 @@ html[data-cinema] .kanji-strokes path {
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-dasharray: 1;
-  stroke-dashoffset: 1;
-  transition: stroke-dashoffset 340ms cubic-bezier(0.45, 0, 0.3, 1) calc((var(--n) - 1 - var(--i)) * 200ms);
+  /* Stroke i is drawn while --write crosses the i-th of n parts. */
+  stroke-dashoffset: calc(1 - clamp(0, var(--write, 0) * var(--n) - var(--i), 1));
 }
 
-html[data-cinema] .act[data-entered] .kanji-strokes {
-  opacity: 1;
-  animation: kanji-sink 2.2s var(--ease-strata) calc(var(--n) * 200ms + 600ms) both;
-}
-
-html[data-cinema] .act[data-entered] .kanji-strokes path {
-  stroke-dashoffset: 0;
-  transition-delay: calc(var(--i) * 200ms);
-  animation: kanji-press 420ms ease-out calc(var(--i) * 200ms + 220ms) both;
-}
-
-@keyframes kanji-sink {
-  from {
-    opacity: 0.7;
-    filter: drop-shadow(0 0 0.5rem color-mix(in srgb, var(--color-evidence) 70%, transparent));
-  }
-
-  to {
-    opacity: 0.07;
-    filter: blur(2px);
-  }
-}
-
-/* とめ・はね・はらい: the line swells where the brush stops, then relaxes. */
-@keyframes kanji-press {
-  0% {
-    stroke-width: 1.5;
-  }
-
-  45% {
-    stroke-width: 2.9;
-  }
-
-  100% {
-    stroke-width: 1.5;
-  }
+html[data-cinema] .act:not([data-entered]) .kanji-strokes {
+  opacity: 0;
 }
 
 /* Headline and eyebrow beside the world: left or right by act (data-side). */
@@ -2510,7 +2478,7 @@ html[data-cinema] .act > .act-frame > .act-head {
   left: clamp(1.25rem, 6vw, 6rem);
   max-width: min(26rem, 38vw);
   opacity: 0;
-  transition: opacity 900ms var(--ease-strata);
+  transition: opacity 240ms var(--ease-strata);
 }
 
 html[data-cinema] .act[data-side='R'] > .act-frame > .act-head {
@@ -2526,39 +2494,26 @@ html[data-cinema] .act > .act-frame > .act-head:focus-within {
 html[data-cinema] .act .act-headline {
   text-shadow: 0 2px 20px rgb(0 0 0 / 0.85);
   opacity: 0;
-  transition: opacity 450ms ease-out;
+  transition: opacity 240ms ease-out;
 }
 
-/* §8.2: one character at a time, 35 ms apart, like ink bleeding into paper; scrolling back dims it. */
+/* §8.2, v2.5 §9-3: one character at a time, like ink bleeding into paper — as far as the scroll has
+   gone (--ink 0–1, set by the director), and back again when scrolling back. */
 html[data-cinema] .act[data-lit] .act-headline,
 html[data-cinema] .act .act-headline:focus-within {
   opacity: 1;
-  transition: none;
 }
 
-html[data-cinema] .act[data-lit] .act-headline .ink {
-  animation: ink-in 1.2s var(--ease-strata) both;
-  animation-delay: calc(var(--i) * 35ms);
+html[data-cinema] .act .act-headline .ink {
+  --shown: clamp(0, var(--ink, 0) * 44 - var(--i) * 0.9, 1);
+  opacity: var(--shown);
+  text-shadow:
+    0 2px 20px rgb(0 0 0 / 0.85),
+    0 0 calc((1 - var(--shown)) * 0.6em) rgb(236 230 221 / 0.9);
 }
 
-@keyframes ink-in {
-  0% {
-    opacity: 0;
-    color: transparent;
-    text-shadow: 0 0 0.6em rgb(236 230 221 / 0.9);
-  }
-
-  40% {
-    opacity: 1;
-    color: color-mix(in srgb, var(--color-ink) 35%, transparent);
-    text-shadow: 0 0 0.3em rgb(236 230 221 / 0.5);
-  }
-
-  100% {
-    opacity: 1;
-    color: var(--color-ink);
-    text-shadow: 0 2px 20px rgb(0 0 0 / 0.85);
-  }
+html[data-cinema] .act .act-headline:focus-within .ink {
+  opacity: 1;
 }
 
 html[data-cinema] .act-world > .act-frame > .act-extras {
@@ -2568,7 +2523,7 @@ html[data-cinema] .act-world > .act-frame > .act-extras {
   max-width: min(24rem, 34vw);
   margin: 0;
   opacity: 0;
-  transition: opacity 900ms var(--ease-strata);
+  transition: opacity 240ms var(--ease-strata);
 }
 
 html[data-cinema] .act-world[data-side='R'] > .act-frame > .act-extras {
@@ -2595,8 +2550,8 @@ html[data-cinema] .act-world > .act-frame > .act-result {
   opacity: 0;
   transform: translate(-50%, 1.25rem);
   transition:
-    opacity 1100ms var(--ease-strata),
-    transform 1400ms var(--ease-strata);
+    opacity 240ms var(--ease-strata),
+    transform 240ms var(--ease-strata);
 }
 
 html[data-cinema] .act-world[data-result] > .act-frame > .act-result,
@@ -2609,7 +2564,7 @@ html[data-cinema] .act-world > .act-frame > .act-result:focus-within {
 html[data-cinema] .act-result .act-metrics {
   grid-area: 1 / 1;
   justify-content: center;
-  transition: opacity 900ms var(--ease-strata);
+  transition: opacity 240ms var(--ease-strata);
 }
 
 html[data-cinema] .act-result .act-metric {
@@ -2636,7 +2591,7 @@ html[data-cinema] .act[data-then] .act-result .act-metrics-then {
 html[data-cinema] .act-catchup .act-metric {
   grid-area: 1 / 1;
   opacity: 0;
-  transition: opacity 600ms var(--ease-strata);
+  transition: opacity 240ms var(--ease-strata);
 }
 
 html[data-cinema] .act-catchup .act-metrics {
@@ -2657,7 +2612,7 @@ html[data-cinema] .act-world .act-case {
 
 /* 3-2: the two amounts travel toward each other (--clash 0–1, set by the director). */
 html[data-cinema] .clash-side {
-  transition: opacity 700ms var(--ease-strata);
+  transition: opacity 240ms var(--ease-strata);
 }
 
 html[data-cinema] .clash-side[data-side='left'] {
@@ -2681,7 +2636,7 @@ html[data-cinema] .act-deep .deep-cards {
 html[data-cinema] .act-deep .deep-cards li {
   grid-area: 1 / 1;
   opacity: 0;
-  transition: opacity 600ms var(--ease-strata);
+  transition: opacity 240ms var(--ease-strata);
 }
 
 html[data-cinema] .act-deep .deep-cards li:is([data-front], :focus-within) {
@@ -2867,7 +2822,7 @@ html[data-cinema] .act-explode .index-guide {
   margin: 0;
   opacity: 0;
   transform: translateX(-50%);
-  transition: opacity 900ms var(--ease-strata);
+  transition: opacity 240ms var(--ease-strata);
   white-space: nowrap;
 }
 
@@ -3081,7 +3036,7 @@ html[data-cinema] .act-genten .clash {
   top: 40svh;
   width: min(40rem, calc(100vw - 2 * var(--gutter)));
   transform: translateX(-50%);
-  transition: opacity 800ms var(--ease-strata);
+  transition: opacity 240ms var(--ease-strata);
 }
 
 html[data-cinema] .act-genten[data-raced] .clash {
@@ -3098,7 +3053,7 @@ html[data-cinema] .act-genten .gates {
   grid-template-columns: repeat(25, 1fr);
   transform: translateX(-50%);
   opacity: 0;
-  transition: opacity 800ms var(--ease-strata);
+  transition: opacity 240ms var(--ease-strata);
 }
 
 html[data-cinema] .act-genten[data-raced] .gates,
@@ -3865,16 +3820,16 @@ html[data-cinema] .act-world > .act-frame > .act-card {
   opacity: 0;
   transform: translate(-50%, calc(-50% + 0.75rem));
   transition:
-    opacity 500ms ease-out,
-    transform 700ms var(--ease-strata);
+    opacity 240ms ease-out,
+    transform 240ms var(--ease-strata);
 }
 
 html[data-cinema] .act-world[data-card] > .act-frame > .act-card {
   opacity: 1;
   transform: translate(-50%, -50%);
   transition:
-    opacity 900ms var(--ease-strata),
-    transform 1200ms var(--ease-strata);
+    opacity 240ms var(--ease-strata),
+    transform 240ms var(--ease-strata);
 }
 
 html[data-cinema] .act-card-top {
@@ -3917,7 +3872,7 @@ html[data-cinema] .act-world > .act-frame > .act-beats {
   margin: 0;
   opacity: 0;
   transform: translateX(-50%);
-  transition: opacity 700ms var(--ease-strata);
+  transition: opacity 240ms var(--ease-strata);
 }
 
 html[data-cinema] .act-world:is([data-beat='1'], [data-beat='2'], [data-beat='3'], [data-beat='4']) > .act-frame > .act-beats,
@@ -3937,8 +3892,8 @@ html[data-cinema] .act-beat-name {
   color: color-mix(in srgb, var(--color-ink-muted) 75%, transparent);
   text-shadow: 0 1px 8px rgb(0 0 0 / 0.9);
   transition:
-    color 600ms var(--ease-strata),
-    border-color 600ms var(--ease-strata);
+    color 240ms var(--ease-strata),
+    border-color 240ms var(--ease-strata);
 }
 
 html[data-cinema] .act-beat:nth-child(1) .act-beat-name {
@@ -3974,9 +3929,9 @@ html[data-cinema] .act-beat-text {
   visibility: hidden;
   transform: translateY(0.4rem);
   transition:
-    opacity 450ms ease-out,
-    transform 450ms ease-out,
-    visibility 0s 450ms;
+    opacity 240ms ease-out,
+    transform 240ms ease-out,
+    visibility 0s 240ms;
 }
 
 /* Beats already told stay marked; the current one is lit. */
@@ -4006,8 +3961,8 @@ html[data-cinema] .act-beat-text:focus-within {
   transform: none;
   pointer-events: auto;
   transition:
-    opacity 800ms var(--ease-strata) 250ms,
-    transform 800ms var(--ease-strata) 250ms,
+    opacity 240ms var(--ease-strata) 40ms,
+    transform 240ms var(--ease-strata) 40ms,
     visibility 0s;
 }
 
@@ -4019,7 +3974,7 @@ html[data-cinema] .act-labels {
   padding: 0;
   list-style: none;
   pointer-events: none;
-  transition: opacity 500ms ease-out;
+  transition: opacity 240ms ease-out;
 }
 
 html[data-cinema] .act[data-result] .act-labels {
@@ -4033,12 +3988,12 @@ html[data-cinema] .act-labels li {
   margin: 0;
   opacity: 0;
   transform: translate(var(--x, -100px), var(--y, -100px));
-  transition: opacity 500ms ease-out;
+  transition: opacity 240ms ease-out;
 }
 
 html[data-cinema] .act-labels li[data-on] {
   opacity: 1;
-  transition: opacity 800ms var(--ease-strata) 200ms;
+  transition: opacity 240ms var(--ease-strata) 40ms;
 }
 
 html[data-cinema] .act-labels li::before {
@@ -4135,37 +4090,22 @@ html[data-cinema] .act-world[data-beat='4'][data-result] > .act-frame > .act-ext
   pointer-events: none;
 }
 
-/* The bars grow when the result appears. */
+/* v2.5 §9-3: the bars grow, and the steps of the plan come down, as far as the scroll has revealed
+   the result (--reveal 0–1, set by the director). */
 html[data-cinema] .compare-bar i {
-  transform: scaleX(0);
-  transition: transform 300ms ease-out;
+  transform: scaleX(var(--reveal, 0));
 }
 
-html[data-cinema] .act[data-result] .compare-bar i,
 html[data-cinema] .act-result:focus-within .compare-bar i {
-  transform: scaleX(1);
-  transition: transform 1500ms var(--ease-strata) 350ms;
-}
-
-html[data-cinema] .act[data-result] .compare-row[data-win] .compare-bar i {
-  transition-delay: 900ms;
+  transform: none;
 }
 
 html[data-cinema] .compare-stairs li {
-  opacity: 0;
-  transform: translateY(-0.4rem);
-  transition:
-    opacity 300ms ease-out,
-    transform 300ms ease-out;
+  opacity: clamp(0, var(--reveal, 0) * 5 - var(--i), 1);
 }
 
-html[data-cinema] .act[data-result] .compare-stairs li,
 html[data-cinema] .act-result:focus-within .compare-stairs li {
   opacity: 1;
-  transform: none;
-  transition:
-    opacity 700ms var(--ease-strata) calc(500ms + var(--i) * 220ms),
-    transform 700ms var(--ease-strata) calc(500ms + var(--i) * 220ms);
 }
 
 /* The finale: the ledger beside the rebuilt core. */

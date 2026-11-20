@@ -194,6 +194,8 @@ export const ActCopySchema = z.object({
    * ④ result. One plain sentence each; numbers are {{metric}} tokens.
    */
   beats: z.tuple([RichTextSchema, RichTextSchema, RichTextSchema, RichTextSchema]).optional(),
+  /** The one line of the title card (§12.1): what the work was. Without it the card shows the layer's lead. */
+  role: RichTextSchema.optional(),
   /** Small labels on the objects of the act's world, by key (§12.2): what each metaphor stands for. */
   labels: z.record(IdSchema, RichTextSchema).optional(),
 });

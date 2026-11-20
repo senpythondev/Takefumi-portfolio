@@ -76,9 +76,12 @@ export const scrollLive: {
   thread: { x: number; y: number; seed: number } | null;
   /** §10-C: when a number was clicked (performance.now()), 0 otherwise: the camera follows its thread. */
   threadFollow: number;
+  /** §9-3: how far the result of the act on screen has been revealed by the scroll (0–1), and which act. */
+  reveal: number;
+  revealAct: string;
   /** A sealing in gold is playing (3-4, the finale): the optional sound rings once (§10-H). */
   gold: boolean;
-} = { progress: {}, acts: {}, navOpacity: 1, settling: false, pointerBand: -1, pointerBandAt: null, linkBand: -1, jumpTo: -1, hub: false, rock: false, layer: 'surface', thread: null, threadFollow: 0, gold: false };
+} = { progress: {}, acts: {}, navOpacity: 1, settling: false, pointerBand: -1, pointerBandAt: null, linkBand: -1, jumpTo: -1, hub: false, rock: false, layer: 'surface', thread: null, threadFollow: 0, reveal: 0, revealAct: '', gold: false };
 
 export function useScrollState<T>(select: (s: ScrollState) => T): T {
   return useSyncExternalStore(

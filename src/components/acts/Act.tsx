@@ -29,9 +29,10 @@ export async function ActEyebrow({ layer, index, locale }: { layer: Layer; index
 
 /**
  * The title card of an act (STORYBOARD v2.4 §12.1): which layer, its one-character mark, the project,
- * its period and one line about it — shown in the centre once the entry is over.
+ * its period and one line about it (the role, where the PM gave one; otherwise the layer's lead) —
+ * shown in the centre once the entry is over.
  */
-export async function ActCard({ layer, index, ctx }: { layer: Layer; index: number; ctx: RichContext }) {
+export async function ActCard({ layer, index, ctx, role }: { layer: Layer; index: number; ctx: RichContext; role?: string }) {
   const td = await getTranslations('depth');
   return (
     <p className="act-card">
@@ -44,7 +45,7 @@ export async function ActCard({ layer, index, ctx }: { layer: Layer; index: numb
       </span>
       <span className="act-card-title">{layer.title}</span>
       <span className="act-card-lead">
-        <RichText text={layer.lead} ctx={ctx} compact />
+        <RichText text={role ?? layer.lead} ctx={ctx} compact />
       </span>
     </p>
   );
@@ -77,17 +78,13 @@ export async function ActBeats({ beats, ctx }: { beats: readonly string[]; ctx: 
   );
 }
 
-/** The labels on the objects of the act's world (§12.2). Decoration over the 3D: the sentences above carry the content. */
-export function ActLabels({ labels, ctx }: { labels: Record<string, string>; ctx: RichContext }) {
-  return (
-    <ul className="act-labels needs-cinema" aria-hidden="true">
-      {Object.entries(labels).map(([key, text]) => (
-        <li key={key} data-label={key}>
-          <span>{text.replace(/\{\{([a-z0-9-]+)\}\}/g, (_, id: string) => ctx.metrics.get(id)?.display ?? '')}</span>
-        </li>
-      ))}
-    </ul>
-  );
+/**
+ * The labels on the objects of the act's world (§12.2), as data: they only exist over the 3D, so the
+ * director builds their elements on the client when the cinema runs (the static page does not carry
+ * them; the sentences of the beats say the same things in the HTML).
+ */
+export function labelData(labels: Record<string, string>, ctx: RichContext): string {
+  return JSON.stringify(Object.fromEntries(Object.entries(labels).map(([key, text]) => [key, text.replace(/\{\{([a-z0-9-]+)\}\}/g, (_, id: string) => ctx.metrics.get(id)?.display ?? '')])));
 }
 
 /** The big numbers of an act: 2–3 Metric links, each with its one-line caption (STORYBOARD §3). */
@@ -151,12 +148,13 @@ export async function Act({
       data-act={act.id}
       data-layer={layer.id}
       data-side={act.side ?? undefined}
+      data-labels={copy.labels ? labelData(copy.labels, ctx) : undefined}
       aria-labelledby={`${anchor}-title`}
       style={{ '--len': act.len, '--tint': `var(--color-layer-${layer.id})` } as CSSProperties}
     >
       <div className="act-frame">
         {act.kanji ? <KanjiMark kanji={act.kanji} /> : null}
-        {act.id !== 'next' ? <ActCard layer={layer} index={index} ctx={ctx} /> : null}
+        {act.id !== 'next' ? <ActCard layer={layer} index={index} ctx={ctx} role={copy.role} /> : null}
         <div className="act-head">
           <ActEyebrow layer={layer} index={index} locale={ctx.locale} />
           <h2 className="act-headline" id={`${anchor}-title`} tabIndex={-1} data-act-headline={act.id}>
@@ -164,7 +162,6 @@ export async function Act({
           </h2>
         </div>
         {copy.beats ? <ActBeats beats={copy.beats} ctx={ctx} /> : null}
-        {copy.labels ? <ActLabels labels={copy.labels} ctx={ctx} /> : null}
         {children ? <div className="act-extras">{children}</div> : null}
         <div className="act-result" data-compare={compare ? '' : undefined}>
           {compare}

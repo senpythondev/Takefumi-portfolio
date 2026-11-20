@@ -1,7 +1,7 @@
 /**
  * ?debug=scroll — the owner's tuning panel for the feel of the home (docs/STORYBOARD.md v2.3 §9-4).
- * Sliders for the acts' length, the wheel, the inertia, how slowly the picture follows, and the
- * tempo of the key moments. Values are kept in this browser's localStorage and are applied only
+ * Sliders for the acts' length, the distance of one wheel step, the short smoothing behind the
+ * scroll, and the stardust (amount, brightness, pull) — STORYBOARD v2.5 §9-6. Values are kept in this browser's localStorage and are applied only
  * while `debug=scroll` is in the URL; the owner reports them and they become the defaults
  * (src/lib/scroll/tune.ts). Plain DOM, loaded only with the parameter.
  */
@@ -9,10 +9,11 @@ import { applyLength, loadTune, tune, TUNE_DEFAULTS, TUNE_KEY, TUNE_RANGES, type
 
 const LABELS: Record<keyof Tune, [label: string, unit: string, hint: string]> = {
   length: ['全体の長さ', '倍', '各幕のスクロール量（元の長さに対する倍率）'],
-  wheel: ['ホイールの感度', '倍', '小さいほど、1回のホイールで進む量が減る'],
-  inertia: ['スクロールの慣性', '', '小さいほど、止めたあと長く滑る'],
-  smooth: ['なめらかさ（時定数）', '秒', '映像がスクロールに追いつくまでの時間'],
-  tempo: ['見せ場の再生テンポ', '倍', '引き上げ・分解・入場と帰還・金継ぎの速さ'],
+  wheel: ['1回のホイールで進む距離', '倍', 'ブラウザの標準に対する倍率。小さいほど少しずつ進む（慣性なし）'],
+  smooth: ['追従のなめらかさ', '秒', '絵がスクロールに追いつくまでの時間（0＝なし）'],
+  stars: ['星屑の量', '倍', '粒の数（1＝既定）'],
+  starLight: ['星屑の明るさ', '倍', '粒の明るさ（1＝既定）'],
+  starPull: ['星屑の引き寄せ', '', 'マウスへ寄る距離（画面幅に対する割合）'],
 };
 
 export function mountScrollPanel(): void {

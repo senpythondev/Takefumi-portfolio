@@ -10,9 +10,9 @@
  * itself moves only to close on a cut face and inside the worlds (each world's `pose`).
  */
 import { Color, Matrix4, Raycaster, Vector2, Vector3, type Group, type Mesh, type PerspectiveCamera, type Scene } from 'three';
-import { ACTS, beatAt, beatEdges, beatsOf, cuesOf } from '@/content/acts';
+import { ACTS, beatAt, beatEdges, beatsOf, storyAt } from '@/content/acts';
 import { scrollLive } from '@/lib/scroll/store';
-import { omegaFor, tune } from '@/lib/scroll/tune';
+import { omegaFor, REST_SECONDS, tune } from '@/lib/scroll/tune';
 import { base, layer as layerColor, type LayerColorId } from '@/styles/tokens';
 import type { BandMaterial } from '../materials/band';
 import { WALL_HORIZON, type WallMaterial } from '../materials/wall';
@@ -26,7 +26,6 @@ import type { Dissolve } from './dissolve';
 import type { Thread } from './thread';
 import type { Tunnel } from './tunnel';
 import { Spring, clamp01, easeOutCubic, mix, seg } from './motion';
-import { Playhead } from './playhead';
 import { postLive } from './post-live';
 import { BANDS, CORE_RADIUS, HUB_FOV, HUB_GAP, HUB_Z, shotAt, type Frame } from './shots';
 import type { createWorldHost, WorldId } from './worlds';
@@ -75,12 +74,12 @@ export function createDirectorRun({
   tier: 'high' | 'medium' | 'low';
 }) {
   const controller = createWallController(wall.get('low'));
-  // The story position: follows the scroll softly, plays the key moments at a fixed tempo (§9).
-  const story = new Playhead(
-    ACTS.flatMap((act, index) =>
-      cuesOf(act).map((c) => ({ g0: index + c.from, g1: index + c.to, dur: c.dur, hold: c.hold, maxBoost: c.maxBoost })),
-    ),
-  );
+  // The story position (v2.5 §9): decided by the scroll alone (src/content/acts.ts `storyAt`), behind
+  // a very short spring that only takes out judder. Once the scroll has stopped, the picture is at
+  // rest within REST_SECONDS: what is left of the spring's tail is dropped.
+  const story = new Spring(0, 18);
+  let storyRaw = -1;
+  let storyStill = 0;
   const nav = new Spring(1, 5);
   const hover = Array.from({ length: BANDS }, () => new Spring(0, 9));
   // The band turned to the camera, smoothed: after a flight the new band turns forward instead of snapping.
@@ -217,7 +216,9 @@ export function createDirectorRun({
   window.addEventListener('touchcancel', onTouchEnd, { passive: true });
 
   // ── §11.1 (v2.4): the stardust over the whole viewport, drawn to the pointer ──
-  const stardust = createStardust(coarse ? (tier === 'high' ? 260 : tier === 'medium' ? 200 : 150) : tier === 'high' ? 640 : tier === 'medium' ? 460 : 320);
+  // (Twice the default amount is allocated, so the tuning can raise it; `tune.stars` 1 draws half.)
+  const stardust = createStardust(2 * (coarse ? (tier === 'high' ? 130 : tier === 'medium' ? 100 : 75) : tier === 'high' ? 320 : tier === 'medium' ? 230 : 160));
+  const starDim = new Spring(1, 6);
   scene.add(stardust.points);
 
   // ── Controls in the acts' HTML ──
@@ -299,14 +300,27 @@ export function createDirectorRun({
         const pj = acts[(ACTS[j] as (typeof ACTS)[number]).id] ?? 0;
         if (pj > 0) raw = j + Math.min(1, pj);
       }
+      // `raw` so far is in scroll fractions; the story's own position eases the key moments and holds the results.
+      {
+        const j = Math.min(LAST, Math.floor(raw));
+        raw = j + storyAt(ACTS[j] as (typeof ACTS)[number], raw - j);
+      }
       if (scrollLive.jumpTo >= 0) {
-        // A flight from the index: snap to the target act's first frame (the same hub framing).
+        // A flight from the index: start from the target act's first frame (the same hub framing)
+        // instead of sweeping through every act between.
         story.snap(scrollLive.jumpTo);
         flightAct = scrollLive.jumpTo;
         scrollLive.jumpTo = -1;
       }
-      const follow = omegaFor(tune.smooth);
-      const G = Math.max(0, story.step(raw, delta, follow, tune.tempo));
+      storyStill = Math.abs(raw - storyRaw) < 1e-6 ? storyStill + delta : 0;
+      storyRaw = raw;
+      if (tune.smooth <= 0.005 || storyStill >= REST_SECONDS) story.snap(raw);
+      else {
+        story.omega = omegaFor(tune.smooth);
+        story.step(raw, delta);
+      }
+      const follow = omegaFor(Math.max(0.05, tune.smooth));
+      const G = Math.max(0, story.x);
       const i = Math.min(LAST, Math.floor(G));
       const p = i === LAST ? clamp01(G - i) : G - i;
       const act = ACTS[i] as (typeof ACTS)[number];
@@ -357,7 +371,7 @@ export function createDirectorRun({
       const starOn = clamp01(star.on.step(starThere, delta));
       const starX = star.x.step(pointer.x * 0.5 + 0.5, delta);
       const starY = star.y.step(0.5 - pointer.y * 0.5, delta);
-      stardust.frame(elapsed, delta, aspect, starX, starY, starOn, star.x.v, star.y.v / aspect, G, 1, dpr, height);
+      stardust.frame(elapsed, delta, aspect, starX, starY, starOn, star.x.v, star.y.v / aspect, G, tune.starLight * starDim.x, dpr, height, tune.starPull, tune.stars / 2);
       const attracting =
         stardust.moving() ||
         star.on.moving(starThere) ||
@@ -404,7 +418,7 @@ export function createDirectorRun({
       scrollLive.hub = hub;
       scrollLive.rock = (i <= 1 && wallDim > 0.3) || (act.id === 'bedrock' && inWorld && phase === 'story');
       scrollLive.layer = act.layer ?? 'surface';
-      scrollLive.gold = story.timed && ((act.id === 'php-audit' && p > 0.5 && p < 0.8) || (isFinale && p > 0.15 && p < 0.5));
+      scrollLive.gold = story.moving(raw) && ((act.id === 'php-audit' && p > 0.5 && p < 0.8) || (isFinale && p > 0.15 && p < 0.5));
       let hoverBand = hub ? (scrollLive.pointerBand >= 0 ? scrollLive.pointerBand : scrollLive.linkBand) : -1;
       if (hub && hoverBand < 0 && coarse && i === 1) hoverBand = Math.min(BANDS - 1, Math.floor(seg(b, 0.55, 0.85, lin) * BANDS));
       if (isFinale && hoverBand !== BANDS - 1) hoverBand = -1;
@@ -669,7 +683,25 @@ export function createDirectorRun({
         if (w.labels && section) {
           let els = labelEls.get(section);
           if (!els) {
-            els = new Map([...section.querySelectorAll<HTMLElement>('[data-label]')].map((el) => [el.dataset.label as string, el]));
+            // Built here, on the client: the labels exist only over the 3D (the section carries their texts as data).
+            const list = document.createElement('ul');
+            list.className = 'act-labels';
+            list.setAttribute('aria-hidden', 'true');
+            els = new Map();
+            try {
+              for (const [key, text] of Object.entries(JSON.parse(section.dataset.labels ?? '{}') as Record<string, string>)) {
+                const li = document.createElement('li');
+                li.dataset.label = key;
+                const span = document.createElement('span');
+                span.textContent = text;
+                li.append(span);
+                list.append(li);
+                els.set(key, li);
+              }
+            } catch {
+              // No labels for this act.
+            }
+            section.querySelector('.act-frame')?.append(list);
             labelEls.set(section, els);
           }
           labelSeen.clear();
@@ -740,6 +772,7 @@ export function createDirectorRun({
       setFlag(surface, 'data-entered', i === 0 && a > 0.32);
       setFlag(surface, 'data-on', shot.headline > 0.01 && i <= 1);
       setFlag(surface, 'data-lit', shot.headline > 0.01 && i <= 1);
+      setVar(surface, '--ink', (i <= 1 ? shot.headline : 0).toFixed(3));
       setFlag(sections.get('explode'), 'data-hub', i === 1 && shot.hub > 0.5 && shot.front < 0.5);
       if (isWorld || isFinale) {
         const on = p > 0.02 && p < 0.98;
@@ -756,10 +789,27 @@ export function createDirectorRun({
         setFlag(section, 'data-card', isWorld && p > 0.128 && (edges ? beat === 0 && p < 0.2 : p < 0.19));
         setAttr(section, 'data-beat', edges && p > 0.128 && p < 0.9 ? String(beat) : null);
         setFlag(section, 'data-lit', isFinale ? p > 0.35 : p > (edges ? 0.151 : 0.19) && p < 0.9);
-        setFlag(section, 'data-result', !isFinale && p > (edges ? beats.result - 0.012 : beats.result - 0.1) && p < 0.87);
+        // v2.5 §9-3: what used to play by the clock is written by the scroll — the brush of light
+        // (--write, then --sink), the headline's ink (--ink), the result's bars and numbers (--reveal).
+        const inkFrom = isFinale ? 0.35 : edges ? 0.151 : 0.19;
+        const inkTo = isFinale ? 0.5 : edges ? mix(edges[0], edges[1], 0.6) : 0.3;
+        // (Written during the entry, and sunk into the background before the title card comes up.)
+        setVar(section, '--write', seg(p, 0.04, 0.115, lin).toFixed(3));
+        setVar(section, '--sink', seg(p, 0.115, 0.148, lin).toFixed(3));
+        setVar(section, '--ink', seg(p, inkFrom, inkTo, lin).toFixed(3));
+        const revealFrom = edges ? mix(edges[3], beats.result, 0.45) : beats.result - 0.1;
+        const reveal = isFinale ? 0 : seg(p, revealFrom, beats.result, lin);
+        setFlag(section, 'data-result', !isFinale && p > revealFrom && p < 0.87);
+        setVar(section, '--reveal', reveal.toFixed(3));
+        scrollLive.reveal = reveal;
+        scrollLive.revealAct = act.id;
         // §13.3: leaving the act, its result is recorded on the navigator's band.
         setFlag(section, 'data-recorded', isWorld && p > 0.853);
       }
+      // §11.1 (v2.5): the stardust steps back while a headline, a caption or a result is on screen
+      // (to about a third), and further inside the dark worlds.
+      const reading = (i === 0 && (window.scrollY < 0.6 * window.innerHeight || shot.headline > 0.3)) || ((isWorld || isFinale) && p > 0.128 && p < 0.9);
+      starDim.step((reading ? 0.35 : 1) * (isWorld && inWorld ? 0.6 : 1), delta);
       const vh = window.innerHeight;
       const heroTarget = clamp01((window.scrollY + 0.85 * vh - heroBottom) / (0.5 * vh));
       heroFade.omega = follow;
@@ -774,7 +824,7 @@ export function createDirectorRun({
 
       const decodingNow = runDecode(elapsed);
       scrollLive.settling =
-        story.moving() ||
+        story.moving(raw) ||
         threadGrow.moving(aimed || following ? 1 : 0) ||
         followAmount > 0.001 ||
         speed > 0.002 ||
@@ -820,7 +870,7 @@ export function createDirectorRun({
           debug.depth = 0;
           debug.beam = wallMaterial.uniforms.uBeam.value;
           debug.story = G;
-          debug.moving = story.moving();
+          debug.moving = story.moving(raw);
           debug.stardust = stardust.stats();
           debug.act = act.id;
           debug.p = p;
@@ -852,6 +902,7 @@ export function createDirectorRun({
       window.removeEventListener('touchmove', onTouchMove);
       window.removeEventListener('touchend', onTouchEnd);
       window.removeEventListener('touchcancel', onTouchEnd);
+      for (const el of document.querySelectorAll('.act-labels')) el.remove();
       scene.remove(stardust.points);
       stardust.dispose();
       root.removeEventListener('pointerleave', onLeave);

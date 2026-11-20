@@ -14,8 +14,8 @@ import { FLUCT_GLSL } from '../worlds/kit';
 
 /** Reach of the pointer and the furthest a grain is drawn, as fractions of the viewport's width. */
 const REACH = 0.25;
-const PULL = 0.05;
-const SWIRL = 0.018;
+/** (v2.5: the furthest a grain is drawn comes from the tuning — 2–3 % of the width by default.) */
+const SWIRL_RATIO = 0.36;
 const STIR_REACH = 0.14;
 /** The spring that carries a grain (ω in 1/s, damping ratio): soft, a little alive, never jumpy. */
 const OMEGA = 5.2;
@@ -67,9 +67,11 @@ export function createStardust(count: number) {
         gl_Position = vec4(position.xy, 0.0, 1.0);
         float flick = 0.62 + 0.38 * fluct(uTime * (0.5 + aSeed), aSeed * 31.0);
         vGlow = aGlow;
-        vAlpha = (0.42 + 0.5 * aDepth) * flick + 1.6 * aGlow;
-        float size = (3.6 + 7.4 * aDepth) * (1.0 + 1.2 * aGlow);
-        gl_PointSize = max(2.5, size * uPx * clamp(uHeight / 900.0, 0.8, 1.4));
+        // v2.5 §11.1: a supporting part — half the size and light of v2.4, far grains dimmer than near
+        // ones, and a grain by the pointer only a little brighter.
+        vAlpha = (0.1 + 0.34 * aDepth * aDepth) * flick + 0.3 * aGlow;
+        float size = (1.8 + 3.7 * aDepth) * (1.0 + 0.5 * aGlow);
+        gl_PointSize = max(1.5, size * uPx * clamp(uHeight / 900.0, 0.8, 1.4));
       }
     `,
     fragmentShader: /* glsl */ `
@@ -81,7 +83,8 @@ export function createStardust(count: number) {
         float soft = smoothstep(1.0, 0.0, d);
         // A bright heart with a soft halo: a grain reads as a small light, not as a pixel.
         // Kept at or below 1: brighter values came out of the post-processing with a dark heart.
-        float a = min(1.0, (soft * soft * soft + 0.4 * soft) * vAlpha * uAmount);
+        // Never a strong light in front of the picture: capped well below the worlds' own lights.
+        float a = min(0.6, (soft * soft * soft + 0.4 * soft) * vAlpha * uAmount);
         // Pale warm white; a grain near the pointer leans to the evidence cyan.
         vec3 c = mix(vec3(0.96, 0.91, 0.8), vec3(0.6, 0.95, 1.0), vGlow * 0.7);
         gl_FragColor = vec4(c * a, a);
@@ -104,13 +107,17 @@ export function createStardust(count: number) {
     /** The grains are still away from home (the low tier keeps drawing while they are). */
     moving: () => moving,
     /** For the tests and the debug HUD: grains drawn toward the pointer, and the furthest one (fraction of the width). */
-    stats: () => ({ count, pulled, maxOff }),
+    stats: () => ({ count: geometry.drawRange.count === Infinity ? count : geometry.drawRange.count, pulled, maxOff }),
     /**
      * `px`, `py`: the pointer in viewport fractions (0–1, y down); `on`: 0–1, how present it is;
      * `vx`, `vy`: its speed (viewport widths per second); `drift`: how far the story has travelled
      * (the grains slide past by depth, as if the camera sank through them).
      */
-    frame(time: number, dt: number, aspect: number, px: number, py: number, on: number, vx: number, vy: number, drift: number, amount: number, dpr: number, height: number) {
+    frame(time: number, dt: number, aspect: number, px: number, py: number, on: number, vx: number, vy: number, drift: number, amount: number, dpr: number, height: number, pull: number, share: number) {
+      // The tuning's amount: only the first grains are drawn (the rest stay at home, unseen).
+      geometry.setDrawRange(0, Math.max(0, Math.min(count, Math.round(count * share))));
+      const PULL = pull;
+      const SWIRL = pull * SWIRL_RATIO;
       const u = material.uniforms;
       u.uTime!.value = time;
       u.uPx!.value = dpr;

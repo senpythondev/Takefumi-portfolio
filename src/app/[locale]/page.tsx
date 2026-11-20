@@ -124,25 +124,8 @@ export default async function Page({ params }: PageProps<'/[locale]'>) {
         </span>
         {tcin('sound')}
       </button>
-      {/* §12.3: shown once, right after the hero has appeared; gone with the first scroll. */}
-      <p className="nav-hint needs-cinema" data-nav-hint="" aria-hidden="true">
-        <span className="nav-hint-item">
-          <svg viewBox="0 0 16 24" width="12" height="18" aria-hidden="true">
-            <rect x="1.5" y="1.5" width="13" height="21" rx="6.5" fill="none" stroke="currentColor" strokeWidth="1.4" />
-            <path className="nav-hint-wheel" d="M8 6v4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-          </svg>
-          {tcin('hintScroll')}
-        </span>
-        <span className="nav-hint-sep">／</span>
-        <span className="nav-hint-item">
-          <svg viewBox="0 0 18 24" width="13" height="18" aria-hidden="true">
-            <path d="M3 3h12M3 9h12M3 15h12M3 21h12" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" opacity="0.45" />
-            <path d="M3 9h12" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />
-          </svg>
-          {tcin('hintBand')}
-        </span>
-      </p>
-      <main id="main" tabIndex={-1} data-cursor-enter={tcin('enter')} data-cursor-read={tcin('read')}>
+      {/* §12.3: the first hint is built on the client when the cinema runs (its two phrases travel as data). */}
+      <main id="main" tabIndex={-1} data-cursor-enter={tcin('enter')} data-cursor-read={tcin('read')} data-hint-scroll={tcin('hintScroll')} data-hint-band={tcin('hintBand')}>
         <Hero layer={surface} person={content.person} ctx={ctx} nextAnchor="index" coreHeadline={content.cinema.coreHeadline} />
         <ActIndex layers={content.layers} guide={content.cinema.indexGuide} locale={locale} />
         {ACTS.filter((a) => a.layer && a.layer !== 'surface').map((act) => {

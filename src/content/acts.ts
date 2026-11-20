@@ -88,37 +88,92 @@ export function beatAt(act: Act, p: number): number {
 }
 
 /**
- * The key moments of an act (STORYBOARD v2.3 §9-2): ranges of its progress that are not scrubbed by
- * the scroll but played at a fixed tempo once the scroll crosses into them (and played back the
- * same way). `dur` is in seconds at tempo 1. Everything between them follows the scroll softly.
- * `hold`: seconds the picture rests at the end of the moment before it may go on (v2.4: the title
- * card after the entry, §12.1; the result, §13.2). `maxBoost`: a fast scroll hurries a beat by at most
- * this much, so its sentence stays up for 1.5 s or more (§12.2).
+ * From the scroll to the story (STORYBOARD v2.5 §9). Everything on screen is decided by the scroll
+ * position: an act's scroll fraction `s` (0–1 over its pinned length) maps to its progress `p`
+ * through a few ranges, each with its own share of the scroll:
+ *
+ * - a key moment (the extraction of the core, the split, an entry, a beat, a return…) crosses its
+ *   part of the story with an eased curve — it starts and ends gently, and a longer range makes the
+ *   same motion slower;
+ * - a hold (the title card after the entry, §12.1; the result, §13.2) is a range of scroll in which
+ *   the story does not move.
+ *
+ * Nothing is timed: stop scrolling and the picture stops; scroll back and it plays back.
  */
-export type ActCue = { from: number; to: number; dur: number; hold?: number; maxBoost?: number };
+type Range = { s0: number; s1: number; p0: number; p1: number; eased: boolean };
 
-/** How long the title card and the result stay before the story may go on (seconds). */
-export const CARD_HOLD = 1.8;
-export const RESULT_HOLD = 2.6;
+/** Shares of a world act's scroll: entry, title card, story (the beats), the held result, return. */
+export const SHARES = { entry: 0.13, card: 0.05, story: 0.5, hold: 0.16, ret: 0.16 } as const;
 
-export function cuesOf(act: Act): ActCue[] {
-  // Act 1: the core is pulled out of the borehole, then turned onto its side.
-  if (act.id === 'surface') return [{ from: 0.3, to: 0.7, dur: 3.0 }, { from: 0.7, to: 1, dur: 2.6 }];
-  // Act 2: the bands come apart; at the end, the first band turns its cut face forward.
-  if (act.id === 'explode') return [{ from: 0, to: 0.5, dur: 2.8 }, { from: 0.85, to: 1, dur: 1.4 }];
-  // The finale: the bands close and their seams turn gold.
-  if (act.id === 'next') return [{ from: 0.02, to: 0.5, dur: 3.8 }];
-  const { entry, result, ret } = beatsOf(act);
-  const cues: ActCue[] = [{ from: 0, to: entry, dur: 2.4, hold: CARD_HOLD }, { from: ret, to: 1, dur: 2.2 }];
-  // The four beats: each plays at its own tempo once the scroll reaches it, then waits for the scroll.
-  const edges = beatEdges(act);
-  if (edges) {
-    for (let b = 0; b < 4; b += 1) {
-      const from = edges[b] as number;
-      const to = edges[b + 1] as number;
-      const span = (to - from) / (result - entry);
-      cues.push({ from, to, dur: Math.min(5.5, Math.max(b === 3 ? 1.6 : 2.4, span * 12)), hold: b === 3 ? RESULT_HOLD : 0.6, maxBoost: 1.6 });
+/** Mostly an S-curve, a little linear: the motion eases at both ends but never quite stalls under the wheel. */
+const ease = (t: number) => 0.3 * t + 0.7 * (t * t * t * (t * (6 * t - 15) + 10));
+
+const rangesCache = new Map<ActId, Range[]>();
+
+function rangesOf(act: Act): Range[] {
+  const cached = rangesCache.get(act.id);
+  if (cached) return cached;
+  const out: Range[] = [];
+  // Acts 1, 2 and the finale: the key moments keep their place; the rest follows the scroll one to one.
+  const inPlace = (moments: [number, number][]) => {
+    let at = 0;
+    for (const [a, b] of moments) {
+      if (a > at) out.push({ s0: at, s1: a, p0: at, p1: a, eased: false });
+      out.push({ s0: a, s1: b, p0: a, p1: b, eased: true });
+      at = b;
+    }
+    if (at < 1) out.push({ s0: at, s1: 1, p0: at, p1: 1, eased: false });
+  };
+  if (act.id === 'surface') inPlace([[0.3, 0.7], [0.7, 1]]);
+  else if (act.id === 'explode') inPlace([[0, 0.5], [0.85, 1]]);
+  else if (act.id === 'next') inPlace([[0.02, 0.5]]);
+  else {
+    const { entry, result, ret } = beatsOf(act);
+    const a = SHARES.entry;
+    const b = a + SHARES.card;
+    const c = b + SHARES.story;
+    const d = c + SHARES.hold;
+    out.push({ s0: 0, s1: a, p0: 0, p1: entry, eased: true });
+    out.push({ s0: a, s1: b, p0: entry, p1: entry, eased: false });
+    const edges = beatEdges(act);
+    if (edges) {
+      // Each beat gets scroll in proportion to how much of the story it tells, and never less than a sixth.
+      const spans = [0, 1, 2, 3].map((k) => Math.max(1 / 6, ((edges[k + 1] as number) - (edges[k] as number)) / (result - entry)));
+      const total = spans.reduce((x, y) => x + y, 0);
+      let at = b;
+      for (let k = 0; k < 4; k += 1) {
+        const next = at + ((spans[k] as number) / total) * SHARES.story;
+        out.push({ s0: at, s1: next, p0: edges[k] as number, p1: edges[k + 1] as number, eased: true });
+        at = next;
+      }
+    } else out.push({ s0: b, s1: c, p0: entry, p1: result, eased: false });
+    out.push({ s0: c, s1: d, p0: result, p1: ret, eased: false });
+    out.push({ s0: d, s1: 1, p0: ret, p1: 1, eased: true });
+  }
+  rangesCache.set(act.id, out);
+  return out;
+}
+
+/** The act's progress for a scroll fraction `s` (0–1). */
+export function storyAt(act: Act, s: number): number {
+  const x = Math.min(1, Math.max(0, s));
+  for (const r of rangesOf(act)) {
+    if (x <= r.s1) {
+      const t = r.s1 > r.s0 ? (x - r.s0) / (r.s1 - r.s0) : 1;
+      return r.p0 + (r.p1 - r.p0) * (r.eased ? ease(t) : t);
     }
   }
-  return cues;
+  return 1;
+}
+
+/** The scroll fraction at which the act's progress reaches `p` (flights, tests, screenshots). */
+export function scrollAt(act: Act, p: number): number {
+  let lo = 0;
+  let hi = 1;
+  for (let k = 0; k < 40; k += 1) {
+    const mid = (lo + hi) / 2;
+    if (storyAt(act, mid) < p) lo = mid;
+    else hi = mid;
+  }
+  return hi;
 }
