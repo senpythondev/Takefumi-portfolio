@@ -344,6 +344,8 @@ export function createDirectorRun({
       u.uGeoPulse.value = shot.wall.geoPulse;
       u.uRig.value = shot.wall.rig;
       u.uBeam.value *= shot.wall.beam;
+      // Today's bed is a detail of the first screen: it fades as the camera closes on the borehole.
+      u.uToday.value = i === 0 ? 1 - seg(acts.surface ?? 0, 0.04, 0.22) : 0;
       u.uStar.value.set(attract.sx.x * 0.5 + 0.5, attract.sy.x * 0.5 + 0.5, attract.k.x);
       u.uStarDrag.value.set(attract.dx.x * 0.06, -attract.dy.x * 0.06);
       if (wallMesh.current) wallMesh.current.visible = wallDim > 0.002;
