@@ -13,7 +13,7 @@ export const LINKS = {
   github: 'https://github.com/senpythondev',
   devProfile: 'https://dev.to/kaze001',
   /** Shown only when NEXT_PUBLIC_ENABLE_PEGASUS_LINK === 'true' (client's consent pending). */
-  pegasus: 'https://pegasus-job.com',
+  clientSite: 'https://pegasus-job.com',
   /** Source of the kanji stroke-order data (CC BY-SA 3.0): the credit in the footer links here (PM, STORYBOARD v2.4). */
   kanjivg: 'https://kanjivg.tagaini.net/',
 } as const;
@@ -29,18 +29,14 @@ export const SCHEMA_ORG = 'https://schema.org';
 
 export const ALLOWED_URLS: readonly string[] = [...Object.values(LINKS), SCHEMA_ORG];
 
-/** Public contact address, split so that it is never written whole in HTML. */
-export const EMAIL_PARTS = { user: 'sen.python.dev', domain: 'gmail.com' } as const;
+/** The public contact address lives in src/content/contact.ts (client-safe); re-exported for scripts and tests. */
+export { EMAIL_PARTS, mailtoHref } from './contact.ts';
 
-export function mailtoHref(): string {
-  return `mailto:${EMAIL_PARTS.user}@${EMAIL_PARTS.domain}`;
-}
-
-export function isPegasusLinkEnabled(): boolean {
+export function isClientSiteLinkEnabled(): boolean {
   return process.env.NEXT_PUBLIC_ENABLE_PEGASUS_LINK === 'true';
 }
 
-/** Hostname for display next to a title, e.g. "pegasus-job.com". */
+/** Hostname for display next to a title, e.g. "genten.vercel.app". */
 export function displayHost(url: string): string {
   return new URL(url).host;
 }

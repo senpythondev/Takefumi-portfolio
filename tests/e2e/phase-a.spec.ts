@@ -8,7 +8,7 @@ import { startStage } from './stage-helpers';
  * STORYBOARD v2.1, Phase A: the long texts live on the case-study pages; the §8 typography; the
  * cursor; the rules of the security and patent sections.
  */
-const WORK = ['current', 'genten', 'pegasus', 'php-audit', 'auction', 'patent', 'deep', 'catchup'];
+const WORK = ['current', 'genten', 'site-migration', 'php-audit', 'auction', 'patent', 'deep', 'catchup'];
 const CONTENT = { ja: contentJa, en: contentEn } as const;
 const plainRole = (id: 'auction') => (contentJa.cinema.acts[id].role ?? '').replace(/\{\{([a-z0-9-]+)\}\}/g, (_, m: string) => contentJa.metrics.find((x) => x.id === m)?.display ?? '');
 
@@ -131,7 +131,7 @@ test('v2.4 §12–§13: title cards, four beats, comparisons and the results led
       }
     }
     // §13.1: comparisons made only of metrics.
-    await expect(page.locator('section[data-act="pegasus"] .compare-bars .compare-row')).toHaveCount(2);
+    await expect(page.locator('section[data-act="site-migration"] .compare-bars .compare-row')).toHaveCount(2);
     await expect(page.locator('section[data-act="patent"] .compare-bars .compare-row')).toHaveCount(2);
     await expect(page.locator('section[data-act="genten"] .compare-group')).toHaveCount(2);
     await expect(page.locator('section[data-act="genten"] .compare-row a.metric')).toHaveCount(6);
@@ -140,7 +140,7 @@ test('v2.4 §12–§13: title cards, four beats, comparisons and the results led
     await expect(page.locator('section[data-act="php-audit"] .compare-list li')).toHaveCount(4);
     await expect(page.locator('section[data-act="php-audit"] .compare-stairs li')).toHaveCount(4);
     // The shorter bar really is shorter, by the metrics' own values (20 minutes against up to 4 hours).
-    const widths = await page.locator('section[data-act="pegasus"] .compare-bar i').evaluateAll((els) => els.map((el) => el.getBoundingClientRect().width));
+    const widths = await page.locator('section[data-act="site-migration"] .compare-bar i').evaluateAll((els) => els.map((el) => el.getBoundingClientRect().width));
     expect((widths[1] as number) / (widths[0] as number)).toBeCloseTo(20 / 240, 1);
     // §13.3: the ledger in the finale — every row's numbers open their evidence.
     const rows = page.locator('section[data-act="next"] .ledger-row');

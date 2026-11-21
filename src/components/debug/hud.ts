@@ -44,7 +44,7 @@ function device() {
  * section, the finale), so fps and frame times can be read per act.
  */
 type Act = string;
-const ACTS: Act[] = ['hero', 'surface', 'explode', 'current', 'genten', 'pegasus', 'php-audit', 'auction', 'patent', 'deep', 'catchup', 'bedrock', 'next', 'drawer'];
+const ACTS: Act[] = ['hero', 'surface', 'explode', 'current', 'genten', 'site-migration', 'php-audit', 'auction', 'patent', 'deep', 'catchup', 'bedrock', 'next', 'drawer'];
 
 function actLocator() {
   let ranges: { act: Act; from: number; to: number }[] = [];

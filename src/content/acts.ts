@@ -19,7 +19,7 @@ export const ACTS: readonly Act[] = [
   { id: 'explode', layer: null, len: 150, pause: 0, side: null, kanji: null },
   { id: 'current', layer: 'current', len: 175, pause: 25, side: 'R', kanji: '照' },
   { id: 'genten', layer: 'genten', len: 325, pause: 25, side: 'L', kanji: '証' },
-  { id: 'pegasus', layer: 'pegasus', len: 275, pause: 25, side: 'R', kanji: '流' },
+  { id: 'site-migration', layer: 'site-migration', len: 275, pause: 25, side: 'R', kanji: '流' },
   { id: 'php-audit', layer: 'php-audit', len: 325, pause: 25, side: 'L', kanji: '繕' },
   { id: 'auction', layer: 'auction', len: 305, pause: 25, side: 'R', kanji: '冷' },
   { id: 'patent', layer: 'patent', len: 275, pause: 25, side: 'L', kanji: '透' },
@@ -33,7 +33,7 @@ export const ACTS: readonly Act[] = [
 export const WORLD_ACTS = ACTS.filter((a) => a.layer && a.layer !== 'surface').map((a) => a.id as Exclude<LayerId, 'surface'>);
 
 /** Layers with a case-study page (/[locale]/work/[id]): the long texts moved off the home. */
-export const WORK_IDS = ['current', 'genten', 'pegasus', 'php-audit', 'auction', 'patent', 'deep', 'catchup'] as const satisfies readonly LayerId[];
+export const WORK_IDS = ['current', 'genten', 'site-migration', 'php-audit', 'auction', 'patent', 'deep', 'catchup'] as const satisfies readonly LayerId[];
 export type WorkId = (typeof WORK_IDS)[number];
 
 export function isWorkId(id: string): id is WorkId {
@@ -62,7 +62,7 @@ export function beatsOf(act: Act) {
 const BEAT_CUTS: Partial<Record<ActId, readonly [number, number, number]>> = {
   current: [0.1, 0.5, 0.66],
   genten: [0.17, 0.34, 0.86],
-  pegasus: [0.2, 0.5, 0.92],
+  'site-migration': [0.2, 0.5, 0.92],
   'php-audit': [0.2, 0.6, 0.98],
   auction: [0.36, 0.7, 0.92],
   patent: [0.12, 0.6, 0.8],

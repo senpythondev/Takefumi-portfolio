@@ -28,7 +28,7 @@ export type Confidence = z.infer<typeof ConfidenceSchema>;
 export const SourceSchema = z.enum(['records', 'eval', 'article', 'ci']);
 export type Source = z.infer<typeof SourceSchema>;
 
-export const LINK_KEYS = ['genten', 'gentenArticle', 'github', 'devProfile', 'pegasus'] as const;
+export const LINK_KEYS = ['genten', 'gentenArticle', 'github', 'devProfile', 'clientSite'] as const;
 export const LinkKeySchema = z.enum(LINK_KEYS);
 export type LinkKey = z.infer<typeof LinkKeySchema>;
 

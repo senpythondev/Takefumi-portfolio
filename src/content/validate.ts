@@ -162,7 +162,7 @@ export function strayDigits(text: string): string[] {
 /** Facts derived from the content structure itself; checked against the structure. */
 export function derivedFactProblems(c: SiteContent): string[] {
   const problems: string[] = [];
-  const projectLayers = ['current', 'genten', 'pegasus', 'php-audit', 'auction', 'patent'].length;
+  const projectLayers = ['current', 'genten', 'site-migration', 'php-audit', 'auction', 'patent'].length;
   const deep = c.layers.find((l) => l.id === 'deep');
   const deepProjects = deep?.blocks.find((b) => b.kind === 'projects');
   const deepCount = deepProjects && deepProjects.kind === 'projects' ? deepProjects.projects.length : 0;

@@ -117,7 +117,7 @@ test('keyboard only, with the cinema: Tab reaches the index and every section, a
   }
   expect(unseen, 'focus on something that cannot be seen').toEqual([]);
   expect(bands, 'the index: one link per layer').toBe(11);
-  for (const id of ['surface', 'explode', 'current', 'genten', 'pegasus', 'php-audit', 'auction', 'patent', 'deep', 'catchup', 'next']) expect([...reached], id).toContain(id);
+  for (const id of ['surface', 'explode', 'current', 'genten', 'site-migration', 'php-audit', 'auction', 'patent', 'deep', 'catchup', 'next']) expect([...reached], id).toContain(id);
 });
 
 test('security headers on every kind of response; the pages run inside the Content-Security-Policy', async ({ page, request }) => {

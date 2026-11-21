@@ -8,7 +8,7 @@ import type { ActId } from './acts.ts';
  * §13.1: the result as a comparison.
  * - `bars`: one bar per metric. `to` (and `from` for a range) is the bar's length as a fraction of
  *   the longest, worked out from the metrics' own values:
- *   - pegasus: the estimate of 2–4 hours is 120–240 minutes (0.5–1 of the bar); 20 minutes is 20/240.
+ *   - site-migration: the estimate of 2–4 hours is 120–240 minutes (0.5–1 of the bar); 20 minutes is 20/240.
  *   - patent: "3 months or more" is the full bar, open-ended; "within 2 months" is 2/3.
  * - `groups`: bars of percentages, read from each metric's display (76% → 0.76).
  * - `change`: before and after, where the "before" has no number (auction).
@@ -31,11 +31,11 @@ export const COMPARE: Partial<Record<ActId, Compare>> = {
       ['genten-cite-closed', 'genten-cite-keyword', 'genten-cite-genten'],
     ],
   },
-  pegasus: {
+  'site-migration': {
     kind: 'bars',
     rows: [
-      { metric: 'pegasus-estimate', from: 0.5, to: 1 },
-      { metric: 'pegasus-downtime', to: 20 / 240, win: true },
+      { metric: 'site-migration-estimate', from: 0.5, to: 1 },
+      { metric: 'site-migration-downtime', to: 20 / 240, win: true },
     ],
   },
   'php-audit': { kind: 'risks', plan: 'php-plan' },
@@ -67,7 +67,7 @@ export function compareMetrics(id: ActId): string[] {
 export const LEDGER: readonly { act: ActId; metrics: readonly string[] }[] = [
   { act: 'current', metrics: [] },
   { act: 'genten', metrics: ['genten-acc-genten', 'genten-cite-genten'] },
-  { act: 'pegasus', metrics: ['pegasus-downtime', 'pegasus-posts'] },
+  { act: 'site-migration', metrics: ['site-migration-downtime', 'site-migration-posts'] },
   { act: 'php-audit', metrics: ['php-files', 'php-plan'] },
   { act: 'auction', metrics: ['auction-bids', 'auction-errors'] },
   { act: 'patent', metrics: ['patent-duration'] },

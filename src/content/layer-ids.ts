@@ -3,7 +3,7 @@ export const LAYER_IDS = [
   'surface',
   'current',
   'genten',
-  'pegasus',
+  'site-migration',
   'php-audit',
   'auction',
   'patent',

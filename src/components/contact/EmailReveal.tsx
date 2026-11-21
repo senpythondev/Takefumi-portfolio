@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useSyncExternalStore } from 'react';
-import { EMAIL_PARTS, mailtoHref } from '@/content/links';
+import { EMAIL_PARTS, mailtoHref } from '@/content/contact';
 
 const noopSubscribe = () => () => {};
 

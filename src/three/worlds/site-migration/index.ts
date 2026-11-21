@@ -33,12 +33,12 @@ function figure(section: HTMLElement, id: string, fallback: number, nth = 0): nu
   return n ? Number(n.replace(/,/g, '')) : fallback;
 }
 
-export default function createPegasus(ctx: WorldContext): World {
+export default function createSiteMigration(ctx: WorldContext): World {
   const group = new Group();
   const r = rng(303);
-  const POSTS = figure(ctx.section, 'pegasus-posts', 214);
-  const PLUGINS_FROM = figure(ctx.section, 'pegasus-plugins', 24, 0);
-  const PLUGINS_TO = figure(ctx.section, 'pegasus-plugins', 18, 1);
+  const POSTS = figure(ctx.section, 'site-migration-posts', 214);
+  const PLUGINS_FROM = figure(ctx.section, 'site-migration-plugins', 24, 0);
+  const PLUGINS_TO = figure(ctx.section, 'site-migration-plugins', 18, 1);
 
   // ── Two towns of windows ──
   const oldTown: Building[] = [];

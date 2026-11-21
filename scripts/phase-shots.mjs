@@ -23,7 +23,7 @@ const ACTS = {
   explode: [150, 0],
   current: [175, 25],
   genten: [325, 25],
-  pegasus: [275, 25],
+  'site-migration': [275, 25],
   'php-audit': [325, 25],
   auction: [305, 25],
   patent: [275, 25],

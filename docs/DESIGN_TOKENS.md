@@ -32,7 +32,7 @@
 | surface | `#988979` | 1.74 |
 | current | `#4c6970` | 1.99 |
 | genten | `#8c9b7e` | 1.93 |
-| pegasus | `#5a677e` | 1.42 |
+| site-migration | `#5a677e` | 1.42 |
 | php-audit | `#9d7665` | 1.62 |
 | auction | `#b2a381` | 2.12 |
 | patent | `#5c6e7c` | 1.42 |
@@ -47,7 +47,7 @@
 | surface | 胡桃染 | kurumizome |
 | current | 藍鼠 | ainezu |
 | genten | 青磁色 | seiji-iro |
-| pegasus | 紺鼠 | konnezu |
+| site-migration | 紺鼠 | konnezu |
 | php-audit | 錆色 | sabi-iro |
 | auction | 黄土色 | ōdo-iro |
 | patent | 藍鉄色 | aitetsu-iro |

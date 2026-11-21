@@ -8,13 +8,13 @@ import { Group, type PerspectiveCamera, type Scene, type WebGLRenderer } from 't
 import { ACTS, beatsOf } from '@/content/acts';
 import type { World, WorldContext, WorldFactory, Tier } from '../worlds/kit';
 
-export type WorldId = 'current' | 'genten' | 'pegasus' | 'php-audit' | 'auction' | 'patent' | 'deep' | 'catchup' | 'bedrock' | 'next';
+export type WorldId = 'current' | 'genten' | 'site-migration' | 'php-audit' | 'auction' | 'patent' | 'deep' | 'catchup' | 'bedrock' | 'next';
 
 // One import() per world, written out, so the bundler makes one chunk per world.
 const LOADERS: Record<WorldId, () => Promise<{ default: WorldFactory }>> = {
   current: () => import('../worlds/current'),
   genten: () => import('../worlds/genten'),
-  pegasus: () => import('../worlds/pegasus'),
+  'site-migration': () => import('../worlds/site-migration'),
   'php-audit': () => import('../worlds/php-audit'),
   auction: () => import('../worlds/auction'),
   patent: () => import('../worlds/patent'),

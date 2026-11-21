@@ -5,7 +5,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import type { CSSProperties } from 'react';
 import { getContent, metricMap, type Layer } from '@/content';
 import { isWorkId, kanjiOf, WORK_IDS } from '@/content/acts';
-import { displayHost, isPegasusLinkEnabled, LINKS } from '@/content/links';
+import { displayHost, isClientSiteLinkEnabled, LINKS } from '@/content/links';
 import { routing } from '@/i18n/routing';
 import { layerAnchor, workPath } from '@/components/acts/anchors';
 import { EvidenceController } from '@/components/evidence/EvidenceController';
@@ -74,7 +74,7 @@ export default async function WorkPage({ params }: PageProps<'/[locale]/work/[id
   const prev = at > 0 ? content.layers.find((l) => l.id === WORK_IDS[at - 1]) : undefined;
   const next = at < WORK_IDS.length - 1 ? content.layers.find((l) => l.id === WORK_IDS[at + 1]) : undefined;
   // The client's domain is shown only after their consent (NEXT_PUBLIC_ENABLE_PEGASUS_LINK).
-  const titleUrl = layer.titleLink && (layer.titleLink !== 'pegasus' || isPegasusLinkEnabled()) ? LINKS[layer.titleLink] : null;
+  const titleUrl = layer.titleLink && (layer.titleLink !== 'clientSite' || isClientSiteLinkEnabled()) ? LINKS[layer.titleLink] : null;
 
   return (
     <>

@@ -312,7 +312,7 @@ export function startCinemaUi({ lenis, addFrameListener }: { lenis: Lenis; addFr
     let format: ((v: number) => string) | null = null;
     let from = 0;
     let to = 0;
-    if (id === 'pegasus-downtime') {
+    if (id === 'site-migration-downtime') {
       // The stopwatch runs down from 20:00 and stops on the real figure (STORYBOARD act 3-3).
       to = Number(numbers[0] ?? 0);
       from = to;

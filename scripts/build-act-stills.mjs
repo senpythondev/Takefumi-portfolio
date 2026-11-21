@@ -18,7 +18,7 @@ const ACTS = {
   explode: 0.7,
   current: 0.68,
   genten: 0.5,
-  pegasus: 0.7,
+  'site-migration': 0.7,
   'php-audit': 0.74,
   auction: 0.45,
   patent: 0.7,

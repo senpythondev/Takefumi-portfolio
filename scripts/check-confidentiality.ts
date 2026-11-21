@@ -10,14 +10,16 @@
  *
  * Detects: IPv4 addresses, AWS account IDs / ARNs / resource IDs / access keys / hostnames,
  * private keys, URLs not in src/content/links.ts, e-mail addresses other than the public one,
- * and image metadata (EXIF/XMP/IPTC/PNG text chunks).
+ * image metadata (EXIF/XMP/IPTC/PNG text chunks), and the migration client's name in the site's
+ * code, content, tests, scripts or file names anywhere except its consent-gated link and the
+ * flag that controls it (PM decision, final round 2026-11-21).
  *
  * False positives go in scripts/confidentiality-exceptions.json, each with a reason.
  */
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { extname, join, relative } from 'node:path';
-import { ALLOWED_URLS, EMAIL_PARTS } from '../src/content/links.ts';
+import { ALLOWED_URLS, EMAIL_PARTS, LINKS } from '../src/content/links.ts';
 
 type Finding = { check: string; file: string; line: number; detail: string };
 type Exception = { check: string; file?: string; match?: string; reason: string };
@@ -173,10 +175,21 @@ const exceptions = loadExceptions();
 const excepted = (f: Finding, matched: string) =>
   exceptions.some((e) => e.check === f.check && (!e.file || f.file === e.file || f.file.startsWith(`${e.file}/`)) && (!e.match || matched.startsWith(e.match)));
 
+// The client's name is taken from its link, so it is written in one place only. Inside the site's
+// own folders it may appear only as that link's host or in the name of the flag that gates it.
+const CLIENT_HOST = new URL(LINKS.clientSite).host;
+const CLIENT_NAME = CLIENT_HOST.split(/[.-]/)[0] ?? CLIENT_HOST;
+const CLIENT_PATTERN = new RegExp(CLIENT_NAME, 'i');
+const CLIENT_ALLOWED = new RegExp(`${CLIENT_HOST.replace(/\./g, '\\.')}|NEXT_PUBLIC_ENABLE_${CLIENT_NAME.toUpperCase()}_LINK`, 'gi');
+const SITE_DIRS = /^(src|tests|scripts|public)\//;
+
 const findings: Finding[] = [];
 const files = filesToScan();
 for (const { file, read } of files) {
   const ext = extname(file).toLowerCase();
+  if (SITE_DIRS.test(file) && CLIENT_PATTERN.test(file)) {
+    findings.push({ check: 'client-name', file, line: 0, detail: "file name contains the migration client's name" });
+  }
   const buf = read();
 
   if (IMAGE_EXT.has(ext)) {
@@ -196,6 +209,9 @@ for (const { file, read } of files) {
         if (!excepted(f, matched)) findings.push(f);
       };
       for (const c of TEXT_CHECKS) for (const m of text.matchAll(c.pattern)) push(c.check, m[0], c.describe(m[0]));
+      if (SITE_DIRS.test(file) && CLIENT_PATTERN.test(text.replace(CLIENT_ALLOWED, ''))) {
+        push('client-name', CLIENT_NAME, "the migration client's name outside its consent-gated link (use the neutral slug site-migration)");
+      }
       if (file !== 'src/content/links.ts') {
         for (const m of text.matchAll(URL_PATTERN)) {
           const url = m[0].replace(/[.,;:!?)]+$/, '');

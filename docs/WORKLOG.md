@@ -19,6 +19,41 @@
 
 ---
 
+## 2026-11-21 — 最終仕上げへの PM 決定の反映（ブランチ `feat/phase-a`）
+
+### 使ったモデル
+- Claude Fable 5.2 で始め、途中から **Claude Opus 5.5** に切り替えた（オーナーが `/model opus` に変更。CLAUDE.md §5）。
+
+### やったこと
+1. **static 版・ケーススタディ・根拠ページの TBT を実スロットリングで測る（PM 決定 1、オプション a）。**
+   - Lighthouse CI を2回に分けて集める（`npm run lhci`）：
+     - 1回目：全 URL をシミュレーションで測る。TBT 以外のアサーションはすべてここで判定する（この3ページの Performance 0.9 以上も含む）。
+     - 2回目（`LHCI_PASS=applied`）：3ページだけを **devtools（実スロットリング）**で測る。URL に `lhci=applied` を付けて区別し、TBT 200ms（複数回の中央値）だけを判定する。
+   - CPU の補正倍率（`lhci-calibrate.ts`）は両方に同じものを使う。上限 200ms と中央値の判定は変えていない。
+   - 理由：シミュレーションの TBT は、このページの最初のレイアウトをブロッキングに数えるので、同じコードで回ごとに 100〜290ms と揺れた。合否が 200ms の境目で入れ替わり、run 44766955927（`f9812ab`）は合格、run 44775923184（`3a1a5a6`、WORKLOG だけの変更）は static 版の中央値 206.5ms で不合格だった。
+   - CLAUDE.md §4 の TBT の行に、測り方と理由を書いた。
+   - 変更したファイル：`lighthouserc.json`（アサーションの振り分け）、`lighthouserc.cjs`（2回目の URL と測り方）、`package.json`（`lhci` スクリプト）。
+2. **移行案件の名前を中立な `site-migration` に変えた（PM 決定 2、守秘）。**
+   - 変えた範囲：URL（`/work/site-migration`、`/evidence/site-migration-*`）、レイヤーと Metric の ID、3D の区間（`src/three/worlds/site-migration/`）、ポスター画像のファイル名、色のトークン（`tokens.generated.css`、`docs/DESIGN_TOKENS.md` は生成し直した）、テスト、スクリプト、サイトマップ。
+   - リンクの鍵も `clientSite` にした。先方の名前が残るのは、フラグで止めているリンクの URL（`src/content/links.ts`）と、フラグ名 `NEXT_PUBLIC_ENABLE_PEGASUS_LINK`（`false` のまま）だけ。
+   - **見つけて直したこと：** メールを組み立てるクライアント部品が `links.ts` を読み込んでいたため、リンクの一覧（先方の URL を含む）が、フラグに関係なくブラウザの JS に入っていた。メールの部品を `src/content/contact.ts` に分けて直した。ビルド結果（`.next/static` と `.next/server/app`）に先方の名前がないことを確認した。
+   - **再発防止：** `scripts/check-confidentiality.ts` に `client-name` のチェックを足した。`src/`・`tests/`・`scripts/`・`public/` の中で、許可した2か所以外に名前が出たら（ファイル名を含む）失敗する。名前はリンクの URL から取り出すので、チェックの中には書いていない。E2E（`site.spec.ts`）でも、ホームと `/work/site-migration` の HTML に名前がないことを確かめる。
+   - 古い URL へのリダイレクトは作っていない（未公開。作ると設定に名前が残る）。
+   - 過去のコミットには古い名前が残っている（履歴の書き換えは指示されていない。リポジトリは非公開のまま）。`docs/` の企画書と過去の WORKLOG・PM レビューの記述はそのままにした。
+   - ローカルの最終スクリーンショット（`docs/screenshots/final/`、コミットしない）も、ファイル名を新しい名前に揃えた。
+3. **schema.org（PM 決定 3）：** `links.ts` と CLAUDE.md §1-2 の記述は承認済み。変更なし。
+4. **リポジトリは非公開のまま（PM 決定 4）。** `backup/pre-rewrite/*` は push しない。
+5. **INP 150ms（PM 決定 5）：** 公開時点では未達として受け入れられた（200ms の合否条件は満たしている）。公開後に、オーナーのスマホで確認する。
+
+### 計測値（ローカル、CPU 3.9倍、benchmarkIndex 2806、各5回）
+| ページ | シミュレーションの TBT | 実スロットリングの TBT | 実スロットリングの中央値 |
+|---|---|---|---|
+| `/ja?quality=static` | 62〜102ms | 99〜119ms | 100ms |
+| `/ja/evidence/genten-acc-genten` | 76〜104ms | 90〜185ms | 98ms |
+| `/ja/work/genten` | 80〜121ms | 105〜133ms | 121ms |
+
+- 実スロットリングでは、ネットワークも実際に絞るので LCP は 1.6〜2.0秒になる。2回目の LCP は判定に使わない（LCP は1回目のシミュレーションで判定する）。
+
 ## 2026-11-20〜21 — 最終仕上げ（公開前）：static 版の TBT、公開まわり、段階C の磨き、QA（ブランチ `feat/phase-a`）
 
 **モデル：** Claude Fable 5.2

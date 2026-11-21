@@ -1,9 +1,9 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { ALLOWED_URLS, EMAIL_PARTS } from '../../src/content/links.ts';
+import { ALLOWED_URLS, EMAIL_PARTS, LINKS } from '../../src/content/links.ts';
 
 const LOCALES = ['ja', 'en'] as const;
-const LAYER_IDS = ['surface', 'current', 'genten', 'pegasus', 'php-audit', 'auction', 'patent', 'deep', 'catchup', 'bedrock', 'next'];
+const LAYER_IDS = ['surface', 'current', 'genten', 'site-migration', 'php-audit', 'auction', 'patent', 'deep', 'catchup', 'bedrock', 'next'];
 const ADDRESS = `${EMAIL_PARTS.user}@${EMAIL_PARTS.domain}`;
 
 function collectConsoleErrors(page: Page): string[] {
@@ -93,8 +93,12 @@ for (const locale of LOCALES) {
       const hrefs = await page.locator('a[href^="http"]').evaluateAll((els) => els.map((e) => e.getAttribute('href') ?? ''));
       expect(hrefs.length).toBeGreaterThan(0);
       for (const href of hrefs) expect(ALLOWED_URLS, href).toContain(href);
-      // The client has not consented yet: neither the link nor the domain may appear.
-      expect(await page.content()).not.toContain('pegasus-job.com');
+      // The client has not consented yet: neither the link, the domain nor the name may appear.
+      // The migration case study uses the neutral slug (PM decision, final round 2026-11-21).
+      const client = new URL(LINKS.clientSite).host.split(/[.-]/)[0] ?? 'unset';
+      expect(await page.content()).not.toMatch(new RegExp(client, 'i'));
+      await page.goto(`/${locale}/work/site-migration`);
+      expect(await page.content()).not.toMatch(new RegExp(client, 'i'));
     });
 
     test('the e-mail address is never in the HTML, only assembled in the browser', async ({ page, request, context }) => {

@@ -134,7 +134,7 @@ export default function createDeep(ctx: WorldContext): World {
   const r = rng(707);
   const items = [...ctx.section.querySelectorAll<HTMLElement>('.deep-cards li[data-card]')];
   const geo = slab();
-  const tints = [layerColor.deep, layerColor.current, layerColor.genten, layerColor.pegasus, layerColor['php-audit'], layerColor.auction, layerColor.patent, layerColor.catchup];
+  const tints = [layerColor.deep, layerColor.current, layerColor.genten, layerColor['site-migration'], layerColor['php-audit'], layerColor.auction, layerColor.patent, layerColor.catchup];
 
   const cards = items.slice(0, CARDS).map((li, i) => {
     const canvas = document.createElement('canvas');

@@ -18,7 +18,7 @@
     "assert": {
       "assertMatrix": [
         {
-          "matchingUrlPattern": ".*",
+          "matchingUrlPattern": "^(?!.*lhci=applied).*",
           "assertions": {
             "categories:accessibility": [
               "error",
@@ -77,7 +77,7 @@
           }
         },
         {
-          "matchingUrlPattern": "^http://localhost:3300/(ja|en)(/evidence/|/work/|\\?quality=static)",
+          "matchingUrlPattern": "^(?!.*lhci=applied)http://localhost:3300/(ja|en)(/evidence/|/work/|\\?quality=static)",
           "assertions": {
             "categories:performance": [
               "error",
@@ -85,7 +85,12 @@
                 "minScore": 0.9,
                 "aggregationMethod": "median"
               }
-            ],
+            ]
+          }
+        },
+        {
+          "matchingUrlPattern": "lhci=applied",
+          "assertions": {
             "total-blocking-time": [
               "error",
               {

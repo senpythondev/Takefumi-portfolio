@@ -39,7 +39,7 @@ export const layer = {
   surface: '#988979', // oklch(0.64 0.030 70)  weathered topsoil
   current: '#4c6970', // oklch(0.50 0.035 215) slate
   genten: '#8c9b7e', // oklch(0.67 0.045 130) sage
-  pegasus: '#5a677e', // oklch(0.51 0.040 262) blue slate
+  'site-migration': '#5a677e', // oklch(0.51 0.040 262) blue slate
   'php-audit': '#9d7665', // oklch(0.60 0.055 45) muted rust — kept clear of the crisis red-orange
   auction: '#b2a381', // oklch(0.72 0.050 88)  sandstone
   patent: '#5c6e7c', // oklch(0.53 0.030 240) grey shale
@@ -60,7 +60,7 @@ export const layerName: Record<LayerColorId, { ja: string; romaji: string }> = {
   surface: { ja: '胡桃染', romaji: 'kurumizome' },
   current: { ja: '藍鼠', romaji: 'ainezu' },
   genten: { ja: '青磁色', romaji: 'seiji-iro' },
-  pegasus: { ja: '紺鼠', romaji: 'konnezu' },
+  'site-migration': { ja: '紺鼠', romaji: 'konnezu' },
   'php-audit': { ja: '錆色', romaji: 'sabi-iro' },
   auction: { ja: '黄土色', romaji: 'ōdo-iro' },
   patent: { ja: '藍鉄色', romaji: 'aitetsu-iro' },

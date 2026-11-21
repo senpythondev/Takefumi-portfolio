@@ -13,7 +13,7 @@ import { expectStageOff, STAGE_LIVE_TIMEOUT } from './stage-helpers';
 type World = { act?: string; p?: number; phase?: string; inWorld?: boolean; worlds?: string[]; hub?: boolean; bands?: ([number, number] | null)[]; acts?: { surface: number; explode: number } };
 const world = (page: Page) => page.evaluate(() => (window as unknown as { __world: World }).__world);
 const LOW = '/ja?quality=low&dpr=0.4&debug=1';
-const WORLD_ACTS = ['current', 'genten', 'pegasus', 'php-audit', 'auction', 'patent', 'deep', 'catchup', 'bedrock', 'next'];
+const WORLD_ACTS = ['current', 'genten', 'site-migration', 'php-audit', 'auction', 'patent', 'deep', 'catchup', 'bedrock', 'next'];
 
 /** Scroll to a point of an act's pinned range (0 = its first frame, 1 = its last). */
 const scrollToAct = (page: Page, act: string, at: number) =>
