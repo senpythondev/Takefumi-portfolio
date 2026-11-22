@@ -53,9 +53,9 @@ PM_REVIEW_07 §5 の方針に沿った、プレビュー環境の取り込み手
 
 | 変数 | Production | Preview | ローカル | 意味 | 設定する時期 |
 |---|---|---|---|---|---|
-| `SITE_LAUNCHED` | 未設定（公開日に `true`） | 未設定 | 未設定 | `true` のビルドだけ `X-Robots-Tag` を外す。**ビルド時に読む**ので、設定したら再デプロイが必要 | Phase 7 |
+| `SITE_LAUNCHED` | **`true`**（2026-11-22 にオーナーが設定） | 未設定 | 未設定 | `true` のビルドだけ `X-Robots-Tag` を外す。**ビルド時に読む**ので、設定したら再デプロイが必要 | Phase 7 |
 | `NEXT_PUBLIC_ENABLE_PEGASUS_LINK` | 未設定（＝無効） | 未設定 | `.env.example` では `false` | 先方の了承後に `true`（Production と Preview の両方）。ビルド時に埋め込まれる | 先方の了承後 |
-| `NEXT_PUBLIC_SITE_URL` | 未設定（公開日に本番ドメイン） | 未設定 | 未設定 | canonical・hreflang・OGP の基準 URL。未設定なら Vercel の本番 URL を使う | Phase 7 |
+| `NEXT_PUBLIC_SITE_URL` | **本番ドメイン**（2026-11-22 にオーナーが設定。アドレスはリポジトリに書かない） | 未設定 | 未設定 | canonical・hreflang・OGP の基準 URL。未設定なら Vercel の本番 URL を使う | Phase 7 |
 | `VERCEL_ENV`・`VERCEL_PROJECT_PRODUCTION_URL` | Vercel が自動で設定 | 自動 | — | **自分では設定しない**（下の注を参照） | — |
 | `GT_RELEASE` | 不要 | 不要 | `npm run build:release` が設定する | `VERCEL_ENV=production` と同じ扱い | — |
 
